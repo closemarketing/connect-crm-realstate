@@ -63,6 +63,7 @@ class IIP_Admin {
 		//register our settings
 		register_setting( 'iip_plugin_settings_group', 'iip_agency_number' );
 		register_setting( 'iip_plugin_settings_group', 'iip_agency_pass' );
+		register_setting( 'iip_plugin_settings_group', 'iip_post_type' );
 
 		// Register Merge Settings.
 		//register_setting( 'iip_plugin_merge_group', 'iip_agency_pass' );
@@ -76,14 +77,33 @@ class IIP_Admin {
 	public function plugin_settings_page() {
 		$agency_number = get_option( 'iip_agency_number' );
 		$agency_pass   = get_option( 'iip_agency_pass' );
+		$post_type     = get_option( 'iip_post_type' );
 		if ( $agency_number && $agency_pass ) {
 			$show_merge_vars = true;
 		} else {
 			$show_merge_vars = false;
 		}
+		// Select Custom post types.
+		$select_cpt_options = '<option value=""';
+		if ( ! $post_type ) {
+			$select_cpt_options .= ' selected';
+		}
+		$select_cpt_options .= '></option>';
+		$args = array(
+			'public'   => true,
+			'_builtin' => false,
+		);
+		$list_post_types = get_post_types( $args, 'objects', 'and' );
+		foreach ( $list_post_types as $list_post_type ) {
+			$select_cpt_options .= '<option value="' . $list_post_type->name . '"';
+			if ( $post_type === $list_post_type->name ) {
+				$select_cpt_options .= ' selected';
+			}
+			$select_cpt_options .= '>' . $list_post_type->label . '</option>';
+		}
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Inmovilla Properties Import Settings', 'import-inmovilla-properties'); ?></h1>
+			<h1><?php esc_html_e( 'Inmovilla Properties Import Settings', 'import-inmovilla-properties' ); ?></h1>
 
 			<form method="post" action="options.php">
 				<?php settings_fields( 'iip_plugin_settings_group' ); ?>
@@ -99,8 +119,13 @@ class IIP_Admin {
 						<td><input type="password" name="iip_agency_pass" value="<?php echo esc_attr( $agency_pass ); ?>" /></td>
 					</tr>
 
+					<tr valign="top">
+						<th scope="row"><?php esc_html_e( 'Custom Post Type to import', 'import-inmovilla-properties' ); ?></th>
+						<td><select name="iip_post_type"><?php echo $select_cpt_options; ?></select></td>
+					</tr>
+
 				</table>
-				
+
 				<?php submit_button(); ?>
 
 			</form>
