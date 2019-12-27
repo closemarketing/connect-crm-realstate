@@ -77,6 +77,7 @@ class IIP_Admin {
 	public function plugin_settings_page() {
 		$agency_number = get_option( 'iip_agency_number' );
 		$agency_pass   = get_option( 'iip_agency_pass' );
+		$language      = get_option( 'iip_language' );
 		$post_type     = get_option( 'iip_post_type' );
 		if ( $agency_number && $agency_pass ) {
 			$show_merge_vars = true;
@@ -101,6 +102,37 @@ class IIP_Admin {
 			}
 			$select_cpt_options .= '>' . $list_post_type->label . '</option>';
 		}
+		// Language.
+		$select_lang = '<option value=""';
+		if ( ! $language ) {
+			$select_lang .= ' selected';
+		}
+		$select_lang .= '></option>';
+		$inmovilla_langs = array(
+			1  => __( 'Spanish', 'import-inmovilla-properties' ),
+			2  => __( 'English', 'import-inmovilla-properties' ),
+			3  => __( 'German', 'import-inmovilla-properties' ),
+			4  => __( 'French', 'import-inmovilla-properties' ),
+			5  => __( 'Dutch', 'import-inmovilla-properties' ),
+			6  => __( 'Norweigian', 'import-inmovilla-properties' ),
+			7  => __( 'Russian', 'import-inmovilla-properties' ),
+			8  => __( 'Portuguese', 'import-inmovilla-properties' ),
+			9  => __( 'Swedish', 'import-inmovilla-properties' ),
+			10 => __( 'Finnish', 'import-inmovilla-properties' ),
+			11 => __( 'Chinese', 'import-inmovilla-properties' ),
+			12 => __( 'Catalan', 'import-inmovilla-properties' ),
+			15 => __( 'Italian', 'import-inmovilla-properties' ),
+			16 => __( 'Basque', 'import-inmovilla-properties' ),
+			17 => __( 'Polish', 'import-inmovilla-properties' ),
+			18 => __( 'Galician', 'import-inmovilla-properties' ),
+		);
+		foreach ( $inmovilla_langs as $key => $value ) {
+			$select_lang .= '<option value="' . $key . '"';
+			if ( ( $language === $key) || ( ! $language && 1 === $key ) ) {
+				$select_lang .= ' selected';
+			}
+			$select_lang .= '>' . $value . '</option>';
+		}
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Inmovilla Properties Import Settings', 'import-inmovilla-properties' ); ?></h1>
@@ -117,6 +149,11 @@ class IIP_Admin {
 					<tr valign="top">
 						<th scope="row"><?php esc_html_e( 'Agency API Password', 'import-inmovilla-properties' ); ?></th>
 						<td><input type="password" name="iip_agency_pass" value="<?php echo esc_attr( $agency_pass ); ?>" /></td>
+					</tr>
+
+					<tr valign="top">
+						<th scope="row"><?php esc_html_e( 'Language', 'import-inmovilla-properties' ); ?></th>
+						<td><select name="iip_language"><?php echo $select_lang; ?></select></td>
 					</tr>
 
 					<tr valign="top">
@@ -161,13 +198,20 @@ class IIP_Admin {
 	 */
 	private function get_properties() {
 		$agency_number = get_option( 'iip_agency_number' );
-		$agency_pass = get_option( 'iip_agency_pass' );
-		
+		$agency_pass   = get_option( 'iip_agency_pass' );
+
 		$args = array(
 			'headers' => array(
 				'Accept'     => 'text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
 				'Connection' => 'keep-alive'
-			)
+			),
+			'body'    => array(
+				'numagencia' => $agency_number,
+				'password'   => $agency_pass,
+				'idioma'     => 1,
+				'ia'         => '84.120.210.5',
+				'ib'         => '42.5.120.1',
+			),
 		);
 		$response = wp_remote_get( 'http://apiweb.inmovilla.com/apiweb/apiweb_demo.php', $args );
 		echo '<pre>';
