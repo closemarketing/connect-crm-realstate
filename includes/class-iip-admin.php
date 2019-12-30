@@ -60,13 +60,16 @@ class IIP_Admin {
 	 * @return void
 	 */
 	public function register_plugin_settings() {
-		//register our settings
+		// Register our settings.
 		register_setting( 'iip_plugin_settings_group', 'iip_agency_number' );
 		register_setting( 'iip_plugin_settings_group', 'iip_agency_pass' );
 		register_setting( 'iip_plugin_settings_group', 'iip_post_type' );
 
 		// Register Merge Settings.
-		//register_setting( 'iip_plugin_merge_group', 'iip_agency_pass' );
+		$properties_fields = $this->get_properties_fields();
+		foreach ( $properties_fields as $key => $value ) {
+			register_setting( 'iip_plugin_merge_group', 'iip_var_' . $key );
+		}
 	}
 
 	/**
@@ -172,10 +175,10 @@ class IIP_Admin {
 
 			$args_query = array( 'paginacion', 1, 1, 'ascensor=1', 'precioinmo, precioalq' );
 			$property_base = $this->get_properties( $args_query );
-
-			echo '<pre>';
+			/*
+			echo '<pre>iip_merge_vars';
 			print_r($property_base['paginacion'][1]);
-			echo '</pre>';
+			echo '</pre>';*/
 			?>
 			<div class="wrap">
 				<h1><?php esc_html_e( 'Merge Variables with custom values', 'import-inmovilla-properties'); ?></h1>
@@ -183,11 +186,16 @@ class IIP_Admin {
 					<?php settings_fields( 'iip_plugin_merge_group' ); ?>
 					<?php do_settings_sections( 'iip_plugin_merge_group' ); ?>
 					<table class="form-table">
-						<tr valign="top">
-							<th scope="row"><?php esc_html_e( 'Agency number', 'import-inmovilla-properties'); ?></th>
-							<td><input type="text" name="agency_number" value="<?php echo esc_attr( $agency_number ); ?>" /></td>
-						</tr>
-
+						<?php
+						$properties_fields = $this->get_properties_fields();
+						foreach ( $properties_fields as $key => $value ) {
+							echo '<tr valign="top">';
+							echo '<th scope="row">' . $value . '</th>';
+							echo '<td><select name="iip_var_' . $value . '">';
+							echo '</select></td>';
+							echo '</tr>';
+						}
+						?>
 					</table>
 
 					<?php submit_button(); ?>
@@ -196,6 +204,99 @@ class IIP_Admin {
 			<?php
 		}
 
+	}
+
+	private function get_properties_fields() {
+		$properties_fields = [
+			'cod_ofer'         => __( '', 'import-inmovilla-properties' ),
+			'keyacci'          => __( '', 'import-inmovilla-properties' ),
+			'banyos'           => __( '', 'import-inmovilla-properties' ),
+			'ref'              => __( 'SKU', 'import-inmovilla-properties' ),
+			'nodisponible'     => __( '', 'import-inmovilla-properties' ),
+			'precioreal'       => __( 'Real price', 'import-inmovilla-properties' ),
+			'preciotraspaso'   => __( '', 'import-inmovilla-properties' ),
+			'precioinmo'       => __( '', 'import-inmovilla-properties' ),
+			'key_loca'         => __( '', 'import-inmovilla-properties' ),
+			'key_zona'         => __( '', 'import-inmovilla-properties' ),
+			'key_tipo'         => __( '', 'import-inmovilla-properties' ),
+			'm_parcela'        => __( '', 'import-inmovilla-properties' ),
+			'balcon'           => __( '', 'import-inmovilla-properties' ),
+			'm_cons'           => __( '', 'import-inmovilla-properties' ),
+			'm_uties'          => __( '', 'import-inmovilla-properties' ),
+			'conservacion'     => __( '', 'import-inmovilla-properties' ),
+			'calefacentral'    => __( '', 'import-inmovilla-properties' ),
+			'airecentral'      => __( '', 'import-inmovilla-properties' ),
+			'plaza_gara'       => __( '', 'import-inmovilla-properties' ),
+			'terraza'          => __( '', 'import-inmovilla-properties' ),
+			'ascensor'         => __( '', 'import-inmovilla-properties' ),
+			'montacargas'      => __( '', 'import-inmovilla-properties' ),
+			'muebles'          => __( '', 'import-inmovilla-properties' ),
+			'calefaccion'      => __( '', 'import-inmovilla-properties' ),
+			'aire_con'         => __( '', 'import-inmovilla-properties' ),
+			'primera_line'     => __( '', 'import-inmovilla-properties' ),
+			'piscina_com'      => __( '', 'import-inmovilla-properties' ),
+			'piscina_prop'     => __( '', 'import-inmovilla-properties' ),
+			'habitaciones'     => __( '', 'import-inmovilla-properties' ),
+			'total_hab'        => __( '', 'import-inmovilla-properties' ),
+			'sumaseos'         => __( '', 'import-inmovilla-properties' ),
+			'repercusion'      => __( '', 'import-inmovilla-properties' ),
+			'exclu'            => __( '', 'import-inmovilla-properties' ),
+			'parking'          => __( '', 'import-inmovilla-properties' ),
+			'todoext'          => __( '', 'import-inmovilla-properties' ),
+			'distmar'          => __( '', 'import-inmovilla-properties' ),
+			'numagencia'       => __( '', 'import-inmovilla-properties' ),
+			'estadoficha'      => __( '', 'import-inmovilla-properties' ),
+			'precioalq'        => __( '', 'import-inmovilla-properties' ),
+			'keycalefa'        => __( '', 'import-inmovilla-properties' ),
+			'eninternet'       => __( '', 'import-inmovilla-properties' ),
+			'zonaauxiliar'     => __( '', 'import-inmovilla-properties' ),
+			'urbanizacion'     => __( '', 'import-inmovilla-properties' ),
+			'destacado'        => __( '', 'import-inmovilla-properties' ),
+			'habdobles'        => __( '', 'import-inmovilla-properties' ),
+			'destestrella'     => __( '', 'import-inmovilla-properties' ),
+			'opcioncompra'     => __( '', 'import-inmovilla-properties' ),
+			'm_terraza'        => __( '', 'import-inmovilla-properties' ),
+			'interesante'      => __( '', 'import-inmovilla-properties' ),
+			'altitud'          => __( '', 'import-inmovilla-properties' ),
+			'latitud'          => __( '', 'import-inmovilla-properties' ),
+			'mls'              => __( '', 'import-inmovilla-properties' ),
+			'numfotos'         => __( '', 'import-inmovilla-properties' ),
+			'fotoletra'        => __( '', 'import-inmovilla-properties' ),
+			'keypromo'         => __( '', 'import-inmovilla-properties' ),
+			'fechacambio'      => __( '', 'import-inmovilla-properties' ),
+			'fechaact'         => __( '', 'import-inmovilla-properties' ),
+			'entidadbancaria'  => __( '', 'import-inmovilla-properties' ),
+			'vistasalmar'      => __( '', 'import-inmovilla-properties' ),
+			'grupomls'         => __( '', 'import-inmovilla-properties' ),
+			'numsucursal'      => __( '', 'import-inmovilla-properties' ),
+			'energiarecibido'  => __( '', 'import-inmovilla-properties' ),
+			'vistasdespejadas' => __( '', 'import-inmovilla-properties' ),
+			'grupoxmls'        => __( '', 'import-inmovilla-properties' ),
+			'grupomil'         => __( '', 'import-inmovilla-properties' ),
+			'x_personal'       => __( '', 'import-inmovilla-properties' ),
+			'mascotas'         => __( '', 'import-inmovilla-properties' ),
+			'aconsultar'       => __( '', 'import-inmovilla-properties' ),
+			'outlet'           => __( '', 'import-inmovilla-properties' ),
+			'aseos'            => __( '', 'import-inmovilla-properties' ),
+			'tipomensual'      => __( '', 'import-inmovilla-properties' ),
+			'idagente'         => __( '', 'import-inmovilla-properties' ),
+			'nombreagente'     => __( '', 'import-inmovilla-properties' ),
+			'apellidosagente'  => __( '', 'import-inmovilla-properties' ),
+			'emailagente'      => __( '', 'import-inmovilla-properties' ),
+			'telefono1agente'  => __( '', 'import-inmovilla-properties' ),
+			'telefono2agente'  => __( '', 'import-inmovilla-properties' ),
+			'srvfotos'         => __( '', 'import-inmovilla-properties' ),
+			'soysrv'           => __( '', 'import-inmovilla-properties' ),
+			'agencia'          => __( '', 'import-inmovilla-properties' ),
+			'ciudad'           => __( '', 'import-inmovilla-properties' ),
+			'zona'             => __( '', 'import-inmovilla-properties' ),
+			'nbtipo'           => __( '', 'import-inmovilla-properties' ),
+			'nbconservacion'   => __( '', 'import-inmovilla-properties' ),
+			'fotoagente'       => __( '', 'import-inmovilla-properties' ),
+			'keyprov'          => __( '', 'import-inmovilla-properties' ),
+		];
+
+		return $properties_fields;
 	}
 	/**
 	 * Gets information from Inmovilla CRM
@@ -236,43 +337,7 @@ class IIP_Admin {
 		} else {
 			return false;
 		}
-/*
-function geturl($url,$campospost)
-{
-	$header[0] = "Accept: text/xml,application/xml,application/xhtml+xml,";
-	$header[0] .= "text/html;q=0.9,text/plain;q=0.8,image/png,/*;q=0.5";
-	$header[] = "Cache-Control: max-age=0";
-	$header[] = "Connection: keep-alive";
-	$header[] = "Keep-Alive: 300";
-	$header[] = "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7";
-	$header[] = "Accept-Language: en-us,en;q=0.5";
-	$header[] = "Pragma: ";
 
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-	curl_setopt($ch, CURLOPT_POSTFIELDS,'');
-	curl_setopt($ch, CURLOPT_POST, 1);
-	curl_setopt($ch, CURLOPT_HEADER, 0);
-	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-	if (strlen($campospost)>0) {
-		//los datos tienen que ser reales, de no ser asi se desactivara el servicio
-		$_SERVER["REMOTE_ADDR"] = '84.220.176.253';
-		$_SERVER["HTTP_X_FORWARDED_FOR"] = '84.120.176.252';
-
-		$campospost=$campospost . "&ia=84.120.210.5&ib=42.5.120.1";
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $campospost);
-	}
-	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-	curl_setopt($ch, CURLOPT_COOKIEJAR, $cookie);
-	curl_setopt($ch, CURLOPT_COOKIEFILE, $cookie);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3");
-	$page = curl_exec($ch);
-	curl_close($ch);
-
-	return $page;
-}*/
 
 	}
 }
