@@ -179,6 +179,11 @@ class IIP_Admin {
 			echo '<pre>iip_merge_vars';
 			print_r($property_base['paginacion'][1]);
 			echo '</pre>';*/
+
+			$custom_fields = $this->get_all_custom_fields( $post_type );
+			echo '<pre>';
+			print_r($custom_fields);
+			echo '</pre>';
 			?>
 			<div class="wrap">
 				<h1><?php esc_html_e( 'Merge Variables with custom values', 'import-inmovilla-properties'); ?></h1>
@@ -192,6 +197,7 @@ class IIP_Admin {
 							echo '<tr valign="top">';
 							echo '<th scope="row">' . $value . '</th>';
 							echo '<td><select name="iip_var_' . $value . '">';
+							
 							echo '</select></td>';
 							echo '</tr>';
 						}
@@ -208,27 +214,88 @@ class IIP_Admin {
 
 	private function get_properties_fields() {
 		$properties_fields = [
-			'cod_ofer'         => __( '', 'import-inmovilla-properties' ),
-			'keyacci'          => __( '', 'import-inmovilla-properties' ),
-			'banyos'           => __( '', 'import-inmovilla-properties' ),
+			// Features.
+			'cod_ofer'         => __( 'Reference', 'import-inmovilla-properties' ),
+			'keyacci'          => __( 'Operation Type', 'import-inmovilla-properties' ),
+			'key_tipo'         => __( 'Property Type', 'import-inmovilla-properties' ),
+			'key_loca'         => __( 'City', 'import-inmovilla-properties' ),
+			'key_zona'         => __( 'Zone', 'import-inmovilla-properties' ),
+			'zonaauxiliar'     => __( 'Complementary Zone', 'import-inmovilla-properties' ),
+			'keycalle'         => __( 'Street key', 'import-inmovilla-properties' ),
+			'calle'            => __( 'Street', 'import-inmovilla-properties' ),
+			'numero'           => __( 'Street number', 'import-inmovilla-properties' ),
+			'cp'               => __( 'ZIP', 'import-inmovilla-properties' ),
+			'altura'           => __( 'Height', 'import-inmovilla-properties' ),
+			'planta'           => __( 'Block', 'import-inmovilla-properties' ),
+			'planta'           => __( 'Floor', 'import-inmovilla-properties' ),
+			'puerta'           => __( 'Door', 'import-inmovilla-properties' ),
+			'escalera'         => __( 'Stairs', 'import-inmovilla-properties' ),
+			'bloque'           => __( 'Block', 'import-inmovilla-properties' ),
+			'edificio'         => __( 'Building', 'import-inmovilla-properties' ),
+			'fecha'            => __( 'Date creation', 'import-inmovilla-properties' ),
+			'fechaact'         => __( 'Date updated', 'import-inmovilla-properties' ),
+			// Surfaces.
+			'm_uties'          => __( 'Useful square meters', 'import-inmovilla-properties' ),
+			'm_cons'           => __( 'Square Meters built', 'import-inmovilla-properties' ),
+			'm_parcela'        => __( 'Square Meters plot', 'import-inmovilla-properties' ),
+			'm_terraza'        => __( 'Square Meters terrace', 'import-inmovilla-properties' ),
+			'm_cocina'         => __( 'Square Meters kitchen', 'import-inmovilla-properties' ),
+			'm_comedor'        => __( 'Square Meters dinning room', 'import-inmovilla-properties' ),
+			'm_salon'          => __( 'Square Meters living room', 'import-inmovilla-properties' ),
+			'm_patio'          => __( 'Square Meters playground', 'import-inmovilla-properties' ),
+			'm_buhardilla'     => __( 'Square Meters attic', 'import-inmovilla-properties' ),
+			'm_pplanta'        => __( 'Square Meters first floor', 'import-inmovilla-properties' ),
+			'm_sotano'         => __( 'Square Meters ground floor', 'import-inmovilla-properties' ),
+			// Distribution
+			'habdobles'        => __( 'Number of Double rooms', 'import-inmovilla-properties' ),
+			'habitaciones'     => __( 'Number of Rooms', 'import-inmovilla-properties' ),
+			'banyos'           => __( 'Number of Bathrooms', 'import-inmovilla-properties' ),
+			'aseos'            => __( 'Number of Toilets', 'import-inmovilla-properties' ),
+			'salon'            => __( 'Number of Living rooms', 'import-inmovilla-properties' ),
+			'numapar'          => __( 'Number of Parkings', 'import-inmovilla-properties' ),
+			'numplanta'        => __( 'Number of floors', 'import-inmovilla-properties' ),
+			'numplanta'        => __( 'Number of floors', 'import-inmovilla-properties' ),
+			'antiguedad'       => __( 'Construction year', 'import-inmovilla-properties' ),
+			'distmar'          => __( 'Beach distance', 'import-inmovilla-properties' ),
+			'gastos_com'       => __( 'Community Expenses', 'import-inmovilla-properties' ),
+			'tgascom'          => __( 'Community periodicity', 'import-inmovilla-properties' ),
+			'ibi'              => __( 'I.B.I.', 'import-inmovilla-properties' ),
+			// Property Data
+			'conservacion'     => __( 'Status', 'import-inmovilla-properties' ),
+			'keycarpinext'     => __( 'External woodwork', 'import-inmovilla-properties' ),
+			'keysuelo'         => __( 'Ground', 'import-inmovilla-properties' ),
+			'keyori'           => __( 'Orientation', 'import-inmovilla-properties' ),
+			'keycarpin'        => __( 'Internal woodwork', 'import-inmovilla-properties' ),
+			'todoext'          => __( 'All external', 'import-inmovilla-properties' ),
+			'keyvista'         => __( 'Views', 'import-inmovilla-properties' ),
+			'keycalefa'        => __( 'Heating Type', 'import-inmovilla-properties' ),
+			'keyagua'          => __( 'Hot water', 'import-inmovilla-properties' ),
+			'cocina_inde'      => __( 'Kitchen Type', 'import-inmovilla-properties' ),
+			'electro'          => __( 'Home Appliances', 'import-inmovilla-properties' ),
+			'tipovpo'          => __( 'Regimen', 'import-inmovilla-properties' ),
+			'keyelectricidad'  => __( 'Electrical installation', 'import-inmovilla-properties' ),
+			'keyfachada'       => __( 'Facade', 'import-inmovilla-properties' ),
+			// Energetic certification.
+			'energiarecibido'  => __( 'Energetic certification', 'import-inmovilla-properties' ),
+			'energialetra'     => __( 'Energetic certification rating', 'import-inmovilla-properties' ),
+			'energiavalor'     => __( 'Energetic certification value', 'import-inmovilla-properties' ),
+			'emisionesletra'   => __( 'Emissions Rating', 'import-inmovilla-properties' ),
+			'emisionesvalor'   => __( 'Emissions value', 'import-inmovilla-properties' ),
+			'refcertificado'   => __( 'Certification reference', 'import-inmovilla-properties' ),
+			// Qualities.
+
+			'fechacambio'      => __( '', 'import-inmovilla-properties' ),
 			'ref'              => __( 'SKU', 'import-inmovilla-properties' ),
 			'nodisponible'     => __( '', 'import-inmovilla-properties' ),
 			'precioreal'       => __( 'Real price', 'import-inmovilla-properties' ),
 			'preciotraspaso'   => __( '', 'import-inmovilla-properties' ),
 			'precioinmo'       => __( '', 'import-inmovilla-properties' ),
-			'key_loca'         => __( '', 'import-inmovilla-properties' ),
-			'key_zona'         => __( '', 'import-inmovilla-properties' ),
-			'key_tipo'         => __( '', 'import-inmovilla-properties' ),
-			'm_parcela'        => __( '', 'import-inmovilla-properties' ),
 			'balcon'           => __( '', 'import-inmovilla-properties' ),
-			'm_cons'           => __( '', 'import-inmovilla-properties' ),
-			'm_uties'          => __( '', 'import-inmovilla-properties' ),
-			'conservacion'     => __( '', 'import-inmovilla-properties' ),
 			'calefacentral'    => __( '', 'import-inmovilla-properties' ),
 			'airecentral'      => __( '', 'import-inmovilla-properties' ),
 			'plaza_gara'       => __( '', 'import-inmovilla-properties' ),
 			'terraza'          => __( '', 'import-inmovilla-properties' ),
-			'ascensor'         => __( '', 'import-inmovilla-properties' ),
+			'ascensor'         => __( 'Lift', 'import-inmovilla-properties' ),
 			'montacargas'      => __( '', 'import-inmovilla-properties' ),
 			'muebles'          => __( '', 'import-inmovilla-properties' ),
 			'calefaccion'      => __( '', 'import-inmovilla-properties' ),
@@ -236,26 +303,19 @@ class IIP_Admin {
 			'primera_line'     => __( '', 'import-inmovilla-properties' ),
 			'piscina_com'      => __( '', 'import-inmovilla-properties' ),
 			'piscina_prop'     => __( '', 'import-inmovilla-properties' ),
-			'habitaciones'     => __( '', 'import-inmovilla-properties' ),
 			'total_hab'        => __( '', 'import-inmovilla-properties' ),
 			'sumaseos'         => __( '', 'import-inmovilla-properties' ),
 			'repercusion'      => __( '', 'import-inmovilla-properties' ),
 			'exclu'            => __( '', 'import-inmovilla-properties' ),
 			'parking'          => __( '', 'import-inmovilla-properties' ),
-			'todoext'          => __( '', 'import-inmovilla-properties' ),
-			'distmar'          => __( '', 'import-inmovilla-properties' ),
 			'numagencia'       => __( '', 'import-inmovilla-properties' ),
 			'estadoficha'      => __( '', 'import-inmovilla-properties' ),
 			'precioalq'        => __( '', 'import-inmovilla-properties' ),
-			'keycalefa'        => __( '', 'import-inmovilla-properties' ),
 			'eninternet'       => __( '', 'import-inmovilla-properties' ),
-			'zonaauxiliar'     => __( '', 'import-inmovilla-properties' ),
 			'urbanizacion'     => __( '', 'import-inmovilla-properties' ),
 			'destacado'        => __( '', 'import-inmovilla-properties' ),
-			'habdobles'        => __( '', 'import-inmovilla-properties' ),
 			'destestrella'     => __( '', 'import-inmovilla-properties' ),
 			'opcioncompra'     => __( '', 'import-inmovilla-properties' ),
-			'm_terraza'        => __( '', 'import-inmovilla-properties' ),
 			'interesante'      => __( '', 'import-inmovilla-properties' ),
 			'altitud'          => __( '', 'import-inmovilla-properties' ),
 			'latitud'          => __( '', 'import-inmovilla-properties' ),
@@ -263,13 +323,10 @@ class IIP_Admin {
 			'numfotos'         => __( '', 'import-inmovilla-properties' ),
 			'fotoletra'        => __( '', 'import-inmovilla-properties' ),
 			'keypromo'         => __( '', 'import-inmovilla-properties' ),
-			'fechacambio'      => __( '', 'import-inmovilla-properties' ),
-			'fechaact'         => __( '', 'import-inmovilla-properties' ),
 			'entidadbancaria'  => __( '', 'import-inmovilla-properties' ),
 			'vistasalmar'      => __( '', 'import-inmovilla-properties' ),
 			'grupomls'         => __( '', 'import-inmovilla-properties' ),
 			'numsucursal'      => __( '', 'import-inmovilla-properties' ),
-			'energiarecibido'  => __( '', 'import-inmovilla-properties' ),
 			'vistasdespejadas' => __( '', 'import-inmovilla-properties' ),
 			'grupoxmls'        => __( '', 'import-inmovilla-properties' ),
 			'grupomil'         => __( '', 'import-inmovilla-properties' ),
@@ -277,7 +334,6 @@ class IIP_Admin {
 			'mascotas'         => __( '', 'import-inmovilla-properties' ),
 			'aconsultar'       => __( '', 'import-inmovilla-properties' ),
 			'outlet'           => __( '', 'import-inmovilla-properties' ),
-			'aseos'            => __( '', 'import-inmovilla-properties' ),
 			'tipomensual'      => __( '', 'import-inmovilla-properties' ),
 			'idagente'         => __( '', 'import-inmovilla-properties' ),
 			'nombreagente'     => __( '', 'import-inmovilla-properties' ),
@@ -337,9 +393,46 @@ class IIP_Admin {
 		} else {
 			return false;
 		}
-
-
 	}
+	
+	function get_all_custom_fields( $post_type ){
+		global $wpdb, $table_prefix;
+		/*
+		// Try and get it from the transient if possible.
+		$fields = get_transient( 'woocommerce_gpf_meta_prepopulate_options' );
+		if ( false !== $fields ) {
+			return $fields;
+		}*/
+		// If not, query for it and store it for later.
+		$fields    = array();
+		$sql       = "SELECT DISTINCT( {$table_prefix}postmeta.meta_key )
+				FROM {$table_prefix}posts
+				LEFT JOIN {$table_prefix}postmeta
+					ON {$table_prefix}posts.ID = {$table_prefix}postmeta.post_id
+					WHERE {$table_prefix}posts.post_type IN '{$post_type}'";
+		$meta_keys = $wpdb->get_col( $sql );
+
+		echo '<pre>';
+		echo $sql;
+		print_r($meta_keys);
+		echo '</pre>';
+		foreach ( $meta_keys as $meta_key ) {
+			// Skip internal meta values that start with an _
+			if ( stripos( $meta_key, '_' ) === 0 ) {
+				continue;
+			}
+			$fields[ 'meta:' . $meta_key ] = $meta_key;
+		}
+		// Add a grouping header if we have some results.
+		if ( ! empty( $fields ) ) {
+			$fields = array_merge( array( 'disabled:meta' => __( '- Custom fields -', 'woo_gpf' ) ), $fields );
+		}
+		$fields = apply_filters( 'woocommerce_gpf_custom_field_list', $fields );
+		//set_transient( 'woocommerce_gpf_meta_prepopulate_options', $fields, MONTH_IN_SECONDS );
+		return $fields;
+	}
+
+	
 }
 
 new IIP_Admin( __FILE__ );
