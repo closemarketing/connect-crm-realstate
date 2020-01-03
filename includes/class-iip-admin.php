@@ -181,8 +181,6 @@ class IIP_Admin {
 			echo '</pre>';*/
 
 			$custom_fields = $this->get_all_custom_fields( $post_type );
-			echo '<pre>';
-			print_r($custom_fields);
 			echo '</pre>';
 			?>
 			<div class="wrap">
@@ -197,7 +195,7 @@ class IIP_Admin {
 							echo '<tr valign="top">';
 							echo '<th scope="row">' . $value . '</th>';
 							echo '<td><select name="iip_var_' . $value . '">';
-							
+							$this->fields_to_option( $custom_fields, $value );
 							echo '</select></td>';
 							echo '</tr>';
 						}
@@ -394,45 +392,48 @@ class IIP_Admin {
 			return false;
 		}
 	}
-	
-	function get_all_custom_fields( $post_type ){
+
+	/**
+	 * Return all meta keys from WordPress database in post type
+	 *
+	 * @param string $post_type Post type.
+	 * @return array Array of metakeys.
+	 */
+	private function get_all_custom_fields( $post_type ) {
 		global $wpdb, $table_prefix;
-		/*
-		// Try and get it from the transient if possible.
-		$fields = get_transient( 'woocommerce_gpf_meta_prepopulate_options' );
-		if ( false !== $fields ) {
-			return $fields;
-		}*/
 		// If not, query for it and store it for later.
 		$fields    = array();
 		$sql       = "SELECT DISTINCT( {$table_prefix}postmeta.meta_key )
 				FROM {$table_prefix}posts
 				LEFT JOIN {$table_prefix}postmeta
 					ON {$table_prefix}posts.ID = {$table_prefix}postmeta.post_id
-					WHERE {$table_prefix}posts.post_type IN '{$post_type}'";
+					WHERE {$table_prefix}posts.post_type = '{$post_type}'";
 		$meta_keys = $wpdb->get_col( $sql );
 
-		echo '<pre>';
-		echo $sql;
-		print_r($meta_keys);
-		echo '</pre>';
-		foreach ( $meta_keys as $meta_key ) {
-			// Skip internal meta values that start with an _
-			if ( stripos( $meta_key, '_' ) === 0 ) {
-				continue;
-			}
-			$fields[ 'meta:' . $meta_key ] = $meta_key;
-		}
-		// Add a grouping header if we have some results.
-		if ( ! empty( $fields ) ) {
-			$fields = array_merge( array( 'disabled:meta' => __( '- Custom fields -', 'woo_gpf' ) ), $fields );
-		}
-		$fields = apply_filters( 'woocommerce_gpf_custom_field_list', $fields );
-		//set_transient( 'woocommerce_gpf_meta_prepopulate_options', $fields, MONTH_IN_SECONDS );
-		return $fields;
+		return $meta_keys;
 	}
 
-	
+	/**
+	 * Converts an array to option html
+	 *
+	 * @param array  $custom_fields Custom fields array.
+	 * @param string $value Value of option selected.
+	 * @return void
+	 */
+	private function fields_to_option( $custom_fields, $value ) {
+		echo '<option value=""';
+		if ( '' === $value ) {
+			echo ' selected';
+		}
+		echo '></option>';
+		foreach ( $custom_fields as $meta_key ) {
+			echo '<option value="' . esc_html( $meta_key ) . '"';
+			if ( ( $value === $meta_key ) || ( ! $value && 1 === $meta_key ) ) {
+				echo ' selected';
+			}
+			echo '>' . esc_html( $meta_key ) . '</option>';
+		}
+	}
 }
 
 new IIP_Admin( __FILE__ );
