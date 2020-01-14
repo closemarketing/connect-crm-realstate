@@ -245,7 +245,7 @@ class IIP_Admin {
 			}
 			?>
 			<div class="wrap">
-				<h1><?php esc_html_e( 'Merge Variables with custom values', 'import-inmovilla-properties'); ?></h1>
+				<h1><?php esc_html_e( 'Merge Variables with custom values', 'import-inmovilla-properties' ); ?></h1>
 				<form method="post" action="options.php">
 					<?php settings_fields( 'iip_plugin_merge_group' ); ?>
 					<?php do_settings_sections( 'iip_plugin_merge_group' ); ?>
@@ -278,6 +278,7 @@ class IIP_Admin {
 							$col = 1;
 						}
 					}
+					echo '</div>';
 
 					submit_button();
 					?>
@@ -389,76 +390,31 @@ class IIP_Admin {
 				],
 			],
 			[
-				'section' => 'others',
-				'label'   => __( 'Others', 'import-inmovilla-properties' ),
+				'section' => 'features',
+				'label'   => __( 'Features', 'import-inmovilla-properties' ),
+				'type'    => 'taxonomy',
+				'fields'  => [
+					'ofertas.adaptadominus' => __( '', 'import-inmovilla-properties' ),
+					'ofertas.agua'    => __( 'Water', 'import-inmovilla-properties' ),
+					'ofertas.airecentral'    => __( '', 'import-inmovilla-properties' ),
+					''  => __( '', 'import-inmovilla-properties' ),
+				],
+			],
+			[
+				'section' => 'sell-data',
+				'label'   => __( 'Sell data', 'import-inmovilla-properties' ),
 				'fields' => [
-
-					'fechacambio'      => __( '', 'import-inmovilla-properties' ),
-					'ref'              => __( 'SKU', 'import-inmovilla-properties' ),
-					'nodisponible'     => __( '', 'import-inmovilla-properties' ),
-					'precioreal'       => __( 'Real price', 'import-inmovilla-properties' ),
-					'preciotraspaso'   => __( '', 'import-inmovilla-properties' ),
-					'precioinmo'       => __( '', 'import-inmovilla-properties' ),
-					'balcon'           => __( '', 'import-inmovilla-properties' ),
-					'calefacentral'    => __( '', 'import-inmovilla-properties' ),
-					'airecentral'      => __( '', 'import-inmovilla-properties' ),
-					'plaza_gara'       => __( '', 'import-inmovilla-properties' ),
-					'terraza'          => __( '', 'import-inmovilla-properties' ),
-					'ascensor'         => __( 'Lift', 'import-inmovilla-properties' ),
-					'montacargas'      => __( '', 'import-inmovilla-properties' ),
-					'muebles'          => __( '', 'import-inmovilla-properties' ),
-					'calefaccion'      => __( '', 'import-inmovilla-properties' ),
-					'aire_con'         => __( '', 'import-inmovilla-properties' ),
-					'primera_line'     => __( '', 'import-inmovilla-properties' ),
-					'piscina_com'      => __( '', 'import-inmovilla-properties' ),
-					'piscina_prop'     => __( '', 'import-inmovilla-properties' ),
-					'total_hab'        => __( '', 'import-inmovilla-properties' ),
-					'sumaseos'         => __( '', 'import-inmovilla-properties' ),
-					'repercusion'      => __( '', 'import-inmovilla-properties' ),
-					'exclu'            => __( '', 'import-inmovilla-properties' ),
-					'parking'          => __( '', 'import-inmovilla-properties' ),
-					'numagencia'       => __( '', 'import-inmovilla-properties' ),
-					'estadoficha'      => __( '', 'import-inmovilla-properties' ),
-					'precioalq'        => __( '', 'import-inmovilla-properties' ),
-					'eninternet'       => __( '', 'import-inmovilla-properties' ),
-					'urbanizacion'     => __( '', 'import-inmovilla-properties' ),
-					'destacado'        => __( '', 'import-inmovilla-properties' ),
-					'destestrella'     => __( '', 'import-inmovilla-properties' ),
-					'opcioncompra'     => __( '', 'import-inmovilla-properties' ),
-					'interesante'      => __( '', 'import-inmovilla-properties' ),
-					'altitud'          => __( '', 'import-inmovilla-properties' ),
-					'latitud'          => __( '', 'import-inmovilla-properties' ),
-					'mls'              => __( '', 'import-inmovilla-properties' ),
-					'numfotos'         => __( '', 'import-inmovilla-properties' ),
-					'fotoletra'        => __( '', 'import-inmovilla-properties' ),
-					'keypromo'         => __( '', 'import-inmovilla-properties' ),
-					'entidadbancaria'  => __( '', 'import-inmovilla-properties' ),
-					'vistasalmar'      => __( '', 'import-inmovilla-properties' ),
-					'grupomls'         => __( '', 'import-inmovilla-properties' ),
-					'numsucursal'      => __( '', 'import-inmovilla-properties' ),
-					'vistasdespejadas' => __( '', 'import-inmovilla-properties' ),
-					'grupoxmls'        => __( '', 'import-inmovilla-properties' ),
-					'grupomil'         => __( '', 'import-inmovilla-properties' ),
-					'x_personal'       => __( '', 'import-inmovilla-properties' ),
-					'mascotas'         => __( '', 'import-inmovilla-properties' ),
-					'aconsultar'       => __( '', 'import-inmovilla-properties' ),
-					'outlet'           => __( '', 'import-inmovilla-properties' ),
-					'tipomensual'      => __( '', 'import-inmovilla-properties' ),
-					'idagente'         => __( '', 'import-inmovilla-properties' ),
-					'nombreagente'     => __( '', 'import-inmovilla-properties' ),
-					'apellidosagente'  => __( '', 'import-inmovilla-properties' ),
-					'emailagente'      => __( '', 'import-inmovilla-properties' ),
-					'telefono1agente'  => __( '', 'import-inmovilla-properties' ),
-					'telefono2agente'  => __( '', 'import-inmovilla-properties' ),
-					'srvfotos'         => __( '', 'import-inmovilla-properties' ),
-					'soysrv'           => __( '', 'import-inmovilla-properties' ),
-					'agencia'          => __( '', 'import-inmovilla-properties' ),
-					'ciudad'           => __( '', 'import-inmovilla-properties' ),
-					'zona'             => __( '', 'import-inmovilla-properties' ),
-					'nbtipo'           => __( '', 'import-inmovilla-properties' ),
-					'nbconservacion'   => __( '', 'import-inmovilla-properties' ),
-					'fotoagente'       => __( '', 'import-inmovilla-properties' ),
-					'keyprov'          => __( '', 'import-inmovilla-properties' ),
+					'ofertas.preciotraspaso' => __( '', 'import-inmovilla-properties' ),
+					'ofertas.precio'  => __( 'Price', 'import-inmovilla-properties' ),
+					''  => __( '', 'import-inmovilla-properties' ),
+					''  => __( '', 'import-inmovilla-properties' ),
+					''  => __( '', 'import-inmovilla-properties' ),
+					''  => __( '', 'import-inmovilla-properties' ),
+					''  => __( '', 'import-inmovilla-properties' ),
+					''  => __( '', 'import-inmovilla-properties' ),
+					''  => __( '', 'import-inmovilla-properties' ),
+					''  => __( '', 'import-inmovilla-properties' ),
+					''  => __( '', 'import-inmovilla-properties' ),
 				],
 			],
 		];
