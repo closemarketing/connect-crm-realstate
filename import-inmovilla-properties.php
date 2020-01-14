@@ -14,6 +14,8 @@
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
 
+define( 'IIP_VERSION', '0.1' );
+
 // Loads translation.
 load_plugin_textdomain( 'import-inmovilla-properties', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 

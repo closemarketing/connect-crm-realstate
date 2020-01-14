@@ -1,0 +1,47 @@
+.iip-column {
+      float: left;
+      padding: 10px 0;
+}
+
+.iip-column.col-9 {
+      width: 75%;
+}
+
+.iip-column.col-8 {
+      width: 70%;
+}
+
+.iip-column.col-6 {
+      width: 50%;
+}
+
+.iip-column.col-4 {
+      width: 30%;
+}
+
+.iip-column.col-3 {
+      width: 25%;
+}
+
+.iip-column.col-12 {
+      width: 100%;
+}
+
+.iip-row:after {
+      content: "";
+      display: table;
+      clear: both;
+}
+
+/**
+ * # Table
+ * ---------------------------------------------------------------------------------------------------- */
+
+.form-table.iip-table th {
+	padding-bottom: 0;
+	width: 130px;
+}
+
+.form-table.iip-table td {
+	padding-bottom: 0;
+}
