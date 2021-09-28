@@ -111,7 +111,7 @@ class IIP_Admin {
 		echo '</h2>';
 
 		if ( 'iip-import' === $active_tab ) {
-
+			echo '<div id="sync-inmovilla-engine"></div>';
 		}
 
 		if ( 'iip-settings' === $active_tab ) {

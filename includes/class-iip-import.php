@@ -66,7 +66,7 @@ class IIP_Import {
 		<script type="text/javascript">
 			var loop=0;
 			jQuery(function($){
-				$(document).find('#mainform').after('<div class="sync-wrapper"><h2><?php _e( 'Import Products from Holded', 'import-holded-products-woocommerce' ); ?></h2><p><?php _e( 'After you fillup the API settings, use the button below to import the products. The importing process may take a while and you need to keep this page open to complete it.', 'import-holded-products-woocommerce' ); ?><br/></p><button id="start-sync" class="button button-primary"><?php _e( 'Start Import', 'import-holded-products-woocommerce' ); ?></button></div>');
+				$(document).find('#sync-inmovilla-engine').after('<div class="sync-wrapper"><h2><?php _e( 'Import Products from Holded', 'import-holded-products-woocommerce' ); ?></h2><p><?php _e( 'After you fillup the API settings, use the button below to import the products. The importing process may take a while and you need to keep this page open to complete it.', 'import-holded-products-woocommerce' ); ?><br/></p><button id="start-sync" class="button button-primary"><?php _e( 'Start Import', 'import-holded-products-woocommerce' ); ?></button></div>');
 				$(document).find('#start-sync').on('click', function(){
 					$(this).attr('disabled','disabled');
 					$(this).after('<span class="spinner is-active"></span>');
