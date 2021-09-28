@@ -21,4 +21,4 @@ load_plugin_textdomain( 'import-inmovilla-properties', false, dirname( plugin_ba
 
 // Includes files.
 require_once dirname( __FILE__ ) . '/includes/class-iip-admin.php';
-//require_once dirname( __FILE__ ) . '/lib/class-iip-import.php';
+require_once dirname( __FILE__ ) . '/includes/class-iip-import.php';

@@ -36,17 +36,17 @@ class IIP_Import {
 	public function __construct( $file ) {
 		$this->file = $file;
 		$this->ajax_msg = '';
-		add_action( 'admin_print_footer_scripts', array( $this, 'iip_admin_print_footer_scripts' ), 11, 1 );
-		add_action( 'wp_ajax_iip_import_products', array( $this, 'iip_import_products' ) );
+		add_action( 'admin_print_footer_scripts', array( $this, 'admin_print_footer_scripts' ), 11, 1 );
+		add_action( 'wp_ajax_import_products', array( $this, 'import_products' ) );
 
-		// add_action( iip_CRON, array( $this,'iip_import_products' ) );
+		add_action( iip_CRON, array( $this, 'import_products' ) );
 	}
 	/**
 	 * Imports products from Holded
 	 *
 	 * @return void
 	 */
-	public function iip_import_products() {
+	public function import_products() {
 		$this->iip_import_method_products();
 
 		/*
@@ -55,10 +55,10 @@ class IIP_Import {
 		wp_mail( get_option( 'admin_email' ), __( 'Products Synced in', 'import-holded-products-woocommerce' ) . ' ' . get_option( 'blogname' ), '', $headers );*/
 	}
 
-	public function iip_admin_print_footer_scripts() {
-		$screen = get_current_screen();
-		$get_section = isset( $_GET['section'] ) ? $_GET['section'] : '';
-		if ( $screen->base == 'woocommerce_page_wc-settings' && $_GET['tab'] == 'products' && $get_section == 'wcpimh-holded' ) {
+	public function admin_print_footer_scripts() {
+		$screen  = get_current_screen();
+		$get_tab = isset( $_GET['tab'] ) ? (string) $_GET['tab'] : '';
+		if ( 'toplevel_page_iip-options' === $screen->base && 'iip-import' === $get_tab ) {
 			?>
 		<style>
 			.spinner{ float: none; }
@@ -77,7 +77,7 @@ class IIP_Import {
 							url: "<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>",
 							dataType: "json",
 							data: {
-								action: "iip_import_products",
+								action: "import_products",
 								syncLoop: x
 							},
 							success: function(results) {
