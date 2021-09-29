@@ -112,28 +112,7 @@ class IIP_Import {
 			<?php
 		}
 	}
-	/**
-	 * Gets information from Holded CRM
-	 *
-	 * @return array
-	 */
-	private function get_products() {
-		$apikey = get_option( 'iip_api' );
-		$args = array(
-			'headers' => array(
-				'key' => $apikey,
-			)
-		);
-		$response = wp_remote_get( 'https://api.holded.com/api/invoicing/v1/products', $args );
-		if ( 200 === $response['response']['code'] ) {
-			$body = wp_remote_retrieve_body( $response );
 
-			return $body;
-		} else {
-			return false;
-		}
-
-	}
 	/**
 	 * Update product meta with the object included
 	 *
@@ -311,7 +290,15 @@ class IIP_Import {
 		$syncLoop     = isset( $syncLoop ) ? $syncLoop : 0;
 
 		if ( ! isset( $this->products ) ) {
-			$this->products = $this->get_products();
+			$args_api = array(
+				'paginacion',
+				1,
+				100,
+				'ascensor=1',
+				'precioinmo, precioalq'
+			);
+
+			$this->products = inmovilla_get_properties( $args_api );
 		}
 
 		if ( false === $this->products ) {

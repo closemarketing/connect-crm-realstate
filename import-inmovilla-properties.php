@@ -20,5 +20,6 @@ define( 'IIP_VERSION', '0.1' );
 load_plugin_textdomain( 'import-inmovilla-properties', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 // Includes files.
+require_once dirname( __FILE__ ) . '/includes/helpers.php';
 require_once dirname( __FILE__ ) . '/includes/class-iip-admin.php';
 require_once dirname( __FILE__ ) . '/includes/class-iip-import.php';
