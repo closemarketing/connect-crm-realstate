@@ -14,12 +14,15 @@
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-define( 'IIP_VERSION', '0.1' );
+define( 'CCRMRE_VERSION', '0.1' );
+define( 'CCRMRE_PLUGIN', __FILE__ );
+define( 'CCRMRE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'CCRMRE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 
 // Loads translation.
 load_plugin_textdomain( 'connect-crm-realstate', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 // Includes files.
-require_once dirname( __FILE__ ) . '/includes/helpers.php';
-require_once dirname( __FILE__ ) . '/includes/class-iip-admin.php';
-require_once dirname( __FILE__ ) . '/includes/class-iip-import.php';
+require_once CCRMRE_PLUGIN_PATH . 'includes/helpers.php';
+require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-admin.php';
+require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-import.php';

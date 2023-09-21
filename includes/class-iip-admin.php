@@ -51,7 +51,7 @@ class IIP_Admin {
 			'iip_admin-styles',
 			plugin_dir_url( __FILE__ ) . 'assets/iip-styles-admin.css',
 			array(),
-			IIP_VERSION
+			CCRMRE_VERSION
 		);
 		wp_enqueue_style( 'iip_admin-styles' );
 
