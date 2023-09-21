@@ -23,6 +23,12 @@ define( 'CCRMRE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 load_plugin_textdomain( 'connect-crm-realstate', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 // Includes files.
-require_once CCRMRE_PLUGIN_PATH . 'includes/helpers.php';
+require_once CCRMRE_PLUGIN_PATH . 'includes/class-helper-api.php';
+require_once CCRMRE_PLUGIN_PATH . 'includes/class-helper-sync.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-admin.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-import.php';
+require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-post-type.php';
+
+new Close\ConnectCRM\RealState\Admin();
+new Close\ConnectCRM\RealState\Import();
+new Close\ConnectCRM\RealState\PostType();

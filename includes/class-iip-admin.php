@@ -8,6 +8,8 @@
  * @version    1.0
  */
 
+namespace Close\ConnectCRM\RealState;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -20,23 +22,12 @@ defined( 'ABSPATH' ) || exit;
  * @copyright  2019 Closemarketing
  * @version    0.1
  */
-class IIP_Admin {
-
-	/**
-	 * The plugin file
-	 *
-	 * @var string
-	 */
-	private $file;
-
+class Admin {
 	/**
 	 * Construct and intialize
 	 *
-	 * @param string $file File of this class.
 	 */
-	public function __construct( $file ) {
-		$this->file = $file;
-
+	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'plugin_settings' ) );
 	}
 
@@ -56,7 +47,14 @@ class IIP_Admin {
 		wp_enqueue_style( 'iip_admin-styles' );
 
 		// Create new top-level menu.
-		add_menu_page( 'Import Inmovilla', 'Import Inmovilla', 'administrator', 'iip-options', array( $this, 'plugin_options_page' ), 'dashicons-rest-api' );
+		add_menu_page(
+			__( 'Connect CRM Real State', 'connect-crm-realstate' ),
+			__( 'Connect CRM Real State', 'connect-crm-realstate' ),
+			'administrator',
+			'iip-options',
+			array( $this, 'plugin_options_page' ),
+			'dashicons-rest-api'
+		);
 
 		// Call register settings function.
 		add_action( 'admin_init', array( $this, 'register_plugin_settings' ) );
@@ -111,7 +109,7 @@ class IIP_Admin {
 		echo '</h2>';
 
 		if ( 'iip-import' === $active_tab ) {
-			echo '<div id="sync-inmovilla-engine"></div>';
+			$this->plugin_import_page();
 		}
 
 		if ( 'iip-settings' === $active_tab ) {
@@ -121,6 +119,23 @@ class IIP_Admin {
 		if ( 'iip-merge' === $active_tab ) {
 			$this->plugin_merge_page();
 		}
+	}
+
+	/**
+	 * Import Page
+	 *
+	 * @return void
+	 */
+	public function plugin_import_page() {
+		?>
+		<div class="connect-realstate-manual-action">
+			<h2><?php _e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
+			<p><?php _e( 'After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?><br/></p>
+			<input id="manual_import" name="manual_import" type="button" class="button button-large button-primary" value="<?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?>" onclick="syncManualProperties(this, 0);" />
+			<span class="spinner"></span>
+			<fieldset id="logwrapper"><legend>Registro</legend><div id="loglist"></div></fieldset>
+		</div>
+		<?php
 	}
 	/**
 	 * Settings and Merge variables page
@@ -548,4 +563,3 @@ class IIP_Admin {
 	}
 }
 
-new IIP_Admin( __FILE__ );

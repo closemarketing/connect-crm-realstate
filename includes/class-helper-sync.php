@@ -1,0 +1,78 @@
+<?php
+/**
+ * Library for Sync connection
+ *
+ * @package    WordPress
+ * @author     David Perez <david@close.technology>
+ * @copyright  2023 Closemarketing
+ * @version    1.0
+ */
+
+namespace Close\ConnectCRM\RealState;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Api Connection.
+ *
+ * @since 1.0.0
+ */
+class SYNC {
+	public static function sync_property( $item, $post_type ) {
+		$message        = '';
+		$property_id    = self::find_property( $item['id'], $post_type );
+		$property_title = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' );
+
+		// Property info.
+		$property_info = array(
+			'post_type'   => $post_type,
+			'post_status' => 'publish',
+		);
+
+		// Meta Info.
+		$property_info['meta_input'] = array();
+		if ( ! empty( $item_user['user_email'] ) ) {
+			$property_info['meta_input']['grao_autor_email'] = $item_user['user_email'];
+		}
+
+		if ( empty( $property_id ) ) {
+			$property_info['post_title']   = $property_title;
+			$property_info['post_name']    = sanitize_title( $property_title );
+			$property_info['post_content'] = isset( $item['description'] ) ? $item['description'] : '';
+			$property_id                   = wp_insert_post( $property_info );
+			$message                      .= 'CREA ' . $property_id;
+		} else {
+			$message            .= 'ACT ' . $property_id;
+			$property_info['ID'] = $property_id;
+			wp_update_post( $property_info );
+		}
+
+		return array(
+			'property_id' => $property_id,
+			'message'     => $message,
+		);
+
+	}
+
+	public static function find_property( $property_id, $post_type ) {
+		$property = get_posts(
+			array(
+				'post_type'   => $post_type,
+				'post_status' => 'publish',
+				'fields'      => 'ids',
+				'meta_query'  => array(
+					array(
+						'key'     => 'ccrmre_property_id',
+						'value'   => $property_id,
+						'compare' => '=',
+					),
+				),
+			)
+		);
+		if ( ! empty( $property[0] ) ) {
+			return $property[0];
+		} else {
+			return 0;
+		}
+	}
+}

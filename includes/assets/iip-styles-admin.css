@@ -45,3 +45,31 @@
 .form-table.iip-table td {
 	padding-bottom: 0;
 }
+
+/**
+ * ## Table - Input
+ * --------------------------- */
+
+.connect-realstate-manual-action #logwrapper {
+	border: 1px solid #aaa;
+	margin: 10px auto;
+}
+.connect-realstate-manual-action fieldset {
+	padding: 20px;
+	width: auto;
+}
+.connect-realstate-manual-action #loglist {
+	border: 1px solid #AAAAAA;
+	height: 380px;
+	overflow: auto;
+}
+.connect-realstate-manual-action #loglist > p {
+	margin: 0;
+	padding: 3px 5px;
+}
+.connect-realstate-manual-action #loglist > p.odd {
+	background: #dfdfdf;
+}
+.connect-realstate-manual-action #loglist > p.finish {
+	background: #76d771;
+}

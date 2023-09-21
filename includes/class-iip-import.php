@@ -8,7 +8,11 @@
  * @version    1.0
  */
 
+namespace Close\ConnectCRM\RealState;
+
 defined( 'ABSPATH' ) || exit;
+
+use Close\ConnectCRM\RealState\API;
 
 /**
  * Library for WooCommerce Settings
@@ -20,7 +24,7 @@ defined( 'ABSPATH' ) || exit;
  * @copyright  2019 Closemarketing
  * @version    0.1
  */
-class IIP_Import {
+class Import {
 	/**
 	 * The plugin file
 	 *
@@ -33,26 +37,38 @@ class IIP_Import {
 	/**
 	 * Construct and intialize
 	 */
-	public function __construct( $file ) {
-		$this->file = $file;
+	public function __construct() {
 		$this->ajax_msg = '';
-		add_action( 'admin_print_footer_scripts', array( $this, 'admin_print_footer_scripts' ), 11, 1 );
-		add_action( 'wp_ajax_import_products', array( $this, 'import_products' ) );
 
 		//add_action( iip_CRON, array( $this, 'import_products' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_manual_import' ) );
+		add_action( 'wp_ajax_manual_import', array( $this, 'manual_import' ) );
+		add_action( 'wp_ajax_nopriv_manual_import', array( $this, 'manual_import' ) );
 	}
+
 	/**
-	 * Imports products from Holded
+	 * Manual import Requests
 	 *
 	 * @return void
 	 */
-	public function import_products() {
-		$this->iip_import_method_products();
+	public function scripts_manual_import() {
+		wp_enqueue_script(
+			'connect-realstate-manual',
+			CCRMRE_PLUGIN_URL . 'includes/assets/connect-realstate-manual.js',
+			array(),
+			CCRMRE_VERSION,
+			true
+		);
 
-		/*
-		// Sends an email to admin
-		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
-		wp_mail( get_option( 'admin_email' ), __( 'Products Synced in', 'import-holded-products-woocommerce' ) . ' ' . get_option( 'blogname' ), '', $headers );*/
+		wp_localize_script(
+			'connect-realstate-manual',
+			'ajaxAction',
+			array(
+				'url'        => admin_url( 'admin-ajax.php' ),
+				'label_sync' => __( 'Syncing', 'import-holded-products-woocommerce' ),
+				'nonce'      => wp_create_nonce( 'manual_import_nonce' ),
+			)
+		);
 	}
 
 	public function admin_print_footer_scripts() {
@@ -111,169 +127,6 @@ class IIP_Import {
 			</script>
 			<?php
 		}
-	}
-
-	/**
-	 * Update product meta with the object included
-	 *
-	 * @param object $item Item Object from holded.
-	 * @param string $product_id Product ID.
-	 * @param string $type Type of the product.
-	 * @return void
-	 */
-	private function update_product( $item, $product_id, $type ) {
-		$tax_included = get_option( 'iip_taxinc' );
-		$import_stock   = get_option( 'iip_stock' );
-		if ( 'simple' === $type ) {
-			if ( 'yes' === $tax_included ) {
-				update_post_meta( $product_id, '_regular_price', $item->total );
-				update_post_meta( $product_id, '_price', $item->total );
-			} else {
-				update_post_meta( $product_id, '_regular_price', $item->price );
-				update_post_meta( $product_id, '_price', $item->price );
-			}
-			update_post_meta( $product_id, '_weight', $item->weight );
-			update_post_meta( $product_id, '_barcode', $item->barcode );
-			update_post_meta( $product_id, '_product_attributes', array() );
-
-			// Check if the product can be sold.
-			if ( 'no' === $import_stock && $item->price > 0) {
-				update_post_meta( $product_id, '_stock_status', 'instock' );
-				update_post_meta( $product_id, '_visibility', 'visible' );
-				wp_remove_object_terms( $product_id, 'exclude-from-catalog', 'product_visibility' );
-				wp_remove_object_terms( $product_id, 'exclude-from-search', 'product_visibility' );
-			} elseif ( 'yes' === $import_stock && $item->stock > 0 ) {
-				update_post_meta( $product_id, '_manage_stock', 'yes' );
-				update_post_meta( $product_id, '_backorders', 'no' );
-				update_post_meta( $product_id, '_stock', $item->stock );
-				update_post_meta( $product_id, '_stock_status', 'instock' );
-				update_post_meta( $product_id, '_visibility', 'visible' );
-				wp_remove_object_terms( $product_id, 'exclude-from-catalog', 'product_visibility' );
-				wp_remove_object_terms( $product_id, 'exclude-from-search', 'product_visibility' );
-			} elseif ( 'yes' === $import_stock && $item->stock == 0 ) {
-				update_post_meta( $product_id, '_manage_stock', 'yes' );
-				update_post_meta( $product_id, '_backorders', 'no' );
-				update_post_meta( $product_id, '_stock', $item->stock );
-				update_post_meta( $product_id, '_visibility', 'hidden' );
-				update_post_meta( $product_id, '_stock_status', 'outofstock' );
-
-				wp_set_object_terms(
-					$product_id,
-					array(
-						'exclude-from-catalog',
-						'exclude-from-search',
-					),
-					'product_visibility'
-				);
-			} else {
-				update_post_meta( $product_id, '_stock_status', 'outofstock' );
-
-				wp_set_object_terms(
-					$product_id,
-					array(
-						'exclude-from-catalog',
-						'exclude-from-search',
-					),
-					'product_visibility'
-				);
-			}
-			/*
-			update_post_meta( $product_id, '_product_attributes', array(
-				'brand' => array('name' => __('Brand', 'import-holded-products-woocommerce'), 'value' => $item->marca, 'position' => 0),
-				'model' => array('name' => __('Model', 'import-holded-products-woocommerce'), 'value' => $item->modelo, 'position' => 1),
-			)
-			);*/
-		}
-		// Default values.
-		update_post_meta( $product_id, '_sale_price', '' );
-		update_post_meta( $product_id, '_sale_price_dates_from', '' );
-		update_post_meta( $product_id, '_sale_price_dates_to', '' );
-		update_post_meta( $product_id, '_tax_status', 'taxable' );
-		update_post_meta( $product_id, '_tax_class', '' );
-		update_post_meta( $product_id, '_sold_individually', 'no' );
-		update_post_meta( $product_id, '_virtual', 'no' );
-		update_post_meta( $product_id, '_downloadable', 'no' );
-
-		/*
-		//Category
-		$parent_id      = substr($item->familia, 0, 2);
-		$parent_familia = $this->db->query("SELECT * FROM familias where id={$parent_id} LIMIT 1");
-
-		if (is_object($parent_familia)&&$parent_familia->num_rows&&$is_new_product) {
-
-			while ($parent_familia_item = $parent_familia->fetch_object()) {
-				$parent_terms = get_terms(array(
-					'taxonomy'   => 'product_cat',
-					'hide_empty' => false,
-					'meta_query' => array(
-						array(
-							'key'   => 'iip_meta_famid',
-							'value' => $parent_familia_item->id,
-						),
-					),
-				));
-				// echo '<pre>';print_r($terms);print_r($familia_item);echo '</pre>';
-				// die(0);
-				if (empty($parent_terms)) {
-					$term = wp_set_object_terms($post_id, $parent_familia_item->nombre, 'product_cat');
-					if (is_array($term) && !empty($term)) {
-						update_term_meta($term[0], 'iip_meta_famid', $parent_familia_item->id);
-					}
-				} else {
-					foreach ($parent_terms as $term) {
-						wp_update_term($term->term_id, 'product_cat', array(
-							'name' => $parent_familia_item->nombre,
-							'slug' => sanitize_title($parent_familia_item->nombre),
-						));
-						wp_set_object_terms($post_id, $term->term_id, 'product_cat');
-						update_term_meta($term->term_id, 'iip_meta_famid', $parent_familia_item->id);
-					}
-				}
-			}
-		}
-		$familia = $this->db->query("SELECT * FROM familias where id={$item->familia} LIMIT 1");
-		if (is_object($familia)&&$familia->num_rows&&$is_new_product) {
-			while ($familia_item = $familia->fetch_object()) {
-				$terms = get_terms(array(
-					'taxonomy'   => 'product_cat',
-					'hide_empty' => false,
-					'meta_query' => array(
-						array(
-							'key'   => 'iip_meta_famid',
-							'value' => $familia_item->id,
-						),
-					),
-				));
-				// echo '<pre>';print_r($terms);print_r($familia_item);echo '</pre>';
-				// die(0);
-				if (empty($terms)) {
-					$term = wp_set_object_terms($post_id, $familia_item->nombre, 'product_cat', true);
-					if (is_array($term) && !empty($term)) {
-						update_term_meta($term[0], 'iip_meta_famid', $familia_item->id);
-					}
-				} else {
-					foreach ($terms as $term) {
-						wp_update_term($term->term_id, 'product_cat', array(
-							'name' => $familia_item->nombre,
-							'slug' => sanitize_title($familia_item->nombre),
-						));
-						wp_set_object_terms($post_id, $term->term_id, 'product_cat', true);
-						update_term_meta($term->term_id, 'iip_meta_famid', $familia_item->id);
-					}
-				}
-			}
-		}
-		if ($is_new_product) {
-			//Create images only for new products
-			$imagen = $this->db->query("SELECT * FROM imagenes where id={$item->imagen} LIMIT 1");
-			if ($imagen->num_rows) {
-				while ($imagen_item = $imagen->fetch_object()) {
-					if ($imagen_item->imagen) {
-						$this->attach_image($post_id, $imagen_item->imagen);
-					}
-				}
-			}
-		}*/
 	}
 	/**
 	 * Import products from API
@@ -468,6 +321,40 @@ class IIP_Import {
 			}
 		}
 	}
-}
 
-new IIP_Import( __FILE__ );
+	/**
+	 * Ajax function to load info
+	 *
+	 * @return void
+	 */
+	public function manual_import() {
+		$loop = isset( $_POST['loop'] ) ? (int) $_POST['loop'] : 0;
+		$post_type = 'property';
+		$progress_msg = '';
+
+		if ( check_ajax_referer( 'manual_import_nonce', 'nonce' ) ) {
+			$properties = get_transient( 'connect_query_properties' );
+			if ( ! $properties ) {
+				$result_api = API::get_properties();
+				$properties = 'ok' === $result_api['status'] ? $result_api['data'] : array();
+				set_transient( 'connect_query_properties', $properties, MINUTE_IN_SECONDS * 3 );
+			}
+			if ( 0 === $loop ) {
+				$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-woocommerce' ) . '<br/>';
+			}
+			$item          = $properties[ $loop ];
+			$total_count   = count( $properties );
+			$result_sync   = SYNC::sync_property( $item, $post_type );
+			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $result_sync['message'];
+
+			wp_send_json_success(
+				array(
+					'loop'    => $loop + 1,
+					'message' => $progress_msg,
+				)
+			);
+		} else {
+			wp_send_json_error( array( 'error' => 'Error' ) );
+		}
+	}
+}
