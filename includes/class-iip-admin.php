@@ -91,22 +91,22 @@ class IIP_Admin {
 		$active_tab = ( isset( $_GET['tab'] ) ? $_GET['tab'] : 'iip-settings' );
 
 		echo '<div class="wrap bialty-containter">';
-		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span>' . esc_html__( 'Import Inmovilla Properties Settings', 'import-inmovilla-properties' ). '</h2>';
+		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span>' . esc_html__( 'Import Inmovilla Properties Settings', 'connect-crm-realstate' ). '</h2>';
 		echo '<h2 class="nav-tab-wrapper">';
 		// Import Properties.
 		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-import' ) . '" class="nav-tab ';
 		echo  ( 'iip-import' === $active_tab ? 'nav-tab-active' : '' );
-		echo '">' . esc_html__( 'Import Properties', 'import-inmovilla-properties' ) . '</a>';
+		echo '">' . esc_html__( 'Import Properties', 'connect-crm-realstate' ) . '</a>';
 
 		// Settings Properties.
 		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-settings' ) . '" class="nav-tab ';
 		echo  ( 'iip-settings' === $active_tab ? 'nav-tab-active' : '' );
-		echo '">' . esc_html__( 'Settings', 'import-inmovilla-properties' ) . '</a>';
+		echo '">' . esc_html__( 'Settings', 'connect-crm-realstate' ) . '</a>';
 
 		// Merge variables.
 		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-merge' ) . '" class="nav-tab ';
 		echo  ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
-		echo '">' . esc_html__( 'Merge variables', 'import-inmovilla-properties' ) . '</a>';
+		echo '">' . esc_html__( 'Merge variables', 'connect-crm-realstate' ) . '</a>';
 
 		echo '</h2>';
 
@@ -162,22 +162,22 @@ class IIP_Admin {
 		}
 		$select_lang .= '></option>';
 		$inmovilla_langs = array(
-			1  => __( 'Spanish', 'import-inmovilla-properties' ),
-			2  => __( 'English', 'import-inmovilla-properties' ),
-			3  => __( 'German', 'import-inmovilla-properties' ),
-			4  => __( 'French', 'import-inmovilla-properties' ),
-			5  => __( 'Dutch', 'import-inmovilla-properties' ),
-			6  => __( 'Norweigian', 'import-inmovilla-properties' ),
-			7  => __( 'Russian', 'import-inmovilla-properties' ),
-			8  => __( 'Portuguese', 'import-inmovilla-properties' ),
-			9  => __( 'Swedish', 'import-inmovilla-properties' ),
-			10 => __( 'Finnish', 'import-inmovilla-properties' ),
-			11 => __( 'Chinese', 'import-inmovilla-properties' ),
-			12 => __( 'Catalan', 'import-inmovilla-properties' ),
-			15 => __( 'Italian', 'import-inmovilla-properties' ),
-			16 => __( 'Basque', 'import-inmovilla-properties' ),
-			17 => __( 'Polish', 'import-inmovilla-properties' ),
-			18 => __( 'Galician', 'import-inmovilla-properties' ),
+			1  => __( 'Spanish', 'connect-crm-realstate' ),
+			2  => __( 'English', 'connect-crm-realstate' ),
+			3  => __( 'German', 'connect-crm-realstate' ),
+			4  => __( 'French', 'connect-crm-realstate' ),
+			5  => __( 'Dutch', 'connect-crm-realstate' ),
+			6  => __( 'Norweigian', 'connect-crm-realstate' ),
+			7  => __( 'Russian', 'connect-crm-realstate' ),
+			8  => __( 'Portuguese', 'connect-crm-realstate' ),
+			9  => __( 'Swedish', 'connect-crm-realstate' ),
+			10 => __( 'Finnish', 'connect-crm-realstate' ),
+			11 => __( 'Chinese', 'connect-crm-realstate' ),
+			12 => __( 'Catalan', 'connect-crm-realstate' ),
+			15 => __( 'Italian', 'connect-crm-realstate' ),
+			16 => __( 'Basque', 'connect-crm-realstate' ),
+			17 => __( 'Polish', 'connect-crm-realstate' ),
+			18 => __( 'Galician', 'connect-crm-realstate' ),
 		);
 		foreach ( $inmovilla_langs as $key => $value ) {
 			$select_lang .= '<option value="' . $key . '"';
@@ -188,29 +188,29 @@ class IIP_Admin {
 		}
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Connection Settings', 'import-inmovilla-properties' ); ?></h1>
+			<h1><?php esc_html_e( 'Connection Settings', 'connect-crm-realstate' ); ?></h1>
 
 			<form method="post" action="options.php">
 				<?php settings_fields( 'iip_plugin_settings_group' ); ?>
 				<?php do_settings_sections( 'iip_plugin_settings_group' ); ?>
 				<table class="form-table">
 					<tr valign="top">
-						<th scope="row"><?php esc_html_e( 'Agency number', 'import-inmovilla-properties'); ?></th>
+						<th scope="row"><?php esc_html_e( 'Agency number', 'connect-crm-realstate'); ?></th>
 						<td><input type="text" name="iip_agency_number" value="<?php echo esc_attr( $agency_number ); ?>" /></td>
 					</tr>
 
 					<tr valign="top">
-						<th scope="row"><?php esc_html_e( 'Agency API Password', 'import-inmovilla-properties' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Agency API Password', 'connect-crm-realstate' ); ?></th>
 						<td><input type="password" name="iip_agency_pass" value="<?php echo esc_attr( $agency_pass ); ?>" /></td>
 					</tr>
 
 					<tr valign="top">
-						<th scope="row"><?php esc_html_e( 'Language', 'import-inmovilla-properties' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Language', 'connect-crm-realstate' ); ?></th>
 						<td><select name="iip_language"><?php echo $select_lang; ?></select></td>
 					</tr>
 
 					<tr valign="top">
-						<th scope="row"><?php esc_html_e( 'Custom Post Type to import', 'import-inmovilla-properties' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Custom Post Type to import', 'connect-crm-realstate' ); ?></th>
 						<td><select name="iip_post_type"><?php echo $select_cpt_options; ?></select></td>
 					</tr>
 
@@ -245,7 +245,7 @@ class IIP_Admin {
 			}
 			?>
 			<div class="wrap">
-				<h1><?php esc_html_e( 'Merge Variables with custom values', 'import-inmovilla-properties' ); ?></h1>
+				<h1><?php esc_html_e( 'Merge Variables with custom values', 'connect-crm-realstate' ); ?></h1>
 				<form method="post" action="options.php">
 					<?php settings_fields( 'iip_plugin_merge_group' ); ?>
 					<?php do_settings_sections( 'iip_plugin_merge_group' ); ?>
@@ -298,206 +298,206 @@ class IIP_Admin {
 		$properties_fields = [
 			[
 				'section' => 'features',
-				'label'   => __( 'Features', 'import-inmovilla-properties' ),
+				'label'   => __( 'Features', 'connect-crm-realstate' ),
 				'fields'  => [
-					'cod_ofer'     => __( 'Reference', 'import-inmovilla-properties' ),
-					'keyacci'      => __( 'Operation Type', 'import-inmovilla-properties' ),
-					'key_tipo'     => __( 'Property Type', 'import-inmovilla-properties' ),
-					'key_loca'     => __( 'City', 'import-inmovilla-properties' ),
-					'key_zona'     => __( 'Zone', 'import-inmovilla-properties' ),
-					'zonaauxiliar' => __( 'Complementary Zone', 'import-inmovilla-properties' ),
-					'keycalle'     => __( 'Street key', 'import-inmovilla-properties' ),
-					'calle'        => __( 'Street', 'import-inmovilla-properties' ),
-					'numero'       => __( 'Street number', 'import-inmovilla-properties' ),
-					'cp'           => __( 'ZIP', 'import-inmovilla-properties' ),
-					'altura'       => __( 'Height', 'import-inmovilla-properties' ),
-					'planta'       => __( 'Block', 'import-inmovilla-properties' ),
-					'planta'       => __( 'Floor', 'import-inmovilla-properties' ),
-					'puerta'       => __( 'Door', 'import-inmovilla-properties' ),
-					'escalera'     => __( 'Stairs', 'import-inmovilla-properties' ),
-					'bloque'       => __( 'Block', 'import-inmovilla-properties' ),
-					'edificio'     => __( 'Building', 'import-inmovilla-properties' ),
-					'fecha'        => __( 'Date creation', 'import-inmovilla-properties' ),
-					'fechaact'     => __( 'Date updated', 'import-inmovilla-properties' ),
+					'cod_ofer'     => __( 'Reference', 'connect-crm-realstate' ),
+					'keyacci'      => __( 'Operation Type', 'connect-crm-realstate' ),
+					'key_tipo'     => __( 'Property Type', 'connect-crm-realstate' ),
+					'key_loca'     => __( 'City', 'connect-crm-realstate' ),
+					'key_zona'     => __( 'Zone', 'connect-crm-realstate' ),
+					'zonaauxiliar' => __( 'Complementary Zone', 'connect-crm-realstate' ),
+					'keycalle'     => __( 'Street key', 'connect-crm-realstate' ),
+					'calle'        => __( 'Street', 'connect-crm-realstate' ),
+					'numero'       => __( 'Street number', 'connect-crm-realstate' ),
+					'cp'           => __( 'ZIP', 'connect-crm-realstate' ),
+					'altura'       => __( 'Height', 'connect-crm-realstate' ),
+					'planta'       => __( 'Block', 'connect-crm-realstate' ),
+					'planta'       => __( 'Floor', 'connect-crm-realstate' ),
+					'puerta'       => __( 'Door', 'connect-crm-realstate' ),
+					'escalera'     => __( 'Stairs', 'connect-crm-realstate' ),
+					'bloque'       => __( 'Block', 'connect-crm-realstate' ),
+					'edificio'     => __( 'Building', 'connect-crm-realstate' ),
+					'fecha'        => __( 'Date creation', 'connect-crm-realstate' ),
+					'fechaact'     => __( 'Date updated', 'connect-crm-realstate' ),
 				],
 			],
 			[
 				'section' => 'surfaces',
-				'label'   => __( 'Surfaces', 'import-inmovilla-properties' ),
+				'label'   => __( 'Surfaces', 'connect-crm-realstate' ),
 				'fields'  => [
-					'm_uties'      => __( 'Useful square meters', 'import-inmovilla-properties' ),
-					'm_cons'       => __( 'Square Meters built', 'import-inmovilla-properties' ),
-					'm_parcela'    => __( 'Square Meters plot', 'import-inmovilla-properties' ),
-					'm_terraza'    => __( 'Square Meters terrace', 'import-inmovilla-properties' ),
-					'm_cocina'     => __( 'Square Meters kitchen', 'import-inmovilla-properties' ),
-					'm_comedor'    => __( 'Square Meters dinning room', 'import-inmovilla-properties' ),
-					'm_salon'      => __( 'Square Meters living room', 'import-inmovilla-properties' ),
-					'm_patio'      => __( 'Square Meters playground', 'import-inmovilla-properties' ),
-					'm_buhardilla' => __( 'Square Meters attic', 'import-inmovilla-properties' ),
-					'm_pplanta'    => __( 'Square Meters first floor', 'import-inmovilla-properties' ),
-					'm_sotano'     => __( 'Square Meters ground floor', 'import-inmovilla-properties' ),
+					'm_uties'      => __( 'Useful square meters', 'connect-crm-realstate' ),
+					'm_cons'       => __( 'Square Meters built', 'connect-crm-realstate' ),
+					'm_parcela'    => __( 'Square Meters plot', 'connect-crm-realstate' ),
+					'm_terraza'    => __( 'Square Meters terrace', 'connect-crm-realstate' ),
+					'm_cocina'     => __( 'Square Meters kitchen', 'connect-crm-realstate' ),
+					'm_comedor'    => __( 'Square Meters dinning room', 'connect-crm-realstate' ),
+					'm_salon'      => __( 'Square Meters living room', 'connect-crm-realstate' ),
+					'm_patio'      => __( 'Square Meters playground', 'connect-crm-realstate' ),
+					'm_buhardilla' => __( 'Square Meters attic', 'connect-crm-realstate' ),
+					'm_pplanta'    => __( 'Square Meters first floor', 'connect-crm-realstate' ),
+					'm_sotano'     => __( 'Square Meters ground floor', 'connect-crm-realstate' ),
 				],
 			],
 			[
 				'section' => 'distribution',
-				'label'   => __( 'Distribution', 'import-inmovilla-properties' ),
+				'label'   => __( 'Distribution', 'connect-crm-realstate' ),
 				'fields'  => [
-					'habdobles'    => __( 'Number of Double rooms', 'import-inmovilla-properties' ),
-					'habitaciones' => __( 'Number of Rooms', 'import-inmovilla-properties' ),
-					'banyos'       => __( 'Number of Bathrooms', 'import-inmovilla-properties' ),
-					'aseos'        => __( 'Number of Toilets', 'import-inmovilla-properties' ),
-					'salon'        => __( 'Number of Living rooms', 'import-inmovilla-properties' ),
-					'numapar'      => __( 'Number of Parkings', 'import-inmovilla-properties' ),
-					'numplanta'    => __( 'Number of floors', 'import-inmovilla-properties' ),
-					'numplanta'    => __( 'Number of floors', 'import-inmovilla-properties' ),
-					'antiguedad'   => __( 'Construction year', 'import-inmovilla-properties' ),
-					'distmar'      => __( 'Beach distance', 'import-inmovilla-properties' ),
-					'gastos_com'   => __( 'Community Expenses', 'import-inmovilla-properties' ),
-					'tgascom'      => __( 'Community periodicity', 'import-inmovilla-properties' ),
-					'ibi'          => __( 'I.B.I.', 'import-inmovilla-properties' ),
+					'habdobles'    => __( 'Number of Double rooms', 'connect-crm-realstate' ),
+					'habitaciones' => __( 'Number of Rooms', 'connect-crm-realstate' ),
+					'banyos'       => __( 'Number of Bathrooms', 'connect-crm-realstate' ),
+					'aseos'        => __( 'Number of Toilets', 'connect-crm-realstate' ),
+					'salon'        => __( 'Number of Living rooms', 'connect-crm-realstate' ),
+					'numapar'      => __( 'Number of Parkings', 'connect-crm-realstate' ),
+					'numplanta'    => __( 'Number of floors', 'connect-crm-realstate' ),
+					'numplanta'    => __( 'Number of floors', 'connect-crm-realstate' ),
+					'antiguedad'   => __( 'Construction year', 'connect-crm-realstate' ),
+					'distmar'      => __( 'Beach distance', 'connect-crm-realstate' ),
+					'gastos_com'   => __( 'Community Expenses', 'connect-crm-realstate' ),
+					'tgascom'      => __( 'Community periodicity', 'connect-crm-realstate' ),
+					'ibi'          => __( 'I.B.I.', 'connect-crm-realstate' ),
 				],
 			],
 			[
 				'section' => 'property_data',
-				'label'   => __( 'Property Data', 'import-inmovilla-properties' ),
+				'label'   => __( 'Property Data', 'connect-crm-realstate' ),
 				'fields'  => [
-					'conservacion'    => __( 'Status', 'import-inmovilla-properties' ),
-					'keycarpinext'    => __( 'External woodwork', 'import-inmovilla-properties' ),
-					'keysuelo'        => __( 'Ground', 'import-inmovilla-properties' ),
-					'keyori'          => __( 'Orientation', 'import-inmovilla-properties' ),
-					'keycarpin'       => __( 'Internal woodwork', 'import-inmovilla-properties' ),
-					'todoext'         => __( 'All external', 'import-inmovilla-properties' ),
-					'keyvista'        => __( 'Views', 'import-inmovilla-properties' ),
-					'keycalefa'       => __( 'Heating Type', 'import-inmovilla-properties' ),
-					'keyagua'         => __( 'Hot water', 'import-inmovilla-properties' ),
-					'cocina_inde'     => __( 'Kitchen Type', 'import-inmovilla-properties' ),
-					'electro'         => __( 'Home Appliances', 'import-inmovilla-properties' ),
-					'tipovpo'         => __( 'Regimen', 'import-inmovilla-properties' ),
-					'keyelectricidad' => __( 'Electrical installation', 'import-inmovilla-properties' ),
-					'keyfachada'      => __( 'Facade', 'import-inmovilla-properties' ),
+					'conservacion'    => __( 'Status', 'connect-crm-realstate' ),
+					'keycarpinext'    => __( 'External woodwork', 'connect-crm-realstate' ),
+					'keysuelo'        => __( 'Ground', 'connect-crm-realstate' ),
+					'keyori'          => __( 'Orientation', 'connect-crm-realstate' ),
+					'keycarpin'       => __( 'Internal woodwork', 'connect-crm-realstate' ),
+					'todoext'         => __( 'All external', 'connect-crm-realstate' ),
+					'keyvista'        => __( 'Views', 'connect-crm-realstate' ),
+					'keycalefa'       => __( 'Heating Type', 'connect-crm-realstate' ),
+					'keyagua'         => __( 'Hot water', 'connect-crm-realstate' ),
+					'cocina_inde'     => __( 'Kitchen Type', 'connect-crm-realstate' ),
+					'electro'         => __( 'Home Appliances', 'connect-crm-realstate' ),
+					'tipovpo'         => __( 'Regimen', 'connect-crm-realstate' ),
+					'keyelectricidad' => __( 'Electrical installation', 'connect-crm-realstate' ),
+					'keyfachada'      => __( 'Facade', 'connect-crm-realstate' ),
 				],
 			],
 			[
 				'section' => 'energetic_certification',
-				'label'   => __( 'Energetic certification', 'import-inmovilla-properties' ),
+				'label'   => __( 'Energetic certification', 'connect-crm-realstate' ),
 				'fields' => [
-					'energiarecibido' => __( 'Energetic certification', 'import-inmovilla-properties' ),
-					'energialetra'    => __( 'Energetic certification rating', 'import-inmovilla-properties' ),
-					'energiavalor'    => __( 'Energetic certification value', 'import-inmovilla-properties' ),
-					'emisionesletra'  => __( 'Emissions Rating', 'import-inmovilla-properties' ),
-					'emisionesvalor'  => __( 'Emissions value', 'import-inmovilla-properties' ),
-					'refcertificado'  => __( 'Certification reference', 'import-inmovilla-properties' ),
+					'energiarecibido' => __( 'Energetic certification', 'connect-crm-realstate' ),
+					'energialetra'    => __( 'Energetic certification rating', 'connect-crm-realstate' ),
+					'energiavalor'    => __( 'Energetic certification value', 'connect-crm-realstate' ),
+					'emisionesletra'  => __( 'Emissions Rating', 'connect-crm-realstate' ),
+					'emisionesvalor'  => __( 'Emissions value', 'connect-crm-realstate' ),
+					'refcertificado'  => __( 'Certification reference', 'connect-crm-realstate' ),
 				],
 			],
 			[
 				'section' => 'features',
-				'label'   => __( 'Features', 'import-inmovilla-properties' ),
+				'label'   => __( 'Features', 'connect-crm-realstate' ),
 				'type'    => 'taxonomy',
 				'fields'  => [
-					'ofertas.adaptadominus'   => __( 'Adaptado PMR', 'import-inmovilla-properties' ),
-					'ofertas.agua'            => __( 'Agua', 'import-inmovilla-properties' ),
-					'ofertas.airecentral'     => __( 'Aire Acond. Central', 'import-inmovilla-properties' ),
-					'ofertas.aire_con'        => __( 'Aire Acondicionado ', 'import-inmovilla-properties' ),
-					'ofertas.alarma'          => __( 'Alarma ', 'import-inmovilla-properties' ),
-					'ofertas.alarmaincendio'  => __( 'Alarma Incendio', 'import-inmovilla-properties' ),
-					'ofertas.alarmarobo'      => __( 'Alarma Robo', 'import-inmovilla-properties' ),
-					'ofertas.altillo'         => __( 'Altillo', 'import-inmovilla-properties' ),
-					'ofertas.apartseparado'   => __( 'Apart. Separado', 'import-inmovilla-properties' ),
-					'ofertas.arma_empo'       => __( 'Armarios empotrados', 'import-inmovilla-properties' ),
-					'ofertas.ascensor'        => __( 'Ascensor', 'import-inmovilla-properties' ),
-					'ofertas.balcon'          => __( 'Balcón ', 'import-inmovilla-properties' ),
-					'ofertas.bar'             => __( 'Bar', 'import-inmovilla-properties' ),
-					'ofertas.barbacoa'        => __( 'Barbacoa', 'import-inmovilla-properties' ),
-					'ofertas.bombafriocalor'  => __( 'Bomba frío y calor', 'import-inmovilla-properties' ),
-					'ofertas.buardilla'       => __( 'Buhardilla ', 'import-inmovilla-properties' ),
-					'ofertas.cajafuerte'      => __( 'Caja fuerte', 'import-inmovilla-properties' ),
-					'ofertas.calefaccion'     => __( 'Calefacción', 'import-inmovilla-properties' ),
-					'ofertas.calefacentral'   => __( 'Calefacción central', 'import-inmovilla-properties' ),
-					'ofertas.chimenea'        => __( 'Chimenea', 'import-inmovilla-properties' ),
-					'ofertas.depoagua'        => __( 'Deposito Agua', 'import-inmovilla-properties' ),
-					'ofertas.descalcificador' => __( 'Descalcificador', 'import-inmovilla-properties' ),
-					'ofertas.despensa'        => __( 'Despensa', 'import-inmovilla-properties' ),
-					'ofertas.diafano'         => __( 'Diáfano', 'import-inmovilla-properties' ),
-					'ofertas.esquina'         => __( 'Esquina', 'import-inmovilla-properties' ),
-					'ofertas.galeria'         => __( 'Galería', 'import-inmovilla-properties' ),
-					'ofertas.plaza_gara'      => __( 'Plazas Garage', 'import-inmovilla-properties' ),
-					'ofertas.garajedoble'     => __( 'Garaje Doble', 'import-inmovilla-properties' ),
-					'ofertas.gasciudad'       => __( 'Gas Ciudad ', 'import-inmovilla-properties' ),
-					'ofertas.gimnasio'        => __( 'Gimnasio', 'import-inmovilla-properties' ),
-					'ofertas.habjuegos'       => __( 'Hab. Juegos', 'import-inmovilla-properties' ),
-					'ofertas.hidromasaje'     => __( 'Hidromasaje', 'import-inmovilla-properties' ),
-					'ofertas.hilomusical'     => __( 'Hilo Musical', 'import-inmovilla-properties' ),
-					'ofertas.jacuzzi'         => __( 'Jacuzzi', 'import-inmovilla-properties' ),
-					'ofertas.jardin'          => __( 'Jardín ', 'import-inmovilla-properties' ),
-					'ofertas.lavanderia'      => __( 'Lavandería ', 'import-inmovilla-properties' ),
-					'ofertas.linea_tlf'       => __( 'Línea telefónica', 'import-inmovilla-properties' ),
-					'ofertas.luminoso'        => __( 'Luminoso', 'import-inmovilla-properties' ),
-					'ofertas.luz'             => __( 'Luz', 'import-inmovilla-properties' ),
-					'ofertas.mirador'         => __( 'Mirador', 'import-inmovilla-properties' ),
-					'ofertas.montacargas'     => __( 'Montacargas', 'import-inmovilla-properties' ),
-					'ofertas.muebles'         => __( 'Muebles', 'import-inmovilla-properties' ),
-					'ofertas.ojobuey'         => __( 'Ojos de Buey', 'import-inmovilla-properties' ),
+					'ofertas.adaptadominus'   => __( 'Adaptado PMR', 'connect-crm-realstate' ),
+					'ofertas.agua'            => __( 'Agua', 'connect-crm-realstate' ),
+					'ofertas.airecentral'     => __( 'Aire Acond. Central', 'connect-crm-realstate' ),
+					'ofertas.aire_con'        => __( 'Aire Acondicionado ', 'connect-crm-realstate' ),
+					'ofertas.alarma'          => __( 'Alarma ', 'connect-crm-realstate' ),
+					'ofertas.alarmaincendio'  => __( 'Alarma Incendio', 'connect-crm-realstate' ),
+					'ofertas.alarmarobo'      => __( 'Alarma Robo', 'connect-crm-realstate' ),
+					'ofertas.altillo'         => __( 'Altillo', 'connect-crm-realstate' ),
+					'ofertas.apartseparado'   => __( 'Apart. Separado', 'connect-crm-realstate' ),
+					'ofertas.arma_empo'       => __( 'Armarios empotrados', 'connect-crm-realstate' ),
+					'ofertas.ascensor'        => __( 'Ascensor', 'connect-crm-realstate' ),
+					'ofertas.balcon'          => __( 'Balcón ', 'connect-crm-realstate' ),
+					'ofertas.bar'             => __( 'Bar', 'connect-crm-realstate' ),
+					'ofertas.barbacoa'        => __( 'Barbacoa', 'connect-crm-realstate' ),
+					'ofertas.bombafriocalor'  => __( 'Bomba frío y calor', 'connect-crm-realstate' ),
+					'ofertas.buardilla'       => __( 'Buhardilla ', 'connect-crm-realstate' ),
+					'ofertas.cajafuerte'      => __( 'Caja fuerte', 'connect-crm-realstate' ),
+					'ofertas.calefaccion'     => __( 'Calefacción', 'connect-crm-realstate' ),
+					'ofertas.calefacentral'   => __( 'Calefacción central', 'connect-crm-realstate' ),
+					'ofertas.chimenea'        => __( 'Chimenea', 'connect-crm-realstate' ),
+					'ofertas.depoagua'        => __( 'Deposito Agua', 'connect-crm-realstate' ),
+					'ofertas.descalcificador' => __( 'Descalcificador', 'connect-crm-realstate' ),
+					'ofertas.despensa'        => __( 'Despensa', 'connect-crm-realstate' ),
+					'ofertas.diafano'         => __( 'Diáfano', 'connect-crm-realstate' ),
+					'ofertas.esquina'         => __( 'Esquina', 'connect-crm-realstate' ),
+					'ofertas.galeria'         => __( 'Galería', 'connect-crm-realstate' ),
+					'ofertas.plaza_gara'      => __( 'Plazas Garage', 'connect-crm-realstate' ),
+					'ofertas.garajedoble'     => __( 'Garaje Doble', 'connect-crm-realstate' ),
+					'ofertas.gasciudad'       => __( 'Gas Ciudad ', 'connect-crm-realstate' ),
+					'ofertas.gimnasio'        => __( 'Gimnasio', 'connect-crm-realstate' ),
+					'ofertas.habjuegos'       => __( 'Hab. Juegos', 'connect-crm-realstate' ),
+					'ofertas.hidromasaje'     => __( 'Hidromasaje', 'connect-crm-realstate' ),
+					'ofertas.hilomusical'     => __( 'Hilo Musical', 'connect-crm-realstate' ),
+					'ofertas.jacuzzi'         => __( 'Jacuzzi', 'connect-crm-realstate' ),
+					'ofertas.jardin'          => __( 'Jardín ', 'connect-crm-realstate' ),
+					'ofertas.lavanderia'      => __( 'Lavandería ', 'connect-crm-realstate' ),
+					'ofertas.linea_tlf'       => __( 'Línea telefónica', 'connect-crm-realstate' ),
+					'ofertas.luminoso'        => __( 'Luminoso', 'connect-crm-realstate' ),
+					'ofertas.luz'             => __( 'Luz', 'connect-crm-realstate' ),
+					'ofertas.mirador'         => __( 'Mirador', 'connect-crm-realstate' ),
+					'ofertas.montacargas'     => __( 'Montacargas', 'connect-crm-realstate' ),
+					'ofertas.muebles'         => __( 'Muebles', 'connect-crm-realstate' ),
+					'ofertas.ojobuey'         => __( 'Ojos de Buey', 'connect-crm-realstate' ),
 				],
 			],
 			[
 				'section' => 'entorno',
-				'label'   => __( 'Entorno', 'import-inmovilla-properties' ),
+				'label'   => __( 'Entorno', 'connect-crm-realstate' ),
 				'type'    => 'taxonomy',
 				'fields'  => [
-					'entorno9'                 => __( 'Autobuses', 'import-inmovilla-properties' ),
-					'entorno0'                 => __( 'Árboles', 'import-inmovilla-properties' ),
-					'entorno14'                => __( 'Céntrico', 'import-inmovilla-properties' ),
-					'entorno10'                => __( 'Centros comerciales', 'import-inmovilla-properties' ),
-					'entorno15'                => __( 'Centros médicos', 'import-inmovilla-properties' ),
-					'entorno18'                => __( 'Cerca de Universidad', 'import-inmovilla-properties' ),
-					'entorno13'                => __( 'Colegios', 'import-inmovilla-properties' ),
-					'entorno7'                 => __( 'Costa', 'import-inmovilla-properties' ),
-					'entorno4'                 => __( 'Golf', 'import-inmovilla-properties' ),
-					'entorno1'                 => __( 'Hospitales', 'import-inmovilla-properties' ),
-					'entorno3'                 => __( 'Metro', 'import-inmovilla-properties' ),
-					'entorno5'                 => __( 'Montaña', 'import-inmovilla-properties' ),
-					'ofertas.primera_line'     => __( 'Primera Línea', 'import-inmovilla-properties' ),
-					'entorno6'                 => __( 'Rural', 'import-inmovilla-properties' ),
-					'entorno19'                => __( 'Supermercados', 'import-inmovilla-properties' ),
-					'entorno11'                => __( 'Tranvía', 'import-inmovilla-properties' ),
-					'entorno2'                 => __( 'Tren', 'import-inmovilla-properties' ),
-					'ofertas.urbanizacion'     => __( 'Urbanización', 'import-inmovilla-properties' ),
-					'entorno8'                 => __( 'Vallado', 'import-inmovilla-properties' ),
-					'entorno17'                => __( 'Vigilancia 24H', 'import-inmovilla-properties' ),
-					'ofertas.vistasalmar'      => __( 'Vistas al mar', 'import-inmovilla-properties' ),
-					'ofertas.vistasdespejadas' => __( 'Vistas despejadas', 'import-inmovilla-properties' ),
-					'entorno16'                => __( 'Zona de paso', 'import-inmovilla-properties' ),
-					'entorno12'                => __( 'Zonas infantiles', 'import-inmovilla-properties' ),
+					'entorno9'                 => __( 'Autobuses', 'connect-crm-realstate' ),
+					'entorno0'                 => __( 'Árboles', 'connect-crm-realstate' ),
+					'entorno14'                => __( 'Céntrico', 'connect-crm-realstate' ),
+					'entorno10'                => __( 'Centros comerciales', 'connect-crm-realstate' ),
+					'entorno15'                => __( 'Centros médicos', 'connect-crm-realstate' ),
+					'entorno18'                => __( 'Cerca de Universidad', 'connect-crm-realstate' ),
+					'entorno13'                => __( 'Colegios', 'connect-crm-realstate' ),
+					'entorno7'                 => __( 'Costa', 'connect-crm-realstate' ),
+					'entorno4'                 => __( 'Golf', 'connect-crm-realstate' ),
+					'entorno1'                 => __( 'Hospitales', 'connect-crm-realstate' ),
+					'entorno3'                 => __( 'Metro', 'connect-crm-realstate' ),
+					'entorno5'                 => __( 'Montaña', 'connect-crm-realstate' ),
+					'ofertas.primera_line'     => __( 'Primera Línea', 'connect-crm-realstate' ),
+					'entorno6'                 => __( 'Rural', 'connect-crm-realstate' ),
+					'entorno19'                => __( 'Supermercados', 'connect-crm-realstate' ),
+					'entorno11'                => __( 'Tranvía', 'connect-crm-realstate' ),
+					'entorno2'                 => __( 'Tren', 'connect-crm-realstate' ),
+					'ofertas.urbanizacion'     => __( 'Urbanización', 'connect-crm-realstate' ),
+					'entorno8'                 => __( 'Vallado', 'connect-crm-realstate' ),
+					'entorno17'                => __( 'Vigilancia 24H', 'connect-crm-realstate' ),
+					'ofertas.vistasalmar'      => __( 'Vistas al mar', 'connect-crm-realstate' ),
+					'ofertas.vistasdespejadas' => __( 'Vistas despejadas', 'connect-crm-realstate' ),
+					'entorno16'                => __( 'Zona de paso', 'connect-crm-realstate' ),
+					'entorno12'                => __( 'Zonas infantiles', 'connect-crm-realstate' ),
 				],
 			],
 			[
 				'section' => 'general-description',
-				'label'   => __( 'General Description', 'import-inmovilla-properties' ),
+				'label'   => __( 'General Description', 'connect-crm-realstate' ),
 				'fields'  => [
-					'ofertas.tinterior'     => __( 'Descripción General', 'import-inmovilla-properties' ),
-					'comentadd.tfachadaofe' => __( 'Fachada', 'import-inmovilla-properties' ),
-					'comentadd.tcocinaofe'  => __( 'Cocina', 'import-inmovilla-properties' ),
-					'comentadd.tpostigoofe' => __( 'Portal', 'import-inmovilla-properties' ),
-					'comentadd.tbanoofe'    => __( 'Baños', 'import-inmovilla-properties' ),
+					'ofertas.tinterior'     => __( 'Descripción General', 'connect-crm-realstate' ),
+					'comentadd.tfachadaofe' => __( 'Fachada', 'connect-crm-realstate' ),
+					'comentadd.tcocinaofe'  => __( 'Cocina', 'connect-crm-realstate' ),
+					'comentadd.tpostigoofe' => __( 'Portal', 'connect-crm-realstate' ),
+					'comentadd.tbanoofe'    => __( 'Baños', 'connect-crm-realstate' ),
 				],
 			],
 			[
 				'section' => 'sell-data',
-				'label'   => __( 'Sell data', 'import-inmovilla-properties' ),
+				'label'   => __( 'Sell data', 'connect-crm-realstate' ),
 				'fields'  => [
-					'ofertas.preciotraspaso' => __( 'Precio Traspaso', 'import-inmovilla-properties' ),
-					'ofertas.precio'         => __( 'Precio Propietario ', 'import-inmovilla-properties' ),
-					'ofertas.porcen'         => __( 'Valor Honorarios %', 'import-inmovilla-properties' ),
-					'ofertas.comision'       => __( 'Valor Honorarios €', 'import-inmovilla-properties' ),
-					'ofertas.porceniva'      => __( 'I.V.A %', 'import-inmovilla-properties' ),
-					'ofertas.precioiva'      => __( 'I.V.A Precio', 'import-inmovilla-properties' ),
-					'ofertas.precioinmo'     => __( 'Precio Inmobiliaria', 'import-inmovilla-properties' ),
-					'ofertas.outlet'         => __( 'Precio Anterior', 'import-inmovilla-properties' ),
-					'ofertas.tasar'          => __( 'Valoración', 'import-inmovilla-properties' ),
-					'ofertas.valorfiscal'    => __( 'Valor Fiscal', 'import-inmovilla-properties' ),
-					'ofertas.aconsultar'     => __( 'Precio a consultar', 'import-inmovilla-properties' ),
-					'ofertas.alta_exclusiva' => __( 'Exclusivas Desde', 'import-inmovilla-properties' ),
-					'ofertas.baja_exclusiva' => __( 'Exclusivas Hasta', 'import-inmovilla-properties' ),
+					'ofertas.preciotraspaso' => __( 'Precio Traspaso', 'connect-crm-realstate' ),
+					'ofertas.precio'         => __( 'Precio Propietario ', 'connect-crm-realstate' ),
+					'ofertas.porcen'         => __( 'Valor Honorarios %', 'connect-crm-realstate' ),
+					'ofertas.comision'       => __( 'Valor Honorarios €', 'connect-crm-realstate' ),
+					'ofertas.porceniva'      => __( 'I.V.A %', 'connect-crm-realstate' ),
+					'ofertas.precioiva'      => __( 'I.V.A Precio', 'connect-crm-realstate' ),
+					'ofertas.precioinmo'     => __( 'Precio Inmobiliaria', 'connect-crm-realstate' ),
+					'ofertas.outlet'         => __( 'Precio Anterior', 'connect-crm-realstate' ),
+					'ofertas.tasar'          => __( 'Valoración', 'connect-crm-realstate' ),
+					'ofertas.valorfiscal'    => __( 'Valor Fiscal', 'connect-crm-realstate' ),
+					'ofertas.aconsultar'     => __( 'Precio a consultar', 'connect-crm-realstate' ),
+					'ofertas.alta_exclusiva' => __( 'Exclusivas Desde', 'connect-crm-realstate' ),
+					'ofertas.baja_exclusiva' => __( 'Exclusivas Hasta', 'connect-crm-realstate' ),
 				],
 			],
 		];

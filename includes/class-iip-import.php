@@ -39,7 +39,7 @@ class IIP_Import {
 		add_action( 'admin_print_footer_scripts', array( $this, 'admin_print_footer_scripts' ), 11, 1 );
 		add_action( 'wp_ajax_import_products', array( $this, 'import_products' ) );
 
-		add_action( iip_CRON, array( $this, 'import_products' ) );
+		//add_action( iip_CRON, array( $this, 'import_products' ) );
 	}
 	/**
 	 * Imports products from Holded

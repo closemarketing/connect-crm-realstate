@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: Import Inmovilla Properties
+ * Plugin Name: Connect CRM Real State
  * Plugin URI: https://www.closemarketing.es
- * Description: Imports Properties from Inmovilla to a Custom Post Type.
- * Author: closemarketing, davidperez
- * Author URI: https://www.closemarketing.net/
+ * Description: Connect Properties from Inmovilla/Anaconda to a Custom Post Type.
+ * Author: closemarketing
+ * Author URI: https://close.technology/
  * Version: 0.1
  *
  * @package WordPress
@@ -17,7 +17,7 @@
 define( 'IIP_VERSION', '0.1' );
 
 // Loads translation.
-load_plugin_textdomain( 'import-inmovilla-properties', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+load_plugin_textdomain( 'connect-crm-realstate', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 // Includes files.
 require_once dirname( __FILE__ ) . '/includes/helpers.php';
