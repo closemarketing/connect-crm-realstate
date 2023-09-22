@@ -24,6 +24,7 @@ function syncManualProperties( element, loop = 0 ) {
 			} else {
 				element.classList.remove('disabled');
 				element.innerHTML = ajaxAction.label_sync;
+				results.data.message = ajaxAction.label_sync_complete;
 			}
 		} else {
 			element.classList.remove('disabled');
@@ -36,7 +37,8 @@ function syncManualProperties( element, loop = 0 ) {
 			document.querySelector('#logwrapper #loglist').appendChild(progressElement);
 			progressElement.innerHTML = results.data.message;
 		}
-		//$(".woocommerce_page_connect_woocommerce #loglist").animate({ scrollTop: $(".woocommerce_page_connect_woocommerce #loglist")[0].scrollHeight}, 450);
+		const loglist = document.querySelector('#logwrapper #loglist');
+		loglist.scrollTo({ top: loglist.scrollHeight, behavior: "smooth" });
 	})
 	.catch(err => console.log(err));
 }

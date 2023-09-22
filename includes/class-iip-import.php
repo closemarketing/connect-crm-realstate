@@ -52,10 +52,11 @@ class Import {
 			'connect-realstate-manual',
 			'ajaxAction',
 			array(
-				'url'           => admin_url( 'admin-ajax.php' ),
-				'label_sync'    => __( 'Sync', 'import-holded-products-woocommerce' ),
-				'label_syncing' => __( 'Syncing', 'import-holded-products-woocommerce' ),
-				'nonce'         => wp_create_nonce( 'manual_import_nonce' ),
+				'url'                 => admin_url( 'admin-ajax.php' ),
+				'label_sync'          => __( 'Sync', 'import-holded-products-woocommerce' ),
+				'label_syncing'       => __( 'Syncing', 'import-holded-products-woocommerce' ),
+				'label_sync_complete' => __( 'Finished', 'import-holded-products-woocommerce' ),
+				'nonce'               => wp_create_nonce( 'manual_import_nonce' ),
 			)
 		);
 	}
