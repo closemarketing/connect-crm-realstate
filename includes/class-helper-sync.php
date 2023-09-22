@@ -30,7 +30,9 @@ class SYNC {
 		);
 
 		// Meta Info.
-		$property_info['meta_input'] = array();
+		$property_info['meta_input'] = array(
+			'property_id' => $item['id'],
+		);
 		if ( ! empty( $item_user['user_email'] ) ) {
 			$property_info['meta_input']['grao_autor_email'] = $item_user['user_email'];
 		}
@@ -62,7 +64,7 @@ class SYNC {
 				'fields'      => 'ids',
 				'meta_query'  => array(
 					array(
-						'key'     => 'ccrmre_property_id',
+						'key'     => 'property_id',
 						'value'   => $property_id,
 						'compare' => '=',
 					),
@@ -70,7 +72,7 @@ class SYNC {
 			)
 		);
 		if ( ! empty( $property[0] ) ) {
-			return $property[0];
+			return (int) $property[0];
 		} else {
 			return 0;
 		}

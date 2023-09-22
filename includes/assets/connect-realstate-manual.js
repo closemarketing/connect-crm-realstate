@@ -1,9 +1,9 @@
 function syncManualProperties( element, loop = 0 ) {
 	element.classList.add('disabled');
-	element.innerHTML = ajaxAction.label_sync + ' <span class="spinner is-active"></span>';
+	element.innerHTML = ajaxAction.label_syncing + ' <span class="spinner is-active"></span>';
 	console.log(loop);
 
-	var class_task = 'odd';
+	var class_task = class_task || 'odd';
 	
 	// AJAX request.
 	fetch( ajaxAction.url, {
@@ -19,15 +19,15 @@ function syncManualProperties( element, loop = 0 ) {
 	.then( function(results) {
 		console.log(results);
 		if ( results.success ){
-			if(results.data.loop){
+			if( results.data.loop <= results.data.total ) {
 				syncManualProperties(element,results.data.loop);
 			} else {
-				//$(document).find('#start-sync').removeAttr('disabled');
-				//$(document).find('.sync-wrapper .spinner').remove();
+				element.classList.remove('disabled');
+				element.innerHTML = ajaxAction.label_sync;
 			}
 		} else {
-			//$(document).find('#start-sync').removeAttr('disabled');
-			//$(document).find('.sync-wrapper .spinner').remove();
+			element.classList.remove('disabled');
+			element.innerHTML = ajaxAction.label_sync;
 		}
 		// Message.
 		if( results.data.message != undefined ){
@@ -36,12 +36,7 @@ function syncManualProperties( element, loop = 0 ) {
 			document.querySelector('#logwrapper #loglist').appendChild(progressElement);
 			progressElement.innerHTML = results.data.message;
 		}
-		if ( class_task == 'odd' ) {
-			class_task = 'even';
-		} else {
-			class_task = 'odd';
-		}
-		
+		class_task = 'odd' === class_task ? 'even' : 'odd';
 	})
 	.catch(err => console.log(err));
 }

@@ -4,7 +4,7 @@
  *
  * @package    WordPress
  * @author     David Perez <david@closemarketing.es>
- * @copyright  2019 Closemarketing
+ * @copyright  2023 Closemarketing
  * @version    1.0
  */
 
@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @package    WordPress
  * @author     David Perez <david@closemarketing.es>
- * @copyright  2019 Closemarketing
+ * @copyright  2023 Closemarketing
  * @version    0.1
  */
 class PostType {

@@ -86,10 +86,10 @@ class Admin {
 	 */
 	public function plugin_options_page() {
 		// Set active class for navigation tabs.
-		$active_tab = ( isset( $_GET['tab'] ) ? $_GET['tab'] : 'iip-settings' );
+		$active_tab = ( isset( $_GET['tab'] ) ? $_GET['tab'] : 'iip-import' );
 
 		echo '<div class="wrap bialty-containter">';
-		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span>' . esc_html__( 'Import Inmovilla Properties Settings', 'connect-crm-realstate' ). '</h2>';
+		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ). '</h2>';
 		echo '<h2 class="nav-tab-wrapper">';
 		// Import Properties.
 		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-import' ) . '" class="nav-tab ';
@@ -131,8 +131,7 @@ class Admin {
 		<div class="connect-realstate-manual-action">
 			<h2><?php _e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
 			<p><?php _e( 'After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?><br/></p>
-			<input id="manual_import" name="manual_import" type="button" class="button button-large button-primary" value="<?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?>" onclick="syncManualProperties(this, 0);" />
-			<span class="spinner"></span>
+			<div id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0);" ><?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?></div>
 			<fieldset id="logwrapper"><legend>Registro</legend><div id="loglist"></div></fieldset>
 		</div>
 		<?php
