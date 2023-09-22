@@ -37,6 +37,7 @@ function syncManualProperties( element, loop = 0 ) {
 			progressElement.innerHTML = results.data.message;
 		}
 		class_task = 'odd' === class_task ? 'even' : 'odd';
+		//$(".woocommerce_page_connect_woocommerce #loglist").animate({ scrollTop: $(".woocommerce_page_connect_woocommerce #loglist")[0].scrollHeight}, 450);
 	})
 	.catch(err => console.log(err));
 }
