@@ -3,7 +3,8 @@ function syncManualProperties( element, loop = 0 ) {
 	element.innerHTML = ajaxAction.label_syncing + ' <span class="spinner is-active"></span>';
 	console.log(loop);
 
-	var class_task = class_task || 'odd';
+	const isOdd = number => number % 2 !== 0;
+	class_task = isOdd(loop) ? 'odd' : 'even';
 	
 	// AJAX request.
 	fetch( ajaxAction.url, {
@@ -17,9 +18,8 @@ function syncManualProperties( element, loop = 0 ) {
 	})
 	.then( (resp) => resp.json() )
 	.then( function(results) {
-		console.log(results);
 		if ( results.success ){
-			if( results.data.loop <= results.data.total ) {
+			if( results.data.loop < results.data.total ) {
 				syncManualProperties(element,results.data.loop);
 			} else {
 				element.classList.remove('disabled');
@@ -36,7 +36,6 @@ function syncManualProperties( element, loop = 0 ) {
 			document.querySelector('#logwrapper #loglist').appendChild(progressElement);
 			progressElement.innerHTML = results.data.message;
 		}
-		class_task = 'odd' === class_task ? 'even' : 'odd';
 		//$(".woocommerce_page_connect_woocommerce #loglist").animate({ scrollTop: $(".woocommerce_page_connect_woocommerce #loglist")[0].scrollHeight}, 450);
 	})
 	.catch(err => console.log(err));

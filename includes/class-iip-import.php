@@ -29,7 +29,6 @@ class Import {
 	 * Construct and intialize
 	 */
 	public function __construct() {
-		//add_action( iip_CRON, array( $this, 'import_products' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_manual_import' ) );
 		add_action( 'wp_ajax_manual_import', array( $this, 'manual_import' ) );
 		add_action( 'wp_ajax_nopriv_manual_import', array( $this, 'manual_import' ) );
@@ -84,7 +83,7 @@ class Import {
 			$item          = $properties[ $loop ];
 			$total_count   = count( $properties );
 			$result_sync   = SYNC::sync_property( $item, $post_type );
-			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop . '/' . $total_count;
+			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1 . '/' . $total_count;
 			$progress_msg .= ' - ' . $result_sync['message'];
 
 			wp_send_json_success(

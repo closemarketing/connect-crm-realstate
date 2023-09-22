@@ -30,11 +30,10 @@ class SYNC {
 		);
 
 		// Meta Info.
-		$property_info['meta_input'] = array(
-			'property_id' => $item['id'],
-		);
-		if ( ! empty( $item_user['user_email'] ) ) {
-			$property_info['meta_input']['grao_autor_email'] = $item_user['user_email'];
+		$property_info['meta_input'] = array();
+
+		foreach ( $item as $key => $item_meta ) {
+			$property_info['meta_input'][ 'property_' . $key ] = $item_meta;
 		}
 
 		if ( empty( $property_id ) ) {
