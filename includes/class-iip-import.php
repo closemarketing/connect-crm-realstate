@@ -79,12 +79,29 @@ class Import {
 			}
 			if ( 0 === $loop ) {
 				$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-woocommerce' ) . '<br/>';
+				update_option( 'connect_crm_realstate_sync', array() );
 			}
 			$item          = $properties[ $loop ];
 			$total_count   = count( $properties );
 			$result_sync   = SYNC::sync_property( $item );
 			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1 . '/' . $total_count;
 			$progress_msg .= ' - ' . $result_sync['message'];
+
+			if ( ! empty( $result_sync['property_id'] ) ) {
+				$property_id = $result_sync['property_id'];
+				$sync        = get_option( 'connect_crm_realstate_sync' );
+				$sync[]      = $property_id;
+				update_option( 'connect_crm_realstate_sync', $sync );
+			}
+
+			if ( $loop + 1 > $total_count ) {
+				$count         = SYNC::trash_not_synced( $sync );
+				$progress_msg .= sprintf(
+					/* translators: %s number of properties */
+					esc_html__( 'Properties not synced and sent to trash: %s', 'connect-woocommerce' ),
+					$count
+				);
+			}
 
 			wp_send_json_success(
 				array(

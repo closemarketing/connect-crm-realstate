@@ -49,12 +49,13 @@ class SYNC {
 			$property_info['post_name']    = sanitize_title( $property_title );
 			$property_info['post_content'] = isset( $item['description'] ) ? $item['description'] : '';
 			$property_id                   = wp_insert_post( $property_info );
-			$message                      .= 'CREA ' . $property_id;
+			$message                      .= __( 'Created Property ID:', 'connect-crm-realstate' );
 		} else {
-			$message            .= 'ACT ' . $property_id;
+			$message            .= __( 'Updated Property ID:', 'connect-crm-realstate' );
 			$property_info['ID'] = $property_id;
 			wp_update_post( $property_info );
 		}
+		$message .= ' ' . $property_id;
 
 		return array(
 			'property_id' => $property_id,
@@ -90,5 +91,43 @@ class SYNC {
 		} else {
 			return 0;
 		}
+	}
+
+	/**
+	 * Sends to trash not synced products.
+	 *
+	 * @param array $products_synced Products synced.
+	 * @return int
+	 */
+	public static function trash_not_synced( $products_synced ) {
+		$settings  = get_option( 'conncrmreal_settings' );
+		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+
+		$products_unpublished = 0;
+		$args_query           = array(
+			'post_type'      => $post_type,
+			'posts_per_page' => -1,
+			'post__not_in'   => $products_synced,
+			'post_status'    => array( 'publish', 'draft' ),
+		);
+		// The Query.
+		$the_query = new \WP_Query( $args_query );
+
+		// The Loop.
+		if ( $the_query->have_posts() ) {
+			while ( $the_query->have_posts() ) {
+				$the_query->the_post();
+				$post_id = get_the_ID();
+				wp_update_post(
+					array(
+						'ID'          => $post_id,
+						'post_status' => 'trash',
+					)
+				);
+				$products_unpublished++;
+			}
+			wp_reset_postdata();
+		}
+		return $products_unpublished;
 	}
 }
