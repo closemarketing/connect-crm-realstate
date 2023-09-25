@@ -22,7 +22,7 @@ WordPress installation and then activate the Plugin from Plugins page.
 
 == Changelog ==
 
-= 0.1 =
+= 1.0.0 =
 *	First released.
 
 == Links ==
