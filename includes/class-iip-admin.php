@@ -24,6 +24,14 @@ defined( 'ABSPATH' ) || exit;
  */
 class Admin {
 	/**
+	 * Settings CRM
+	 *
+	 * @var array
+	 */
+	private $settings;
+
+
+	/**
 	 * Construct and intialize
 	 *
 	 */
@@ -37,7 +45,6 @@ class Admin {
 	 * @return void
 	 */
 	public function plugin_settings() {
-
 		wp_register_style(
 			'iip_admin-styles',
 			plugin_dir_url( __FILE__ ) . 'assets/iip-styles-admin.css',
@@ -61,49 +68,32 @@ class Admin {
 	}
 
 	/**
-	 * Register plugin settings
-	 *
-	 * @return void
-	 */
-	public function register_plugin_settings() {
-		// Register our settings.
-		register_setting( 'iip_plugin_settings_group', 'iip_agency_number' );
-		register_setting( 'iip_plugin_settings_group', 'iip_agency_pass' );
-		register_setting( 'iip_plugin_settings_group', 'iip_post_type' );
-
-		// Register Merge Settings.
-		$properties_fields = $this->get_properties_fields();
-
-		foreach ( $properties_fields as $property_field ) {
-			register_setting( 'iip_plugin_merge_group', 'iip_var_' . esc_html( $property_field['section'] ) );
-		}
-	}
-
-	/**
 	 * Adds plugin settings page
 	 *
 	 * @return void
 	 */
 	public function plugin_options_page() {
+		$this->settings = get_option( 'conncrmreal_settings' );
+
 		// Set active class for navigation tabs.
-		$active_tab = ( isset( $_GET['tab'] ) ? $_GET['tab'] : 'iip-import' );
+		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
 
 		echo '<div class="wrap bialty-containter">';
 		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ). '</h2>';
 		echo '<h2 class="nav-tab-wrapper">';
 		// Import Properties.
 		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-import' ) . '" class="nav-tab ';
-		echo  ( 'iip-import' === $active_tab ? 'nav-tab-active' : '' );
+		echo ( 'iip-import' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Import Properties', 'connect-crm-realstate' ) . '</a>';
 
 		// Settings Properties.
 		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-settings' ) . '" class="nav-tab ';
-		echo  ( 'iip-settings' === $active_tab ? 'nav-tab-active' : '' );
+		echo ( 'iip-settings' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Settings', 'connect-crm-realstate' ) . '</a>';
 
 		// Merge variables.
 		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-merge' ) . '" class="nav-tab ';
-		echo  ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
+		echo ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Merge variables', 'connect-crm-realstate' ) . '</a>';
 
 		echo '</h2>';
@@ -113,12 +103,102 @@ class Admin {
 		}
 
 		if ( 'iip-settings' === $active_tab ) {
-			$this->plugin_settings_page();
+			echo '<form method="post" action="options.php">';
+			settings_fields( 'admin_conncrmreal_settings' );
+			do_settings_sections( 'conncrmreal_settings' );
+			submit_button( esc_html__( 'Save changes', 'connect-crm-realstate' ) );
+			echo '</form>';
 		}
 
 		if ( 'iip-merge' === $active_tab ) {
 			$this->plugin_merge_page();
 		}
+	}
+
+	/**
+	 * Register plugin settings
+	 *
+	 * @return void
+	 */
+	public function register_plugin_settings() {
+		// Register our settings.
+		register_setting(
+			'admin_conncrmreal_settings',
+			'conncrmreal_settings',
+			array( $this, 'sanitize_fields_settings' )
+		);
+	
+		add_settings_section(
+			'admin_conncrmreal_settings',
+			__( 'Settings for Integration with CRM Real State', 'connect-crm-realstate' ),
+			array( $this, 'admin_section_settings_info' ),
+			'conncrmreal_settings'
+		);
+
+		add_settings_field(
+			'conncrmreal_type',
+			__( 'Type', 'connect-crm-realstate' ),
+			array( $this, 'type_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
+		add_settings_field(
+			'conncrmreal_apipassword',
+			__( 'API Password / Token', 'connect-crm-realstate' ),
+			array( $this, 'apipassword_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+	}
+
+	/**
+	 * Sanitize fiels before saves in DB
+	 *
+	 * @param array $input Input fields.
+	 * @return array
+	 */
+	public function sanitize_fields_settings( $input ) {
+		$sanitary_values = array();
+
+		$field_values = array(
+			'type',
+			'apipassword',
+		);
+
+		foreach ( $field_values as $field_value ) {
+			if ( isset( $input[ $field_value ] ) ) {
+				$sanitary_values[ $field_value ] = sanitize_text_field( $input[ $field_value ] );
+			}
+		}
+
+		return $sanitary_values;
+	}
+	/**
+	 * Show title callback
+	 *
+	 * @return void
+	 */
+	public function type_callback() {
+		$type_option = isset( $this->settings['type'] ) ? $this->settings['type'] : 'show';
+		?>
+		<select name="conncrmreal_settings[type]" id="type">
+			<option value="anaconda" <?php selected( $type_option, 'anaconda' ); ?>><?php esc_html_e( 'Anaconda', 'connect-crm-realstate' ); ?></option>
+			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?>><?php esc_html_e( 'Inmovilla', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<?php
+	}
+
+	/**
+	 * Password callback
+	 *
+	 * @return void
+	 */
+	public function apipassword_callback() {
+		printf(
+			'<input class="regular-text" type="password" name="conncrmreal_settings[apipassword]" id="apipassword" value="%s">',
+			isset( $this->settings['apipassword'] ) ? esc_attr( $this->settings['apipassword'] ) : ''
+		);
 	}
 
 	/**
@@ -129,113 +209,21 @@ class Admin {
 	public function plugin_import_page() {
 		?>
 		<div class="connect-realstate-manual-action">
-			<h2><?php _e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
-			<p><?php _e( 'After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?><br/></p>
+			<h2><?php esc_html_e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
+			<p><?php esc_html_e( 'After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?><br/></p>
 			<div id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0);" ><?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?></div>
-			<fieldset id="logwrapper"><legend>Registro</legend><div id="loglist"></div></fieldset>
+			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
 		</div>
 		<?php
 	}
+
 	/**
-	 * Settings and Merge variables page
+	 * Info for neo automate section.
 	 *
 	 * @return void
 	 */
-	public function plugin_settings_page() {
-		$agency_number = get_option( 'iip_agency_number' );
-		$agency_pass   = get_option( 'iip_agency_pass' );
-		$language      = get_option( 'iip_language' );
-		$post_type     = get_option( 'iip_post_type' );
-		if ( $agency_number && $agency_pass ) {
-			$show_merge_vars = true;
-		} else {
-			$show_merge_vars = false;
-		}
-		// Select Custom post types.
-		$select_cpt_options = '<option value=""';
-		if ( ! $post_type ) {
-			$select_cpt_options .= ' selected';
-		}
-		$select_cpt_options .= '></option>';
-		$args = array(
-			'public'   => true,
-			'_builtin' => false,
-		);
-		$list_post_types = get_post_types( $args, 'objects', 'and' );
-		foreach ( $list_post_types as $list_post_type ) {
-			$select_cpt_options .= '<option value="' . $list_post_type->name . '"';
-			if ( $post_type === $list_post_type->name ) {
-				$select_cpt_options .= ' selected';
-			}
-			$select_cpt_options .= '>' . $list_post_type->label . '</option>';
-		}
-		// Language.
-		$select_lang = '<option value=""';
-		if ( ! $language ) {
-			$select_lang .= ' selected';
-		}
-		$select_lang .= '></option>';
-		$inmovilla_langs = array(
-			1  => __( 'Spanish', 'connect-crm-realstate' ),
-			2  => __( 'English', 'connect-crm-realstate' ),
-			3  => __( 'German', 'connect-crm-realstate' ),
-			4  => __( 'French', 'connect-crm-realstate' ),
-			5  => __( 'Dutch', 'connect-crm-realstate' ),
-			6  => __( 'Norweigian', 'connect-crm-realstate' ),
-			7  => __( 'Russian', 'connect-crm-realstate' ),
-			8  => __( 'Portuguese', 'connect-crm-realstate' ),
-			9  => __( 'Swedish', 'connect-crm-realstate' ),
-			10 => __( 'Finnish', 'connect-crm-realstate' ),
-			11 => __( 'Chinese', 'connect-crm-realstate' ),
-			12 => __( 'Catalan', 'connect-crm-realstate' ),
-			15 => __( 'Italian', 'connect-crm-realstate' ),
-			16 => __( 'Basque', 'connect-crm-realstate' ),
-			17 => __( 'Polish', 'connect-crm-realstate' ),
-			18 => __( 'Galician', 'connect-crm-realstate' ),
-		);
-		foreach ( $inmovilla_langs as $key => $value ) {
-			$select_lang .= '<option value="' . $key . '"';
-			if ( ( $language === $key) || ( ! $language && 1 === $key ) ) {
-				$select_lang .= ' selected';
-			}
-			$select_lang .= '>' . $value . '</option>';
-		}
-		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Connection Settings', 'connect-crm-realstate' ); ?></h1>
-
-			<form method="post" action="options.php">
-				<?php settings_fields( 'iip_plugin_settings_group' ); ?>
-				<?php do_settings_sections( 'iip_plugin_settings_group' ); ?>
-				<table class="form-table">
-					<tr valign="top">
-						<th scope="row"><?php esc_html_e( 'Agency number', 'connect-crm-realstate'); ?></th>
-						<td><input type="text" name="iip_agency_number" value="<?php echo esc_attr( $agency_number ); ?>" /></td>
-					</tr>
-
-					<tr valign="top">
-						<th scope="row"><?php esc_html_e( 'Agency API Password', 'connect-crm-realstate' ); ?></th>
-						<td><input type="password" name="iip_agency_pass" value="<?php echo esc_attr( $agency_pass ); ?>" /></td>
-					</tr>
-
-					<tr valign="top">
-						<th scope="row"><?php esc_html_e( 'Language', 'connect-crm-realstate' ); ?></th>
-						<td><select name="iip_language"><?php echo $select_lang; ?></select></td>
-					</tr>
-
-					<tr valign="top">
-						<th scope="row"><?php esc_html_e( 'Custom Post Type to import', 'connect-crm-realstate' ); ?></th>
-						<td><select name="iip_post_type"><?php echo $select_cpt_options; ?></select></td>
-					</tr>
-
-				</table>
-				<?php submit_button(); ?>
-
-				</div>
-
-			</form>
-		</div>
-		<?php
+	public function admin_section_settings_info() {
+		esc_html_e( 'Put the connection API key settings in order to connect external data.', 'connect-crm-realstate' );
 	}
 
 	public function plugin_merge_page() {

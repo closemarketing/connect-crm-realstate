@@ -28,6 +28,10 @@ class PostType {
 	 */
 	public function __construct() {
 		add_action( 'init', array( $this, 'cpt_property' ) );
+
+		// Register Meta box for post type property.
+		add_action( 'add_meta_boxes', array( $this, 'metabox_property' ) );
+		add_action( 'save_post', array( $this, 'save_metaboxes_property' ) );
 	}
 
 	/**
@@ -68,6 +72,43 @@ class PostType {
 		);
 		register_post_type( 'property', $args );
 	}
+	/**
+	 * Adds metabox
+	 *
+	 * @return void
+	 */
+	public function metabox_property() {
+		add_meta_box(
+			'property',
+			__( 'Property Meta', 'connect-crm-realstate' ),
+			array( $this, 'metabox_show_property' ),
+			'property',
+			'normal'
+		);
+	}
+	/**
+	 * Metabox inputs for post type.
+	 *
+	 * @param object $post Post object.
+	 * @return void
+	 */
+	public function metabox_show_property( $post ) {
+		$meta = get_post_meta( $post->ID );
+		?>
+		<table>
+			<?php
+			foreach ( $meta as $key => $value ) {
+				if ( false === strpos( $key, 'property_' ) ) {
+					continue;
+				}
+				echo '<tr>';
+				echo '<td><strong>' . esc_attr( $key ) . '</strong></td>';
+				echo '<td>' . esc_attr( $value[0] ) . '</td>';
+				echo '</tr>';
+			}
+			?>
+		</table>
+		<?php
+	}
 
 }
-
