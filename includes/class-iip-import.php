@@ -96,11 +96,7 @@ class Import {
 
 			if ( $loop + 1 > $total_count ) {
 				$count         = SYNC::trash_not_synced( $sync );
-				$progress_msg .= sprintf(
-					/* translators: %s number of properties */
-					esc_html__( 'Properties not synced and sent to trash: %s', 'connect-woocommerce' ),
-					$count
-				);
+				$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-woocommerce' ) . $count;
 			}
 
 			wp_send_json_success(

@@ -19,7 +19,7 @@ function syncManualProperties( element, loop = 0 ) {
 	.then( (resp) => resp.json() )
 	.then( function(results) {
 		if ( results.success ){
-			if( results.data.loop < results.data.total ) {
+			if( results.data.loop <= results.data.total ) {
 				syncManualProperties(element,results.data.loop);
 			} else {
 				element.classList.remove('disabled');
