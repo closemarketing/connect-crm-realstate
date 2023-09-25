@@ -1,1 +1,10 @@
-api.http
+#Wordpress
+vendor/
+node_modules/
+# Numerous always-ignore extensions
+*.log
+*.zip
+
+# OS or Editor folders
+._*.cache
+.DS_Store
