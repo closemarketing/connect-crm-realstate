@@ -18,8 +18,16 @@ defined( 'ABSPATH' ) || exit;
  * @since 1.0.0
  */
 class SYNC {
-	public static function sync_property( $item, $post_type ) {
+	/**
+	 * Syncs property from item API.
+	 *
+	 * @param array $item Item from API.
+	 * @return array
+	 */
+	public static function sync_property( $item ) {
 		$message        = '';
+		$settings       = get_option( 'conncrmreal_settings' );
+		$post_type      = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$property_id    = self::find_property( $item['id'], $post_type );
 		$property_title = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' );
 
@@ -55,6 +63,13 @@ class SYNC {
 
 	}
 
+	/**
+	 * Finds property by property_id.
+	 *
+	 * @param string $property_id Property ID.
+	 * @param string $post_type Post type.
+	 * @return int
+	 */
 	public static function find_property( $property_id, $post_type ) {
 		$property = get_posts(
 			array(

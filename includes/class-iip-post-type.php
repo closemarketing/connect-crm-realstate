@@ -24,14 +24,24 @@ defined( 'ABSPATH' ) || exit;
  */
 class PostType {
 	/**
+	 * Settings
+	 *
+	 * @var array
+	 */
+	private $settings;
+
+	/**
 	 * Construct and intialize
 	 */
 	public function __construct() {
-		add_action( 'init', array( $this, 'cpt_property' ) );
+		$this->settings     = get_option( 'conncrmreal_settings' );
+		$settings_post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
 
-		// Register Meta box for post type property.
-		add_action( 'add_meta_boxes', array( $this, 'metabox_property' ) );
-		add_action( 'save_post', array( $this, 'save_metaboxes_property' ) );
+		if ( 'property' === $settings_post_type ) {
+			add_action( 'init', array( $this, 'cpt_property' ) );
+			// Register Meta box for post type property.
+			add_action( 'add_meta_boxes', array( $this, 'metabox_property' ) );
+		}
 	}
 
 	/**
@@ -40,6 +50,7 @@ class PostType {
 	 * @return void
 	 **/
 	public function cpt_property() {
+		$settings_post_type_slug = isset( $this->settings['post_type_slug'] ) ? $this->settings['post_type_slug'] : __( 'properties', 'connect-crm-realstate' );
 		$labels = array(
 			'name'               => __( 'Property', 'connect-crm-realstate' ),
 			'singular_name'      => __( 'Properties', 'connect-crm-realstate' ),
@@ -60,7 +71,7 @@ class PostType {
 			'show_in_rest'       => true, // Adds gutenberg support.
 			'query_var'          => true,
 			'rewrite'            => array(
-				'slug'       => _x( 'properties', 'slug', 'connect-crm-realstate' ),
+				'slug'       => $settings_post_type_slug,
 				'with_front' => false,
 			),
 			'has_archive'        => false,
@@ -110,5 +121,4 @@ class PostType {
 		</table>
 		<?php
 	}
-
 }

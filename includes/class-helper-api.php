@@ -18,20 +18,47 @@ defined( 'ABSPATH' ) || exit;
  * @since 1.0.0
  */
 class API {
-	public static function request( $method, $endpoint, $query, $crm = 'anaconda' ) {
-		if ( 'anaconda' === $crm ) {
+	/**
+	 * Request to API depending CRM
+	 *
+	 * @param string $method Method of API request.
+	 * @param string $endpoint Endpoint of API request.
+	 * @param array  $query Query of API request.
+	 * @return array
+	 */
+	public static function request( $method, $endpoint, $query = array() ) {
+		$settings     = get_option( 'conncrmreal_settings' );
+		$settings_crm = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
+		if ( 'anaconda' === $settings_crm ) {
 			return self::request_anaconda( $method, $endpoint, $query );
-		} else {
+		} elseif ( 'inmovilla' === $settings_crm ) {
 			return self::request_inmovilla( $method, $endpoint, $query );
 		}
 	}
 
+	/**
+	 * Request to API from Anaconda CRM
+	 *
+	 * @param string $method Method of API request.
+	 * @param string $endpoint Endpoint of API request.
+	 * @param array  $query Query of API request.
+	 * @return array
+	 */
 	private static function request_anaconda( $method = 'GET', $endpoint, $query ) {
+		$settings    = get_option( 'conncrmreal_settings' );
+		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
+
+		if ( empty( $apipassword ) ) {
+			return array(
+				'status' => 'error',
+				'data'   => __( 'API password is empty', 'connect-crm-realstate' ),
+			);
+		}
 		// API connection.
 		$args = array(
-			'method' => $method,
+			'method'  => $method,
 			'headers' => array(
-				'Authorization' => 'Bearer 3SEG3FBSPT4TFL9DSEF3',
+				'Authorization' => 'Bearer ' . $apipassword,
 			),
 			'timeout' => 300,
 		);
@@ -54,11 +81,24 @@ class API {
 			);
 		}
 	}
+
+	/**
+	 * Request to API from Anaconda CRM
+	 *
+	 * @param string $method Method of API request.
+	 * @param string $endpoint Endpoint of API request.
+	 * @param array  $query Query of API request.
+	 * @return array
+	 */
 	private static function request_inmovilla( $method = 'GET', $endpoint, $query ) {
 	}
 
+	/**
+	 * Request to properties API from CRM
+	 *
+	 * @return array
+	 */
 	public static function get_properties() {
-		$crm = 'anaconda';
-		return self::request( 'GET', 'properties', array(), $crm );
+		return self::request( 'GET', 'properties' );
 	}
 }

@@ -68,7 +68,6 @@ class Import {
 	 */
 	public function manual_import() {
 		$loop         = isset( $_POST['loop'] ) ? (int) $_POST['loop'] : 0;
-		$post_type    = 'property';
 		$progress_msg = '';
 
 		if ( check_ajax_referer( 'manual_import_nonce', 'nonce' ) ) {
@@ -83,7 +82,7 @@ class Import {
 			}
 			$item          = $properties[ $loop ];
 			$total_count   = count( $properties );
-			$result_sync   = SYNC::sync_property( $item, $post_type );
+			$result_sync   = SYNC::sync_property( $item );
 			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1 . '/' . $total_count;
 			$progress_msg .= ' - ' . $result_sync['message'];
 

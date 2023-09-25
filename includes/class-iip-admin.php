@@ -121,6 +121,8 @@ class Admin {
 	 * @return void
 	 */
 	public function register_plugin_settings() {
+		$this->settings = get_option( 'conncrmreal_settings' );
+
 		// Register our settings.
 		register_setting(
 			'admin_conncrmreal_settings',
@@ -150,6 +152,24 @@ class Admin {
 			'conncrmreal_settings',
 			'admin_conncrmreal_settings'
 		);
+
+		add_settings_field(
+			'conncrmreal_post_type',
+			__( 'Post Type', 'connect-crm-realstate' ),
+			array( $this, 'post_type_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
+		if ( isset( $this->settings['post_type'] ) && 'property' === $this->settings['post_type'] ) {
+			add_settings_field(
+				'conncrmreal_post_type_slug',
+				__( 'Post Type SLUG', 'connect-crm-realstate' ),
+				array( $this, 'post_type_slug_callback' ),
+				'conncrmreal_settings',
+				'admin_conncrmreal_settings'
+			);
+		}
 	}
 
 	/**
@@ -164,6 +184,8 @@ class Admin {
 		$field_values = array(
 			'type',
 			'apipassword',
+			'post_type',
+			'post_type_slug',
 		);
 
 		foreach ( $field_values as $field_value ) {
@@ -174,6 +196,7 @@ class Admin {
 
 		return $sanitary_values;
 	}
+
 	/**
 	 * Show title callback
 	 *
@@ -198,6 +221,50 @@ class Admin {
 		printf(
 			'<input class="regular-text" type="password" name="conncrmreal_settings[apipassword]" id="apipassword" value="%s">',
 			isset( $this->settings['apipassword'] ) ? esc_attr( $this->settings['apipassword'] ) : ''
+		);
+	}
+
+	/**
+	 * Show title callback
+	 *
+	 * @return void
+	 */
+	public function post_type_callback() {
+		$post_type_option = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'show';
+
+		$args = array(
+			'public'   => true,
+			'_builtin' => true,
+		);
+		$post_types = get_post_types( $args );
+		unset( $post_types['attachment'] );
+		?>
+		<select name="conncrmreal_settings[post_type]" id="post_type">
+			<option value="property" <?php selected( $post_type_option, 'property' ); ?>><?php esc_html_e( 'Created by this plugin', 'connect-crm-realstate' ); ?></option>
+			<?php
+			foreach ( $post_types as $post_type ) {
+				?>
+				<option value="<?php echo esc_attr( $post_type ); ?>" <?php selected( $post_type_option, $post_type ); ?>><?php echo esc_html( $post_type ); ?></option>
+				<?php
+			}
+			?>
+		</select>
+		<?php
+	}
+
+	/**
+	 * Password callback
+	 *
+	 * @return void
+	 */
+	public function post_type_slug_callback() {
+		printf(
+			'<input class="regular-text" type="text" name="conncrmreal_settings[post_type_slug]" id="post_type_slug" value="%s">',
+			isset( $this->settings['post_type_slug'] ) ? esc_attr( $this->settings['post_type_slug'] ) : ''
+		);
+		echo sprintf( 
+			'<p class="description">%s</p>',
+			__( 'Slug for the post type. If you change this, you need to save the permalinks again.', 'connect-crm-realstate' )
 		);
 	}
 
