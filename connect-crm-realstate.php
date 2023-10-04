@@ -24,6 +24,7 @@ load_plugin_textdomain( 'connect-crm-realstate', false, dirname( plugin_basename
 
 // Includes files.
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-helper-api.php';
+require_once CCRMRE_PLUGIN_PATH . 'includes/class-helper-fields.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-helper-sync.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-admin.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-import.php';
