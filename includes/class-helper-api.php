@@ -19,24 +19,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class API {
 	/**
-	 * Request to API depending CRM
-	 *
-	 * @param string $method Method of API request.
-	 * @param string $endpoint Endpoint of API request.
-	 * @param array  $query Query of API request.
-	 * @return array
-	 */
-	public static function request( $method, $endpoint, $query = array() ) {
-		$settings     = get_option( 'conncrmreal_settings' );
-		$settings_crm = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
-		if ( 'anaconda' === $settings_crm ) {
-			return self::request_anaconda( $method, $endpoint, $query );
-		} elseif ( 'inmovilla' === $settings_crm ) {
-			return self::request_inmovilla( $method, $endpoint, $query );
-		}
-	}
-
-	/**
 	 * Request to API from Anaconda CRM
 	 *
 	 * @param string $method Method of API request.
@@ -44,7 +26,7 @@ class API {
 	 * @param array  $query Query of API request.
 	 * @return array
 	 */
-	private static function request_anaconda( $method = 'GET', $endpoint, $query ) {
+	private static function request_anaconda( $method = 'GET', $endpoint, $query = array() ) {
 		$settings    = get_option( 'conncrmreal_settings' );
 		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
 
@@ -90,7 +72,7 @@ class API {
 	 * @param array  $query Query of API request.
 	 * @return array
 	 */
-	private static function request_inmovilla( $method = 'GET', $endpoint, $query ) {
+	private static function request_inmovilla( $method = 'GET', $endpoint, $query = array() ) {
 	}
 
 	/**
@@ -99,6 +81,12 @@ class API {
 	 * @return array
 	 */
 	public static function get_properties() {
-		return self::request( 'GET', 'properties' );
+		$settings     = get_option( 'conncrmreal_settings' );
+		$settings_crm = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
+		if ( 'anaconda' === $settings_crm ) {
+			return self::request_anaconda( 'GET', 'properties/my_office_properties' );
+		} elseif ( 'inmovilla' === $settings_crm ) {
+			return self::request_inmovilla( 'GET', 'properties' );
+		}
 	}
 }
