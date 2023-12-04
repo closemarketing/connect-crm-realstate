@@ -68,29 +68,35 @@ class Import {
 	 */
 	public function manual_import() {
 		$loop         = isset( $_POST['loop'] ) ? (int) $_POST['loop'] : 0;
-		$properties   = isset( $_POST['properties'] ) ? $_POST['properties'] : array();
 		$pagination   = isset( $_POST['pagination'] ) ? (int) $_POST['pagination'] : 200;
+		$totalprop    = isset( $_POST['totalprop'] ) ? (int) $_POST['totalprop'] : 0;
 		$progress_msg = '';
 
 		if ( check_ajax_referer( 'manual_import_nonce', 'nonce' ) ) {
-			$properties  = get_option( 'connect_query_properties' );
-			$change_page = $loop % $pagination;
-			$page        = round( $loop / $pagination, 0 ) + 1;
+			$loop_page = $loop % $pagination;
+			$page      = round( $loop / $pagination, 0 ) + 1;
 
 			if ( 0 === $loop ) {
 				update_option( 'connect_crm_realstate_sync', array() );
 			}
 
-			if ( ! $properties || 0 === $loop || 0 === $change_page ) {
+			$property = get_transient( 'connreal_query_property_loop_' . $loop_page );
+			if ( ! $property || 0 === $loop_page ) {
 				$result_api   = API::get_properties( $page );
 				$properties   = 'ok' === $result_api['status'] ? $result_api['data'] : array();
 				$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-realstate' ) . '<br/>';
 				$total_count  = ! empty( $total_count ) ? $total_count : 0;
 				$total_count += count( $properties );
+				$i            = 0;
+				foreach ( $properties as $property_api ) {
+					set_transient( 'connreal_query_property_loop_' . $i, $property_api, MINUTE_IN_SECONDS * 3 );
+					$i++;
+				}
+				$property  = $result_api['data'][ $loop_page ];
+				$totalprop = count( $properties );
 			}
 
-			$item          = $properties[ $loop ];
-			$result_sync   = SYNC::sync_property( $item );
+			$result_sync   = SYNC::sync_property( $property );
 			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1;
 			$progress_msg .= ' - ' . $result_sync['message'];
 
@@ -100,8 +106,9 @@ class Import {
 				$sync[]      = $property_id;
 				update_option( 'connect_crm_realstate_sync', $sync );
 			}
-			$finish = count( $properties ) < $pagination && $loop === $pagination ? true : false;
-			$progress_msg .= ' page: ' . $page . ' Contador: ' . count( $properties ) . ' page: ' . $pagination . ' loop: ' . $loop . ' finish: ' . $finish . ' ';
+			$finish = $totalprop < $pagination && $totalprop === $loop ? true : false;
+
+			$progress_msg .= ' page: ' . $page . ' properties: ' . $totalprop . ' pagination: ' . $pagination . ' loop: ' . $loop . ' finish: ' . $finish . ' change page:' . $loop_page;
 			if ( $finish ) {
 				$count         = SYNC::trash_not_synced( $sync );
 				$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-crm-realstate' ) . $count;
@@ -112,8 +119,8 @@ class Import {
 					'loop'       => $loop + 1,
 					'message'    => $progress_msg,
 					'pagination' => $pagination,
+					'totalprop'  => $totalprop,
 					'finish'     => $finish,
-					'properties' => $properties,
 				)
 			);
 		} else {

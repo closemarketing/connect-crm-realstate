@@ -1,4 +1,4 @@
-function syncManualProperties( element, loop = 0, pagination, properties = [] ) {
+function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
 	element.classList.add('disabled');
 	element.innerHTML = ajaxAction.label_syncing + ' <span class="spinner is-active"></span>';
 	console.log(loop);
@@ -14,13 +14,13 @@ function syncManualProperties( element, loop = 0, pagination, properties = [] ) 
 			'Content-Type': 'application/x-www-form-urlencoded',
 			'Cache-Control': 'no-cache',
 		},
-		body: 'action=manual_import&nonce=' + ajaxAction.nonce + '&loop=' + loop + '&pagination=' + pagination + '&properties=' + properties,
+		body: 'action=manual_import&nonce=' + ajaxAction.nonce + '&loop=' + loop + '&pagination=' + pagination + '&totalprop=' + totalprop,
 	})
 	.then( (resp) => resp.json() )
 	.then( function(results) {
 		if ( results.success ){
 			if( ! results.data.finish ) {
-				syncManualProperties(element,results.data.loop, results.data.pagination, results.data.properties);
+				syncManualProperties(element,results.data.loop, results.data.pagination, results.data.totalprop );
 			} else {
 				element.classList.remove('disabled');
 				element.innerHTML = ajaxAction.label_sync;
