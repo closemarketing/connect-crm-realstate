@@ -47,19 +47,21 @@ class API {
 		if ( ! empty( $query ) ) {
 			$args['body'] = $query;
 		}
+
 		$response    = wp_remote_request( 'https://api.anaconda.guru/api/v1/' . $endpoint, $args );
 		$result_body = wp_remote_retrieve_body( $response );
-		$body        = json_decode( $result_body, true );
+		$code        = (int) substr( wp_remote_retrieve_response_code( $response ), 0, 1 );
+		$data        = json_decode( $result_body, true );
 
-		if ( ! is_wp_error( $response ) && ( 200 === $response['response']['code'] || 201 === $response['response']['code'] ) ) {
-			return array(
-				'status' => 'ok',
-				'data'   => isset( $body ) ? $body : array(),
-			);
-		} else {
+		if ( is_wp_error( $response ) || empty( $response['body'] ) || 2 !== $code ) {
 			return array(
 				'status' => 'error',
 				'data'   => isset( $body['error_message'] ) ? $body['error_message'] : '',
+			);
+		} else {
+			return array(
+				'status' => 'ok',
+				'data'   => $data,
 			);
 		}
 	}
@@ -80,13 +82,27 @@ class API {
 	 *
 	 * @return array
 	 */
-	public static function get_properties() {
+	public static function get_properties( $page ) {
 		$settings     = get_option( 'conncrmreal_settings' );
 		$settings_crm = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
 		if ( 'anaconda' === $settings_crm ) {
-			return self::request_anaconda( 'GET', 'properties/my_office_properties' );
+			return self::request_anaconda( 'GET', 'properties/my_office_properties?page=' . $page );
 		} elseif ( 'inmovilla' === $settings_crm ) {
 			return self::request_inmovilla( 'GET', 'properties' );
+		}
+	}
+
+	/**
+	 * Request to properties API from CRM
+	 *
+	 * @return array
+	 */
+	public static function get_total_properties() {
+		$settings     = get_option( 'conncrmreal_settings' );
+		$settings_crm = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
+		if ( 'anaconda' === $settings_crm ) {
+			return self::request_anaconda( 'POST', 'properties/total_search_properties' );
+		} elseif ( 'inmovilla' === $settings_crm ) {
 		}
 	}
 }
