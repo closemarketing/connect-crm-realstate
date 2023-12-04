@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Connect CRM Real State\n"
 "POT-Creation-Date: 2023-12-04 10:32+0100\n"
-"PO-Revision-Date: 2023-12-04 20:02+0100\n"
+"PO-Revision-Date: 2023-12-04 20:07+0100\n"
 "Last-Translator: David Pérez <david@close.marketing>\n"
 "Language-Team: David Pérez <david@close.marketing>\n"
 "Language: es_ES\n"
@@ -26,7 +26,7 @@ msgstr "La contraseña de la API está vacía"
 
 #: includes/class-helper-sync.php:32 includes/class-iip-post-type.php:55
 msgid "Property"
-msgstr "Vivienda"
+msgstr "Propiedad"
 
 #: includes/class-helper-sync.php:52
 msgid "Created Property ID:"
@@ -755,7 +755,7 @@ msgstr "Finalizado"
 
 #: includes/class-iip-import.php:87
 msgid "Connecting with API and syncing Properties ..."
-msgstr ""
+msgstr "Conectando con la con API y sincronizando propiedades ..."
 
 #: includes/class-iip-import.php:107
 msgid "Properties not synced and sent to trash: "
@@ -763,7 +763,7 @@ msgstr ""
 
 #: includes/class-iip-post-type.php:53
 msgid "properties"
-msgstr "inmuebles"
+msgstr "propiedades"
 
 #: includes/class-iip-post-type.php:56
 msgid "Properties"
@@ -771,15 +771,15 @@ msgstr "Propiedades"
 
 #: includes/class-iip-post-type.php:57 includes/class-iip-post-type.php:58
 msgid "Add New Properties"
-msgstr ""
+msgstr "Añadir nuevas propiedades"
 
 #: includes/class-iip-post-type.php:59
 msgid "Edit Properties"
-msgstr ""
+msgstr "Editar propiedades"
 
 #: includes/class-iip-post-type.php:60
 msgid "New Properties"
-msgstr ""
+msgstr "Nuevas propiedades"
 
 #: includes/class-iip-post-type.php:61
 msgid "View Properties"
@@ -791,11 +791,11 @@ msgstr "Buscar propiedad"
 
 #: includes/class-iip-post-type.php:63
 msgid "Not found Property"
-msgstr ""
+msgstr "No encontrado Propiedad"
 
 #: includes/class-iip-post-type.php:64
 msgid "Not found Property in trash"
-msgstr ""
+msgstr "No encontrado Propiedad en la basura"
 
 #: includes/class-iip-post-type.php:94
 msgid "Property Meta"
@@ -808,6 +808,8 @@ msgstr "https://www.closemarketing.es"
 #. Description of the plugin/theme
 msgid "Connect Properties from Inmovilla/Anaconda to a Custom Post Type."
 msgstr ""
+"Conectar propiedades de Inmovilla/Anaconda a un tipo de entrada "
+"personalizado."
 
 #. Author of the plugin/theme
 msgid "closemarketing"
