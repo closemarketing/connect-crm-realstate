@@ -1,7 +1,6 @@
 function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
 	element.classList.add('disabled');
 	element.innerHTML = ajaxAction.label_syncing + ' <span class="spinner is-active"></span>';
-	console.log(loop);
 
 	const isOdd = number => number % 2 !== 0;
 	class_task = isOdd(loop) ? 'odd' : 'even';

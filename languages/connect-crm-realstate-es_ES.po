@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Connect CRM Real State\n"
 "POT-Creation-Date: 2023-12-04 10:32+0100\n"
-"PO-Revision-Date: 2023-12-04 10:39+0100\n"
+"PO-Revision-Date: 2023-12-04 20:02+0100\n"
 "Last-Translator: David Pérez <david@close.marketing>\n"
 "Language-Team: David Pérez <david@close.marketing>\n"
 "Language: es_ES\n"
@@ -22,7 +22,7 @@ msgstr ""
 
 #: includes/class-helper-api.php:36
 msgid "API password is empty"
-msgstr ""
+msgstr "La contraseña de la API está vacía"
 
 #: includes/class-helper-sync.php:32 includes/class-iip-post-type.php:55
 msgid "Property"
@@ -30,24 +30,24 @@ msgstr "Vivienda"
 
 #: includes/class-helper-sync.php:52
 msgid "Created Property ID:"
-msgstr ""
+msgstr "Propiedad creada ID:"
 
 #: includes/class-helper-sync.php:54
 msgid "Updated Property ID:"
-msgstr ""
+msgstr "Propiedad actualizada ID:"
 
 #. Plugin Name of the plugin/theme
 #: includes/class-iip-admin.php:58 includes/class-iip-admin.php:59
 msgid "Connect CRM Real State"
-msgstr ""
+msgstr "Connect CRM Real State"
 
 #: includes/class-iip-admin.php:82
 msgid "Connect CRM Real State Settings"
-msgstr ""
+msgstr "Ajustes de Connect CRM Real State"
 
 #: includes/class-iip-admin.php:87 includes/class-iip-admin.php:283
 msgid "Import Properties"
-msgstr ""
+msgstr "Importar propiedades"
 
 #: includes/class-iip-admin.php:92
 msgid "Settings"
@@ -55,7 +55,7 @@ msgstr "Ajustes"
 
 #: includes/class-iip-admin.php:97
 msgid "Merge variables"
-msgstr ""
+msgstr "Fusionar variables"
 
 #: includes/class-iip-admin.php:109
 msgid "Save changes"
@@ -63,7 +63,7 @@ msgstr "Guardar los cambios"
 
 #: includes/class-iip-admin.php:135
 msgid "Settings for Integration with CRM Real State"
-msgstr ""
+msgstr "Ajustes para la integración con CRM Real State"
 
 #: includes/class-iip-admin.php:142
 msgid "Type"
@@ -71,7 +71,7 @@ msgstr "Tipo"
 
 #: includes/class-iip-admin.php:150
 msgid "API Password / Token"
-msgstr ""
+msgstr "Contraseña / Token API"
 
 #: includes/class-iip-admin.php:158
 msgid "Post Type"
@@ -79,11 +79,11 @@ msgstr "Tipo de contenido"
 
 #: includes/class-iip-admin.php:167
 msgid "Post Type SLUG"
-msgstr ""
+msgstr "SLUG del tipo de contenido"
 
 #: includes/class-iip-admin.php:211
 msgid "Anaconda"
-msgstr ""
+msgstr "Anaconda"
 
 #: includes/class-iip-admin.php:212
 msgid "Inmovilla"
@@ -91,13 +91,15 @@ msgstr "Inmovilla"
 
 #: includes/class-iip-admin.php:245
 msgid "Created by this plugin"
-msgstr ""
+msgstr "Creado por este plugin"
 
 #: includes/class-iip-admin.php:269
 msgid ""
 "Slug for the post type. If you change this, you need to save the permalinks "
 "again."
 msgstr ""
+"Slug para el tipo de entrada. Si cambia esto, es necesario guardar los "
+"permalinks de nuevo."
 
 #: includes/class-iip-admin.php:284
 msgid ""
@@ -105,6 +107,9 @@ msgid ""
 "properties. The importing process may take a while and you need to keep this "
 "page open to complete it."
 msgstr ""
+"Después de rellenar los ajustes, utilice el botón de abajo para importar las "
+"propiedades. El proceso de importación puede tardar un poco y es necesario "
+"mantener esta página abierta para completarlo."
 
 #: includes/class-iip-admin.php:285
 msgid "Start Import"
@@ -122,7 +127,7 @@ msgstr ""
 
 #: includes/class-iip-admin.php:321
 msgid "Merge Variables with custom values"
-msgstr ""
+msgstr "Fusionar variables con valores personalizados"
 
 #: includes/class-iip-admin.php:374 includes/class-iip-admin.php:467
 msgid "Features"
@@ -150,7 +155,7 @@ msgstr "Zona"
 
 #: includes/class-iip-admin.php:381
 msgid "Complementary Zone"
-msgstr ""
+msgstr "Zona complementaria"
 
 #: includes/class-iip-admin.php:382
 msgid "Street key"

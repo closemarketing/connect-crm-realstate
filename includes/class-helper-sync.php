@@ -57,6 +57,7 @@ class SYNC {
 		}
 		$message .= ' ' . $property_id;
 		$message .= ! empty( $item['internal_property_id'] ) ? ' (' . $item['internal_property_id'] . ')' : '';
+		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $item['city'];
 
 		return array(
 			'property_id' => $property_id,
@@ -101,34 +102,22 @@ class SYNC {
 	 * @return int
 	 */
 	public static function trash_not_synced( $products_synced ) {
+		global $wpdb;
 		$settings  = get_option( 'conncrmreal_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 
-		$products_unpublished = 0;
-		$args_query           = array(
-			'post_type'      => $post_type,
-			'posts_per_page' => -1,
-			'post__not_in'   => $products_synced,
-			'post_status'    => array( 'publish', 'draft' ),
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE $wpdb->posts
+				SET post_status = 'trash'
+				WHERE post_type = %s
+				AND post_status = 'publish'
+				AND ID NOT IN ( %s )",
+				$post_type,
+				implode( ',', $products_synced )
+			)
 		);
-		// The Query.
-		$the_query = new \WP_Query( $args_query );
 
-		// The Loop.
-		if ( $the_query->have_posts() ) {
-			while ( $the_query->have_posts() ) {
-				$the_query->the_post();
-				$post_id = get_the_ID();
-				wp_update_post(
-					array(
-						'ID'          => $post_id,
-						'post_status' => 'trash',
-					)
-				);
-				$products_unpublished++;
-			}
-			wp_reset_postdata();
-		}
-		return $products_unpublished;
+		return $result;
 	}
 }

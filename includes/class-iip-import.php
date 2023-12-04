@@ -96,23 +96,29 @@ class Import {
 				$totalprop = count( $properties );
 			}
 
-			$result_sync   = SYNC::sync_property( $property );
-			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1;
-			$progress_msg .= ' - ' . $result_sync['message'];
+			if ( ! empty( $property ) ) {
+				$result_sync   = SYNC::sync_property( $property );
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1;
+				$progress_msg .= ' - ' . $result_sync['message'];
 
-			if ( ! empty( $result_sync['property_id'] ) ) {
-				$property_id = $result_sync['property_id'];
-				$sync        = get_option( 'connect_crm_realstate_sync' );
-				$sync[]      = $property_id;
-				update_option( 'connect_crm_realstate_sync', $sync );
+				if ( ! empty( $result_sync['property_id'] ) ) {
+					$sync   = get_option( 'connect_crm_realstate_sync' );
+					$sync   = ! empty( $sync ) ? $sync : array();
+					$sync[] = $result_sync['property_id'];
+					update_option( 'connect_crm_realstate_sync', $sync );
+				}
+				$finish = $totalprop < $pagination && $totalprop === $loop ? true : false;
+				$finish = 0 === $totalprop ? true : $finish;
+			} else {
+				$finish = true;
 			}
-			$finish = $totalprop < $pagination && $totalprop === $loop ? true : false;
 
-			$progress_msg .= ' page: ' . $page . ' properties: ' . $totalprop . ' pagination: ' . $pagination . ' loop: ' . $loop . ' finish: ' . $finish . ' change page:' . $loop_page;
 			if ( $finish ) {
 				$count         = SYNC::trash_not_synced( $sync );
 				$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-crm-realstate' ) . $count;
 			}
+
+			delete_transient( 'connreal_query_property_loop_' . $loop_page );
 
 			wp_send_json_success(
 				array(
