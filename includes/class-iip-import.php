@@ -84,7 +84,7 @@ class Import {
 			if ( ! $properties || 0 === $loop || 0 === $change_page ) {
 				$result_api   = API::get_properties( $page );
 				$properties   = 'ok' === $result_api['status'] ? $result_api['data'] : array();
-				$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-woocommerce' ) . '<br/>';
+				$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-realstate' ) . '<br/>';
 				$total_count  = ! empty( $total_count ) ? $total_count : 0;
 				$total_count += count( $properties );
 			}
@@ -104,7 +104,7 @@ class Import {
 			$progress_msg .= ' page: ' . $page . ' Contador: ' . count( $properties ) . ' page: ' . $pagination . ' loop: ' . $loop . ' finish: ' . $finish . ' ';
 			if ( $finish ) {
 				$count         = SYNC::trash_not_synced( $sync );
-				$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-woocommerce' ) . $count;
+				$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-crm-realstate' ) . $count;
 			}
 
 			wp_send_json_success(
@@ -118,57 +118,6 @@ class Import {
 			);
 		} else {
 			wp_send_json_error( array( 'error' => 'Error' ) );
-		}
-	}
-
-	public function attach_image( $post_id, $img_string ) {
-		if ( ! $img_string || ! $post_id ) {
-			return null;
-		}
-
-		$post         = get_post( $post_id );
-		$upload_dir   = wp_upload_dir();
-		$upload_path  = $upload_dir['path'];
-		$filename     = $post->post_name . '-' . time() . '.png';
-		$image_upload = file_put_contents( $upload_path . $filename, $img_string );
-		// HANDLE UPLOADED FILE
-		if ( ! function_exists( 'wp_handle_sideload' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-		}
-
-		if ( ! function_exists( 'wp_get_current_user' ) ) {
-			require_once ABSPATH . 'wp-includes/pluggable.php';
-		}
-		$file = array(
-			'error'    => '',
-			'tmp_name' => $upload_path . $filename,
-			'name'     => $filename,
-			'type'     => 'image/png',
-			'size'     => filesize( $upload_path . $filename ),
-		);
-		if ( ! empty( $file ) ) {
-			$file_return = wp_handle_sideload( $file, array( 'test_form' => false ) );
-			$filename    = $file_return['file'];
-		}
-		if ( isset( $file_return['file'] ) && isset( $file_return['file'] ) ) {
-			$attachment = array(
-				'post_mime_type' => $file_return['type'],
-				'post_title'     => preg_replace( '/\.[^.]+$/', ' ', basename( $file_return['file'] ) ),
-				'post_content'   => '',
-				'post_status'    => 'inherit',
-				'guid'           => $file_return['url'],
-			);
-			$attach_id  = wp_insert_attachment( $attachment, $filename, $post_id );
-			if ( $attach_id ) {
-				require_once ABSPATH . 'wp-admin/includes/image.php';
-				$post_thumbnail_id = get_post_thumbnail_id( $post_id );
-				if ( $post_thumbnail_id ) {
-					wp_delete_attachment( $post_thumbnail_id, true );
-				}
-				$attach_data = wp_generate_attachment_metadata( $attach_id, $filename );
-				wp_update_attachment_metadata( $attach_id, $attach_data );
-				set_post_thumbnail( $post_id, $attach_id );
-			}
 		}
 	}
 }
