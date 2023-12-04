@@ -68,23 +68,30 @@ class Import {
 	 */
 	public function manual_import() {
 		$loop         = isset( $_POST['loop'] ) ? (int) $_POST['loop'] : 0;
+		$properties   = isset( $_POST['properties'] ) ? $_POST['properties'] : array();
+		$pagination   = isset( $_POST['pagination'] ) ? (int) $_POST['pagination'] : 200;
 		$progress_msg = '';
 
 		if ( check_ajax_referer( 'manual_import_nonce', 'nonce' ) ) {
-			$properties = get_transient( 'connect_query_properties' );
-			if ( ! $properties ) {
-				$result_api = API::get_properties();
-				$properties = 'ok' === $result_api['status'] ? $result_api['data'] : array();
-				set_transient( 'connect_query_properties', $properties, MINUTE_IN_SECONDS * 3 );
-			}
+			$properties  = get_option( 'connect_query_properties' );
+			$change_page = $loop % $pagination;
+			$page        = round( $loop / $pagination, 0 ) + 1;
+
 			if ( 0 === $loop ) {
-				$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-woocommerce' ) . '<br/>';
 				update_option( 'connect_crm_realstate_sync', array() );
 			}
+
+			if ( ! $properties || 0 === $loop || 0 === $change_page ) {
+				$result_api   = API::get_properties( $page );
+				$properties   = 'ok' === $result_api['status'] ? $result_api['data'] : array();
+				$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-woocommerce' ) . '<br/>';
+				$total_count  = ! empty( $total_count ) ? $total_count : 0;
+				$total_count += count( $properties );
+			}
+
 			$item          = $properties[ $loop ];
-			$total_count   = count( $properties );
 			$result_sync   = SYNC::sync_property( $item );
-			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1 . '/' . $total_count;
+			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1;
 			$progress_msg .= ' - ' . $result_sync['message'];
 
 			if ( ! empty( $result_sync['property_id'] ) ) {
@@ -93,17 +100,20 @@ class Import {
 				$sync[]      = $property_id;
 				update_option( 'connect_crm_realstate_sync', $sync );
 			}
-
-			if ( $loop + 1 > $total_count ) {
+			$finish = count( $properties ) < $pagination && $loop === $pagination ? true : false;
+			$progress_msg .= ' page: ' . $page . ' Contador: ' . count( $properties ) . ' page: ' . $pagination . ' loop: ' . $loop . ' finish: ' . $finish . ' ';
+			if ( $finish ) {
 				$count         = SYNC::trash_not_synced( $sync );
 				$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-woocommerce' ) . $count;
 			}
 
 			wp_send_json_success(
 				array(
-					'loop'    => $loop + 1,
-					'message' => $progress_msg,
-					'total'   => $total_count,
+					'loop'       => $loop + 1,
+					'message'    => $progress_msg,
+					'pagination' => $pagination,
+					'finish'     => $finish,
+					'properties' => $properties,
 				)
 			);
 		} else {

@@ -56,6 +56,7 @@ class SYNC {
 			wp_update_post( $property_info );
 		}
 		$message .= ' ' . $property_id;
+		$message .= ! empty( $item['internal_property_id'] ) ? ' (' . $item['internal_property_id'] . ')' : '';
 
 		return array(
 			'property_id' => $property_id,

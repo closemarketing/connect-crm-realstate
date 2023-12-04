@@ -194,6 +194,8 @@ class Admin {
 			}
 		}
 
+		$sanitary_values['api_pagination'] = 'anaconda' === $input['type'] ? 200 : 100;
+
 		return $sanitary_values;
 	}
 
@@ -274,11 +276,13 @@ class Admin {
 	 * @return void
 	 */
 	public function plugin_import_page() {
+		$settings   = get_option( 'conncrmreal_settings' );
+		$pagination = empty( $settings['api_pagination'] ) ? 200 : $settings['api_pagination'];
 		?>
 		<div class="connect-realstate-manual-action">
 			<h2><?php esc_html_e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
 			<p><?php esc_html_e( 'After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?><br/></p>
-			<div id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0);" ><?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?></div>
+			<div id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" ><?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?></div>
 			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
 		</div>
 		<?php
