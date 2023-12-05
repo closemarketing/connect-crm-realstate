@@ -76,10 +76,9 @@ class SYNC {
 	public static function find_property( $property_id, $post_type ) {
 		$property = get_posts(
 			array(
-				'post_type'   => $post_type,
-				'post_status' => 'publish',
-				'fields'      => 'ids',
-				'meta_query'  => array(
+				'post_type'  => $post_type,
+				'fields'     => 'ids',
+				'meta_query' => array(
 					array(
 						'key'     => 'property_id',
 						'value'   => $property_id,
@@ -95,29 +94,43 @@ class SYNC {
 		}
 	}
 
+	public static function clear_property_meta() {
+		global $wpdb;
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM $wpdb->postmeta
+				WHERE meta_key = '%s'",
+				'property_synced'
+			)
+		);
+	}
+
 	/**
 	 * Sends to trash not synced products.
 	 *
-	 * @param array $products_synced Products synced.
 	 * @return int
 	 */
-	public static function trash_not_synced( $products_synced ) {
-		global $wpdb;
+	public static function trash_not_synced() {
 		$settings  = get_option( 'conncrmreal_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 
-		$result = $wpdb->query(
-			$wpdb->prepare(
-				"UPDATE $wpdb->posts
-				SET post_status = 'trash'
-				WHERE post_type = %s
-				AND post_status = 'publish'
-				AND ID NOT IN ( %s )",
-				$post_type,
-				implode( ',', $products_synced )
-			)
+		$args = array(
+			'posts_per_page' => -1,
+			'post_type'      => $post_type,
+			'fields'         => 'ids',
+			'meta_query' => array(
+				array(
+					'key'     => 'property_synced',
+					'compare' => 'NOT EXISTS',
+				),
+			),
 		);
+		$posts_to_delete = get_posts( $args );
 
-		return $result;
+		foreach ( $posts_to_delete as $post_id ) {
+			wp_trash_post( $post_id );
+		}
+
+		return count( $posts_to_delete );
 	}
 }

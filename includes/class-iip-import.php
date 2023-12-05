@@ -77,7 +77,7 @@ class Import {
 			$page      = round( $loop / $pagination, 0 ) + 1;
 
 			if ( 0 === $loop ) {
-				update_option( 'connect_crm_realstate_sync', array() );
+				SYNC::clear_property_meta();
 			}
 
 			$property = get_transient( 'connreal_query_property_loop_' . $loop_page );
@@ -96,16 +96,14 @@ class Import {
 				$totalprop = count( $properties );
 			}
 
+			$sync = get_option( 'connect_crm_realstate_sync' );
 			if ( ! empty( $property ) ) {
 				$result_sync   = SYNC::sync_property( $property );
 				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1;
 				$progress_msg .= ' - ' . $result_sync['message'];
 
 				if ( ! empty( $result_sync['property_id'] ) ) {
-					$sync   = get_option( 'connect_crm_realstate_sync' );
-					$sync   = ! empty( $sync ) ? $sync : array();
-					$sync[] = $result_sync['property_id'];
-					update_option( 'connect_crm_realstate_sync', $sync );
+					update_post_meta( $result_sync['property_id'], 'property_synced', true );
 				}
 				$finish = $totalprop < $pagination && $totalprop === $loop ? true : false;
 				$finish = 0 === $totalprop ? true : $finish;
