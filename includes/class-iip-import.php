@@ -102,9 +102,6 @@ class Import {
 				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1;
 				$progress_msg .= ' - ' . $result_sync['message'];
 
-				if ( ! empty( $result_sync['property_id'] ) ) {
-					update_post_meta( $result_sync['property_id'], 'property_synced', true );
-				}
 				$finish = $totalprop < $pagination && $totalprop === $loop ? true : false;
 				$finish = 0 === $totalprop ? true : $finish;
 			} else {

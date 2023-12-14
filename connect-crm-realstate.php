@@ -28,7 +28,11 @@ require_once CCRMRE_PLUGIN_PATH . 'includes/class-helper-sync.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-admin.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-import.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-post-type.php';
+require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-cron.php';
+
+require 'vendor/autoload.php';
 
 new Close\ConnectCRM\RealState\Admin();
 new Close\ConnectCRM\RealState\Import();
 new Close\ConnectCRM\RealState\PostType();
+new Close\ConnectCRM\RealState\Cron();

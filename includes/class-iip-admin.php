@@ -79,7 +79,7 @@ class Admin {
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
 
 		echo '<div class="wrap bialty-containter">';
-		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ). '</h2>';
+		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ) . '</h2>';
 		echo '<h2 class="nav-tab-wrapper">';
 		// Import Properties.
 		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-import' ) . '" class="nav-tab ';
@@ -154,6 +154,14 @@ class Admin {
 		);
 
 		add_settings_field(
+			'conncrmreal_cron',
+			__( 'Sync with Cron?', 'connect-crm-realstate' ),
+			array( $this, 'cron_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
+		add_settings_field(
 			'conncrmreal_post_type',
 			__( 'Post Type', 'connect-crm-realstate' ),
 			array( $this, 'post_type_callback' ),
@@ -184,6 +192,7 @@ class Admin {
 		$field_values = array(
 			'type',
 			'apipassword',
+			'cron',
 			'post_type',
 			'post_type_slug',
 		);
@@ -224,6 +233,21 @@ class Admin {
 			'<input class="regular-text" type="password" name="conncrmreal_settings[apipassword]" id="apipassword" value="%s">',
 			isset( $this->settings['apipassword'] ) ? esc_attr( $this->settings['apipassword'] ) : ''
 		);
+	}
+
+	/**
+	 * Cron callback
+	 *
+	 * @return void
+	 */
+	public function cron_callback() {
+		$cron_option = isset( $this->settings['cron'] ) ? $this->settings['cron'] : 'no';
+		?>
+		<select name="conncrmreal_settings[cron]" id="cron">
+			<option value="no" <?php selected( $cron_option, 'no' ); ?>><?php esc_html_e( 'No', 'connect-crm-realstate' ); ?></option>
+			<option value="yes" <?php selected( $cron_option, 'yes' ); ?>><?php esc_html_e( 'Yes', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<?php
 	}
 
 	/**

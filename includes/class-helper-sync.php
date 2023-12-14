@@ -59,6 +59,10 @@ class SYNC {
 		$message .= ! empty( $item['internal_property_id'] ) ? ' (' . $item['internal_property_id'] . ')' : '';
 		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $item['city'];
 
+		if ( ! empty( $property_id ) ) {
+			update_post_meta( $property_id, 'property_synced', true );
+		}
+
 		return array(
 			'property_id' => $property_id,
 			'message'     => $message,
