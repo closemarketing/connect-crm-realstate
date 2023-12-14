@@ -12,6 +12,11 @@ namespace Close\ConnectCRM\RealState;
 
 defined( 'ABSPATH' ) || exit;
 
+// Prevents fatal error is_plugin_active.
+if ( ! function_exists( 'is_plugin_active' ) ) {
+	include_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+
 /**
  * Library for Page Settings
  *
@@ -41,6 +46,10 @@ class PostType {
 			add_action( 'init', array( $this, 'cpt_property' ) );
 			// Register Meta box for post type property.
 			add_action( 'add_meta_boxes', array( $this, 'metabox_property' ) );
+
+			add_filter( 'manage_edit-' . $settings_post_type . '_columns', array( $this, 'add_property_columns' ) );
+			add_action( 'manage_' . $settings_post_type . '_posts_custom_column', array( $this, 'manage_post_type_columns' ), 10, 2 );
+
 		}
 	}
 
@@ -51,6 +60,7 @@ class PostType {
 	 **/
 	public function cpt_property() {
 		$settings_post_type_slug = isset( $this->settings['post_type_slug'] ) ? $this->settings['post_type_slug'] : __( 'properties', 'connect-crm-realstate' );
+
 		$labels = array(
 			'name'               => __( 'Property', 'connect-crm-realstate' ),
 			'singular_name'      => __( 'Properties', 'connect-crm-realstate' ),
@@ -121,4 +131,59 @@ class PostType {
 		</table>
 		<?php
 	}
+	/**
+	 * Adds columns to post type post_type
+	 *
+	 * @param array $post_type_columns  Header of admin post type list.
+	 * @return array $post_type_columns New elements for header.
+	 */
+	public function add_property_columns( $post_type_columns ) {
+		$new_columns['cb']            = '<input type="checkbox" />';
+		$new_columns['title']         = __( 'Title', 'connect-crm-realstate' );
+		$new_columns['property_data'] = __( 'Property', 'connect-crm-realstate' );
+
+		if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) || is_plugin_active( 'wordpress-seo-premium/wp-seo-premium.php' ) ) {
+			// Optional for Yoast SEO.
+			$new_columns['wpseo-score']             = __( 'SEO', 'wordpress-seo' );
+			$new_columns['wpseo-score-readability'] = __( 'Readability', 'wordpress-seo' );
+			$new_columns['wpseo-title']             = __( 'SEO Title', 'wordpress-seo' );
+			$new_columns['wpseo-metadesc']          = __( 'Meta Desc.', 'wordpress-seo' );
+			$new_columns['wpseo-focuskw']           = __( 'Focus KW', 'wordpress-seo' );
+		}
+
+		if ( is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			// Optional for RankMath SEO.
+			$new_columns['rank_math_seo_details']           = __( 'SEO Details', 'rankmath' );
+		}
+
+		return $new_columns;
+	}
+
+	/**
+	 * Add columns content
+	 *
+	 * @param array $column_name Column name of actual.
+	 * @param array $id Post ID.
+	 * @return void
+	 */
+	public function manage_post_type_columns( $column_name, $id ) {
+		switch ( $column_name ) {
+			case 'property_data':
+				// Status.
+				$property_enabled = get_post_meta( $id, 'property_enabled', true );
+				echo '<p><strong>' . esc_html__( 'Status', 'connect-crm-realstate' ) . '</strong>: ';
+				echo ! empty( $property_enabled ) ? esc_html__( 'Available', 'connect-crm-realstate' ) : esc_html__( 'Sold', 'connect-crm-realstate' );
+				echo '</p>';
+				// Agent.
+				$property_agent = get_post_meta( $id, 'property_agent', true );
+				echo '<p><strong>' . esc_html__( 'Agent', 'connect-crm-realstate' ) . '</strong>: ';
+				echo esc_html( $property_agent );
+				echo '</p>';
+				break;
+
+			default:
+				break;
+		} // end switch
+	}
 }
+
