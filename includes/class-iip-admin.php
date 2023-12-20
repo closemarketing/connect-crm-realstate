@@ -178,6 +178,13 @@ class Admin {
 				'admin_conncrmreal_settings'
 			);
 		}
+		add_settings_field(
+			'conncrmreal_postal_code',
+			__( 'Include Properties by Postal Code', 'connect-crm-realstate' ),
+			array( $this, 'postal_code_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
 	}
 
 	/**
@@ -195,6 +202,7 @@ class Admin {
 			'cron',
 			'post_type',
 			'post_type_slug',
+			'postal_code',
 		);
 
 		foreach ( $field_values as $field_value ) {
@@ -279,7 +287,7 @@ class Admin {
 	}
 
 	/**
-	 * Password callback
+	 * Post Type callback
 	 *
 	 * @return void
 	 */
@@ -291,6 +299,22 @@ class Admin {
 		echo sprintf( 
 			'<p class="description">%s</p>',
 			__( 'Slug for the post type. If you change this, you need to save the permalinks again.', 'connect-crm-realstate' )
+		);
+	}
+
+	/**
+	 * Postal code callback
+	 *
+	 * @return void
+	 */
+	public function postal_code_callback() {
+		printf(
+			'<input class="regular-text" type="text" name="conncrmreal_settings[postal_code]" id="postal_code" value="%s">',
+			isset( $this->settings['postal_code'] ) ? esc_attr( $this->settings['postal_code'] ) : ''
+		);
+		echo sprintf( 
+			'<p class="description">%s</p>',
+			__( 'Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma.', 'connect-crm-realstate' )
 		);
 	}
 

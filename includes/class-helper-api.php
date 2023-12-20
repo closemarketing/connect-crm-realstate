@@ -86,7 +86,7 @@ class API {
 		$settings     = get_option( 'conncrmreal_settings' );
 		$settings_crm = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
 		if ( 'anaconda' === $settings_crm && ! empty( $page ) ) {
-			return self::request_anaconda( 'GET', 'properties/my_office_properties?page=' . $page );
+			return self::request_anaconda( 'GET', 'properties/?page=' . $page );
 		} elseif ( 'anaconda' === $settings_crm && ! empty( $changed_from ) ) {
 			$query = array(
 				'changed_from' => $changed_from,

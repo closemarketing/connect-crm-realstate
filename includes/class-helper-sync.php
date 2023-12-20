@@ -25,11 +25,22 @@ class SYNC {
 	 * @return array
 	 */
 	public static function sync_property( $item ) {
-		$message        = '';
-		$settings       = get_option( 'conncrmreal_settings' );
-		$post_type      = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
-		$property_id    = self::find_property( $item['id'], $post_type );
-		$property_title = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' );
+		$message            = '';
+		$settings           = get_option( 'conncrmreal_settings' );
+		$post_type          = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$filter_postal_code = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
+		$property_id        = self::find_property( $item['id'], $post_type );
+		$property_title     = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' );
+
+		if ( self::cannot_import( $item, $filter_postal_code ) ) {
+			$message  = __( 'NOT Imported', 'connect-crm-realstate' );
+			$message .= self::add_end_message( $item, $property_title );
+
+			return array(
+				'property_id' => $property_id,
+				'message'     => $message,
+			);
+		}
 
 		// Property info.
 		$property_info = array(
@@ -41,6 +52,9 @@ class SYNC {
 		$property_info['meta_input'] = array();
 
 		foreach ( $item as $key => $item_meta ) {
+			if ( 'description' === $key || 'name' === $key ) {
+				continue;
+			}
 			$property_info['meta_input'][ 'property_' . $key ] = $item_meta;
 		}
 
@@ -49,25 +63,69 @@ class SYNC {
 			$property_info['post_name']    = sanitize_title( $property_title );
 			$property_info['post_content'] = isset( $item['description'] ) ? $item['description'] : '';
 			$property_id                   = wp_insert_post( $property_info );
-			$message                      .= __( 'Created Property ID:', 'connect-crm-realstate' );
+			$message                      .= __( 'Created', 'connect-crm-realstate' );
 		} else {
-			$message            .= __( 'Updated Property ID:', 'connect-crm-realstate' );
+			$message            .= __( 'Updated', 'connect-crm-realstate' );
 			$property_info['ID'] = $property_id;
 			wp_update_post( $property_info );
 		}
-		$message .= ' ' . $property_id;
-		$message .= ! empty( $item['internal_property_id'] ) ? ' (' . $item['internal_property_id'] . ')' : '';
-		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $item['city'];
+		$message .= self::add_end_message( $item, $property_title );
 
 		if ( ! empty( $property_id ) ) {
 			update_post_meta( $property_id, 'property_synced', true );
+			delete_post_meta( $property_id, 'property_description' );
+			delete_post_meta( $property_id, 'property_name' );
 		}
 
 		return array(
 			'property_id' => $property_id,
 			'message'     => $message,
 		);
+	}
 
+	/**
+	 * Adds end message.
+	 *
+	 * @param array  $item Item from API.
+	 * @param string $property_title Property title.
+	 * @return string
+	 */
+	private static function add_end_message( $item, $property_title ) {
+		$message  = ' ' . __( 'Property ID:', 'connect-crm-realstate' );
+		$message .= ' ' . $item['id'];
+		$message .= ! empty( $item['internal_property_id'] ) ? ' (' . $item['internal_property_id'] . ')' : '';
+		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $item['city'];
+		return $message;
+	}
+
+	/**
+	 * Filters the property depending of settings.
+	 *
+	 * @param array  $item Item from API.
+	 * @param string $filter_postal_code Postal code filter.
+	 * @return boolean
+	 */
+	private static function cannot_import( $item, $filter_postal_code ) {
+		$property_postal_code = isset( $item['postal_code'] ) ? trim( $item['postal_code'] ) : '';
+
+		if ( empty( $property_postal_code ) ) {
+			return false;
+		}
+
+		$filters = explode( ',', $filter_postal_code );
+		foreach ( $filters as $filter ) {
+			$filter = trim( $filter );
+			if ( empty( $filter ) ) {
+				continue;
+			}
+			if ( $filter === $property_postal_code ) {
+				return false;
+			} elseif ( fnmatch( $filter, $property_postal_code ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

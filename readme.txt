@@ -2,7 +2,7 @@
 Contributors: closemarketing
 Tags: properties, inmovilla
 
-Import Inmovilla properties to your WordPress Installation.
+Import Inmovilla and Anaconda properties to your WordPress Installation.
 
 == Description ==
 
@@ -18,6 +18,8 @@ WordPress installation and then activate the Plugin from Plugins page.
 == Changelog ==
 
 = 1.0.0 =
+* Imports all properties from Anaconda.
+* Option to filter by Postal code.
 *	First released.
 
 == Links ==
