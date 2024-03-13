@@ -18,7 +18,7 @@ define( 'CCRMRE_VERSION', '1.0.0-beta.7' );
 define( 'CCRMRE_PLUGIN', __FILE__ );
 define( 'CCRMRE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'CCRMRE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
-define( 'CCRMRE_SYNC_PERIOD', 1800 );
+define( 'CCRMRE_SYNC_PERIOD', 3600 );
 
 // Loads translation.
 load_plugin_textdomain( 'connect-crm-realstate', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );

@@ -56,7 +56,7 @@ class API {
 		if ( is_wp_error( $response ) || empty( $response['body'] ) || 2 !== $code ) {
 			return array(
 				'status' => 'error',
-				'data'   => isset( $body['error_message'] ) ? $body['error_message'] : '',
+				'data'   => isset( $data['message'] ) ? $data['message'] : '',
 			);
 		} else {
 			return array(
@@ -80,6 +80,8 @@ class API {
 	/**
 	 * Request to properties API from CRM
 	 *
+	 * @param int    $page Page of properties.
+	 * @param string $changed_from Date of changed properties.
 	 * @return array
 	 */
 	public static function get_properties( $page = 0, $changed_from = '' ) {
