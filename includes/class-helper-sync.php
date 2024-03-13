@@ -156,6 +156,11 @@ class SYNC {
 		}
 	}
 
+	/**
+	 * Clears property meta.
+	 *
+	 * @return void
+	 */
 	public static function clear_property_meta() {
 		global $wpdb;
 		$wpdb->query(
