@@ -153,9 +153,14 @@ class Admin {
 			'admin_conncrmreal_settings'
 		);
 
+		$sync_minutes = CCRMRE_SYNC_PERIOD / 60;
 		add_settings_field(
 			'conncrmreal_cron',
-			__( 'Sync with Cron?', 'connect-crm-realstate' ),
+			sprintf(
+				/* translators: %s: minutes */
+				__( 'Sync with Cron (every %s minutes)?', 'connect-crm-realstate' ),
+				$sync_minutes
+			),
 			array( $this, 'cron_callback' ),
 			'conncrmreal_settings',
 			'admin_conncrmreal_settings'
