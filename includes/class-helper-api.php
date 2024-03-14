@@ -93,7 +93,7 @@ class API {
 			$query = array(
 				'changed_from' => $changed_from,
 			);
-			return self::request_anaconda( 'GET', 'properties/search', $query );
+			return self::request_anaconda( 'POST', 'properties/search', $query );
 		} elseif ( 'inmovilla' === $settings_crm ) {
 			return self::request_inmovilla( 'GET', 'properties' );
 		}
