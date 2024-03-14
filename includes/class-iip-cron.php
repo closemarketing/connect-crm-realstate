@@ -61,5 +61,8 @@ class Cron {
 		foreach ( $result_api['data'] as $property ) {
 			SYNC::sync_property( $property );
 		}
+		return array(
+			'synced' => count( $result_api['data'] ),
+		);
 	}
 }
