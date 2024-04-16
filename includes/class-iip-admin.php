@@ -96,10 +96,19 @@ class Admin {
 		echo ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Merge variables', 'connect-crm-realstate' ) . '</a>';
 
+		// Log.
+		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-log' ) . '" class="nav-tab ';
+		echo ( 'iip-log' === $active_tab ? 'nav-tab-active' : '' );
+		echo '">' . esc_html__( 'Log', 'connect-crm-realstate' ) . '</a>';
+
 		echo '</h2>';
 
 		if ( 'iip-import' === $active_tab ) {
 			$this->plugin_import_page();
+		}
+
+		if ( 'iip-log' === $active_tab ) {
+			$this->plugin_log_page();
 		}
 
 		if ( 'iip-settings' === $active_tab ) {
@@ -337,6 +346,48 @@ class Admin {
 			<p><?php esc_html_e( 'After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?><br/></p>
 			<div id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" ><?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?></div>
 			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Log Page
+	 *
+	 * @return void
+	 */
+	public function plugin_log_page() {
+		?>
+		<div class="connect-realstate-log">
+			<h2><?php esc_html_e( 'Latest cron logs', 'connect-crm-realstate' ); ?></h2>
+			<p><?php esc_html_e( 'After you fillup the API settings, use the button below to import the products. The importing process may take a while and you need to keep this page open to complete it.', 'connect-woocommerce' ); ?>
+			</p>
+
+			<fieldset id="logwrapper">
+				<legend><?php esc_html_e( 'Log', 'connect-woocommerce' ); ?></legend>
+				<div id="loglist">
+					<?php
+					$uploads_dir = wp_upload_dir();
+					$folder      = $uploads_dir['basedir'] . '/ccrmre_logs/';
+					$files       = list_files( $folder, 2 );
+					$index       = 0;
+					foreach ( $files as $file ) {
+						if ( is_file( $file ) ) {
+							$filename = basename( $file );
+						}
+						$class = ( 0 === $index % 2 ) ? 'even' : 'odd';
+						echo '<p class="' . esc_html( $class ) . '">';
+						$file_open = fopen( $file, 'r' );
+						$line      = fgets( $file_open );
+						fclose( $file_open );
+						echo '<a href="' . esc_url( $uploads_dir['baseurl'] . '/ccrmre_logs/' . $filename ) . '" target="_blank">';
+						echo ! empty( esc_html( $line ) ) ? esc_html( $line ) : esc_html( $filename );
+						echo '</a>';
+						echo '</p>';
+						$index++;
+					}
+					?>
+				</div>
+			</fieldset>
 		</div>
 		<?php
 	}

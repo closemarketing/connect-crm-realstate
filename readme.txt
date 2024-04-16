@@ -21,6 +21,7 @@ WordPress installation and then activate the Plugin from Plugins page.
 * Imports all properties from Anaconda.
 * Option to filter by Postal code.
 *	First released.
+* Saves logs in folder.
 
 == Links ==
 
