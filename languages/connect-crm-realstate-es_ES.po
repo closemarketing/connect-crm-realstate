@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Connect CRM Real State\n"
-"POT-Creation-Date: 2023-12-20 18:11+0100\n"
-"PO-Revision-Date: 2023-12-20 18:12+0100\n"
+"POT-Creation-Date: 2024-04-16 13:51+0200\n"
+"PO-Revision-Date: 2024-04-16 13:52+0200\n"
 "Last-Translator: David Pérez <david@close.marketing>\n"
 "Language-Team: David Pérez <david@close.marketing>\n"
 "Language: es_ES\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.4.1\n"
+"X-Generator: Poedit 3.4.2\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-Flags-xgettext: --add-comments=translators:\n"
 "X-Poedit-WPHeader: connect-crm-realstate.php\n"
@@ -57,7 +57,7 @@ msgstr "Connect CRM Real State"
 msgid "Connect CRM Real State Settings"
 msgstr "Ajustes de Connect CRM Real State"
 
-#: includes/class-iip-admin.php:87 includes/class-iip-admin.php:331
+#: includes/class-iip-admin.php:87 includes/class-iip-admin.php:345
 msgid "Import Properties"
 msgstr "Importar propiedades"
 
@@ -69,59 +69,68 @@ msgstr "Ajustes"
 msgid "Merge variables"
 msgstr "Fusionar variables"
 
-#: includes/class-iip-admin.php:109
+#: includes/class-iip-admin.php:102 includes/class-iip-admin.php:348
+#: includes/class-iip-admin.php:366
+#: vendor/woocommerce/action-scheduler/classes/ActionScheduler_AdminView.php:247
+#: vendor/woocommerce/action-scheduler/classes/ActionScheduler_ListTable.php:102
+msgid "Log"
+msgstr "Registro"
+
+#: includes/class-iip-admin.php:118
 msgid "Save changes"
 msgstr "Guardar los cambios"
 
-#: includes/class-iip-admin.php:135
+#: includes/class-iip-admin.php:144
 msgid "Settings for Integration with CRM Real State"
 msgstr "Ajustes para la integración con CRM Real State"
 
-#: includes/class-iip-admin.php:142
+#: includes/class-iip-admin.php:151
 msgid "Type"
 msgstr "Tipo"
 
-#: includes/class-iip-admin.php:150
+#: includes/class-iip-admin.php:159
 msgid "API Password / Token"
 msgstr "Contraseña / Token API"
 
-#: includes/class-iip-admin.php:158
-msgid "Sync with Cron?"
-msgstr "¿Sincronización con Cron?"
+#. translators: %s: minutes
+#: includes/class-iip-admin.php:170
+#, php-format
+msgid "Sync with Cron (every %s minutes)?"
+msgstr "¿Sincronizar con Cron (cada %s minutos)?"
 
-#: includes/class-iip-admin.php:166
+#: includes/class-iip-admin.php:180
 msgid "Post Type"
 msgstr "Tipo de contenido"
 
-#: includes/class-iip-admin.php:175
+#: includes/class-iip-admin.php:189
 msgid "Post Type SLUG"
 msgstr "SLUG del tipo de contenido"
 
-#: includes/class-iip-admin.php:183
+#: includes/class-iip-admin.php:197
 msgid "Include Properties by Postal Code"
 msgstr "Incluir inmuebles por código postal"
 
-#: includes/class-iip-admin.php:228
+#: includes/class-iip-admin.php:242
 msgid "Anaconda"
 msgstr "Anaconda"
 
-#: includes/class-iip-admin.php:229
+#: includes/class-iip-admin.php:243
 msgid "Inmovilla"
 msgstr "Inmovilla"
 
-#: includes/class-iip-admin.php:255
+#: includes/class-iip-admin.php:269
 msgid "No"
 msgstr "No"
 
-#: includes/class-iip-admin.php:256
+#: includes/class-iip-admin.php:270
 msgid "Yes"
 msgstr "Sí"
 
-#: includes/class-iip-admin.php:277
+#: includes/class-iip-admin.php:291
 msgid "Created by this plugin"
 msgstr "Creado por este plugin"
 
-#: includes/class-iip-admin.php:301
+#: includes/class-iip-admin.php:315
 msgid ""
 "Slug for the post type. If you change this, you need to save the permalinks "
 "again."
@@ -129,7 +138,7 @@ msgstr ""
 "Slug para el tipo de entrada. Si cambia esto, es necesario guardar los "
 "permalinks de nuevo."
 
-#: includes/class-iip-admin.php:317
+#: includes/class-iip-admin.php:331
 msgid ""
 "Include all properties by Postal Code. If it is blank, will import all "
 "properties. Add Postal codes that you will like to import. For example: "
@@ -141,7 +150,7 @@ msgstr ""
 "importar. Por ejemplo: 18100. Puede utilizar un marcador como 18* para "
 "incluir toda Granada. Añada varias zonas separadas por comas."
 
-#: includes/class-iip-admin.php:332
+#: includes/class-iip-admin.php:346
 msgid ""
 "After you fillup the settings, use the button below to import the "
 "properties. The importing process may take a while and you need to keep this "
@@ -151,639 +160,658 @@ msgstr ""
 "propiedades. El proceso de importación puede tardar un poco y es necesario "
 "mantener esta página abierta para completarlo."
 
-#: includes/class-iip-admin.php:333
+#: includes/class-iip-admin.php:347
 msgid "Start Import"
 msgstr "Iniciar importación"
 
-#: includes/class-iip-admin.php:334
-#: vendor/woocommerce/action-scheduler/classes/ActionScheduler_AdminView.php:247
-#: vendor/woocommerce/action-scheduler/classes/ActionScheduler_ListTable.php:102
-msgid "Log"
-msgstr "Registro"
+#: includes/class-iip-admin.php:361
+msgid "Latest cron logs"
+msgstr ""
 
-#: includes/class-iip-admin.php:345
+#: includes/class-iip-admin.php:362
+#, fuzzy
+#| msgid ""
+#| "After you fillup the settings, use the button below to import the "
+#| "properties. The importing process may take a while and you need to keep "
+#| "this page open to complete it."
+msgid ""
+"After you fillup the API settings, use the button below to import the "
+"products. The importing process may take a while and you need to keep this "
+"page open to complete it."
+msgstr ""
+"Después de rellenar los ajustes, utilice el botón de abajo para importar las "
+"propiedades. El proceso de importación puede tardar un poco y es necesario "
+"mantener esta página abierta para completarlo."
+
+#: includes/class-iip-admin.php:401
 msgid "Put the connection API key settings in order to connect external data."
 msgstr ""
 "Poner la configuración de la clave de la API de conexión con el fin de "
 "conectar los datos externos."
 
-#: includes/class-iip-admin.php:369
+#: includes/class-iip-admin.php:425
 msgid "Merge Variables with custom values"
 msgstr "Fusionar variables con valores personalizados"
 
-#: includes/class-iip-admin.php:422 includes/class-iip-admin.php:515
+#: includes/class-iip-admin.php:478 includes/class-iip-admin.php:571
 msgid "Features"
 msgstr "Características"
 
-#: includes/class-iip-admin.php:424
+#: includes/class-iip-admin.php:480
 msgid "Reference"
 msgstr "Referencia"
 
-#: includes/class-iip-admin.php:425
+#: includes/class-iip-admin.php:481
 msgid "Operation Type"
 msgstr "Tipo de operación"
 
-#: includes/class-iip-admin.php:426
+#: includes/class-iip-admin.php:482
 msgid "Property Type"
 msgstr "Tipo de inmueble"
 
-#: includes/class-iip-admin.php:427
+#: includes/class-iip-admin.php:483
 msgid "City"
 msgstr "Ciudad"
 
-#: includes/class-iip-admin.php:428
+#: includes/class-iip-admin.php:484
 msgid "Zone"
 msgstr "Zona"
 
-#: includes/class-iip-admin.php:429
+#: includes/class-iip-admin.php:485
 msgid "Complementary Zone"
 msgstr "Zona complementaria"
 
-#: includes/class-iip-admin.php:430
+#: includes/class-iip-admin.php:486
 msgid "Street key"
 msgstr ""
 
-#: includes/class-iip-admin.php:431
+#: includes/class-iip-admin.php:487
 msgid "Street"
 msgstr "Calle"
 
-#: includes/class-iip-admin.php:432
+#: includes/class-iip-admin.php:488
 msgid "Street number"
 msgstr "Número"
 
-#: includes/class-iip-admin.php:433
+#: includes/class-iip-admin.php:489
 msgid "ZIP"
 msgstr "Código postal"
 
-#: includes/class-iip-admin.php:434
+#: includes/class-iip-admin.php:490
 msgid "Height"
 msgstr "Altura"
 
-#: includes/class-iip-admin.php:435 includes/class-iip-admin.php:439
+#: includes/class-iip-admin.php:491 includes/class-iip-admin.php:495
 msgid "Block"
 msgstr "Bloque"
 
-#: includes/class-iip-admin.php:436
+#: includes/class-iip-admin.php:492
 msgid "Floor"
 msgstr "Piso"
 
-#: includes/class-iip-admin.php:437
+#: includes/class-iip-admin.php:493
 msgid "Door"
 msgstr "Puerta"
 
-#: includes/class-iip-admin.php:438
+#: includes/class-iip-admin.php:494
 msgid "Stairs"
 msgstr "Escaleras"
 
-#: includes/class-iip-admin.php:440
+#: includes/class-iip-admin.php:496
 msgid "Building"
 msgstr "Edificio"
 
-#: includes/class-iip-admin.php:441
+#: includes/class-iip-admin.php:497
 msgid "Date creation"
 msgstr "Fecha de creación"
 
-#: includes/class-iip-admin.php:442
+#: includes/class-iip-admin.php:498
 msgid "Date updated"
 msgstr ""
 
-#: includes/class-iip-admin.php:447
+#: includes/class-iip-admin.php:503
 msgid "Surfaces"
 msgstr "Superficies"
 
-#: includes/class-iip-admin.php:449
+#: includes/class-iip-admin.php:505
 msgid "Useful square meters"
 msgstr ""
 
-#: includes/class-iip-admin.php:450
+#: includes/class-iip-admin.php:506
 msgid "Square Meters built"
 msgstr ""
 
-#: includes/class-iip-admin.php:451
+#: includes/class-iip-admin.php:507
 msgid "Square Meters plot"
 msgstr ""
 
-#: includes/class-iip-admin.php:452
+#: includes/class-iip-admin.php:508
 msgid "Square Meters terrace"
 msgstr ""
 
-#: includes/class-iip-admin.php:453
+#: includes/class-iip-admin.php:509
 msgid "Square Meters kitchen"
 msgstr ""
 
-#: includes/class-iip-admin.php:454
+#: includes/class-iip-admin.php:510
 msgid "Square Meters dinning room"
 msgstr ""
 
-#: includes/class-iip-admin.php:455
+#: includes/class-iip-admin.php:511
 msgid "Square Meters living room"
 msgstr ""
 
-#: includes/class-iip-admin.php:456
+#: includes/class-iip-admin.php:512
 msgid "Square Meters playground"
 msgstr ""
 
-#: includes/class-iip-admin.php:457
+#: includes/class-iip-admin.php:513
 msgid "Square Meters attic"
 msgstr ""
 
-#: includes/class-iip-admin.php:458
+#: includes/class-iip-admin.php:514
 msgid "Square Meters first floor"
 msgstr ""
 
-#: includes/class-iip-admin.php:459
+#: includes/class-iip-admin.php:515
 msgid "Square Meters ground floor"
 msgstr ""
 
-#: includes/class-iip-admin.php:464
+#: includes/class-iip-admin.php:520
 msgid "Distribution"
 msgstr "Distribución"
 
-#: includes/class-iip-admin.php:466
+#: includes/class-iip-admin.php:522
 msgid "Number of Double rooms"
 msgstr ""
 
-#: includes/class-iip-admin.php:467
+#: includes/class-iip-admin.php:523
 msgid "Number of Rooms"
 msgstr "Número de Habitaciones"
 
-#: includes/class-iip-admin.php:468
+#: includes/class-iip-admin.php:524
 msgid "Number of Bathrooms"
 msgstr "Km incluido"
 
-#: includes/class-iip-admin.php:469
+#: includes/class-iip-admin.php:525
 msgid "Number of Toilets"
 msgstr ""
 
-#: includes/class-iip-admin.php:470
+#: includes/class-iip-admin.php:526
 msgid "Number of Living rooms"
 msgstr ""
 
-#: includes/class-iip-admin.php:471
+#: includes/class-iip-admin.php:527
 msgid "Number of Parkings"
 msgstr ""
 
-#: includes/class-iip-admin.php:472 includes/class-iip-admin.php:473
+#: includes/class-iip-admin.php:528 includes/class-iip-admin.php:529
 msgid "Number of floors"
 msgstr ""
 
-#: includes/class-iip-admin.php:474
+#: includes/class-iip-admin.php:530
 msgid "Construction year"
 msgstr ""
 
-#: includes/class-iip-admin.php:475
+#: includes/class-iip-admin.php:531
 msgid "Beach distance"
 msgstr ""
 
-#: includes/class-iip-admin.php:476
+#: includes/class-iip-admin.php:532
 msgid "Community Expenses"
 msgstr ""
 
-#: includes/class-iip-admin.php:477
+#: includes/class-iip-admin.php:533
 msgid "Community periodicity"
 msgstr ""
 
-#: includes/class-iip-admin.php:478
+#: includes/class-iip-admin.php:534
 msgid "I.B.I."
 msgstr ""
 
-#: includes/class-iip-admin.php:483
+#: includes/class-iip-admin.php:539
 msgid "Property Data"
 msgstr ""
 
-#: includes/class-iip-admin.php:485 includes/class-iip-post-type.php:174
+#: includes/class-iip-admin.php:541 includes/class-iip-post-type.php:174
 #: vendor/woocommerce/action-scheduler/classes/ActionScheduler_AdminView.php:242
 #: vendor/woocommerce/action-scheduler/classes/ActionScheduler_ListTable.php:97
 msgid "Status"
 msgstr "Estado"
 
-#: includes/class-iip-admin.php:486
+#: includes/class-iip-admin.php:542
 msgid "External woodwork"
 msgstr ""
 
-#: includes/class-iip-admin.php:487
+#: includes/class-iip-admin.php:543
 msgid "Ground"
 msgstr "Terreno"
 
-#: includes/class-iip-admin.php:488
+#: includes/class-iip-admin.php:544
 msgid "Orientation"
 msgstr "Orientación"
 
-#: includes/class-iip-admin.php:489
+#: includes/class-iip-admin.php:545
 msgid "Internal woodwork"
 msgstr ""
 
-#: includes/class-iip-admin.php:490
+#: includes/class-iip-admin.php:546
 msgid "All external"
 msgstr ""
 
-#: includes/class-iip-admin.php:491
+#: includes/class-iip-admin.php:547
 msgid "Views"
 msgstr "Vistas"
 
-#: includes/class-iip-admin.php:492
+#: includes/class-iip-admin.php:548
 msgid "Heating Type"
 msgstr ""
 
-#: includes/class-iip-admin.php:493
+#: includes/class-iip-admin.php:549
 msgid "Hot water"
 msgstr "Agua caliente"
 
-#: includes/class-iip-admin.php:494
+#: includes/class-iip-admin.php:550
 msgid "Kitchen Type"
 msgstr ""
 
-#: includes/class-iip-admin.php:495
+#: includes/class-iip-admin.php:551
 msgid "Home Appliances"
 msgstr ""
 
-#: includes/class-iip-admin.php:496
+#: includes/class-iip-admin.php:552
 msgid "Regimen"
 msgstr ""
 
-#: includes/class-iip-admin.php:497
+#: includes/class-iip-admin.php:553
 msgid "Electrical installation"
 msgstr "Instalación el&eacute;ctrica"
 
-#: includes/class-iip-admin.php:498
+#: includes/class-iip-admin.php:554
 msgid "Facade"
 msgstr ""
 
-#: includes/class-iip-admin.php:503 includes/class-iip-admin.php:505
+#: includes/class-iip-admin.php:559 includes/class-iip-admin.php:561
 msgid "Energetic certification"
 msgstr ""
 
-#: includes/class-iip-admin.php:506
+#: includes/class-iip-admin.php:562
 msgid "Energetic certification rating"
 msgstr ""
 
-#: includes/class-iip-admin.php:507
+#: includes/class-iip-admin.php:563
 msgid "Energetic certification value"
 msgstr ""
 
-#: includes/class-iip-admin.php:508
+#: includes/class-iip-admin.php:564
 msgid "Emissions Rating"
 msgstr ""
 
-#: includes/class-iip-admin.php:509
+#: includes/class-iip-admin.php:565
 msgid "Emissions value"
 msgstr ""
 
-#: includes/class-iip-admin.php:510
+#: includes/class-iip-admin.php:566
 msgid "Certification reference"
 msgstr ""
 
-#: includes/class-iip-admin.php:518
+#: includes/class-iip-admin.php:574
 msgid "Adaptado PMR"
 msgstr ""
 
-#: includes/class-iip-admin.php:519
+#: includes/class-iip-admin.php:575
 msgid "Agua"
 msgstr "Agua"
 
-#: includes/class-iip-admin.php:520
+#: includes/class-iip-admin.php:576
 msgid "Aire Acond. Central"
 msgstr ""
 
-#: includes/class-iip-admin.php:521
+#: includes/class-iip-admin.php:577
 msgid "Aire Acondicionado "
 msgstr ""
 
-#: includes/class-iip-admin.php:522
+#: includes/class-iip-admin.php:578
 msgid "Alarma "
 msgstr ""
 
-#: includes/class-iip-admin.php:523
+#: includes/class-iip-admin.php:579
 msgid "Alarma Incendio"
 msgstr ""
 
-#: includes/class-iip-admin.php:524
+#: includes/class-iip-admin.php:580
 msgid "Alarma Robo"
 msgstr ""
 
-#: includes/class-iip-admin.php:525
+#: includes/class-iip-admin.php:581
 msgid "Altillo"
 msgstr ""
 
-#: includes/class-iip-admin.php:526
+#: includes/class-iip-admin.php:582
 msgid "Apart. Separado"
 msgstr ""
 
-#: includes/class-iip-admin.php:527
+#: includes/class-iip-admin.php:583
 msgid "Armarios empotrados"
 msgstr ""
 
-#: includes/class-iip-admin.php:528
+#: includes/class-iip-admin.php:584
 msgid "Ascensor"
 msgstr ""
 
-#: includes/class-iip-admin.php:529
+#: includes/class-iip-admin.php:585
 msgid "Balcón "
 msgstr ""
 
-#: includes/class-iip-admin.php:530
+#: includes/class-iip-admin.php:586
 msgid "Bar"
 msgstr "Barra"
 
-#: includes/class-iip-admin.php:531
+#: includes/class-iip-admin.php:587
 msgid "Barbacoa"
 msgstr ""
 
-#: includes/class-iip-admin.php:532
+#: includes/class-iip-admin.php:588
 msgid "Bomba frío y calor"
 msgstr ""
 
-#: includes/class-iip-admin.php:533
+#: includes/class-iip-admin.php:589
 msgid "Buhardilla "
 msgstr ""
 
-#: includes/class-iip-admin.php:534
+#: includes/class-iip-admin.php:590
 msgid "Caja fuerte"
 msgstr ""
 
-#: includes/class-iip-admin.php:535
+#: includes/class-iip-admin.php:591
 msgid "Calefacción"
 msgstr "Calefacción"
 
-#: includes/class-iip-admin.php:536
+#: includes/class-iip-admin.php:592
 msgid "Calefacción central"
 msgstr ""
 
-#: includes/class-iip-admin.php:537
+#: includes/class-iip-admin.php:593
 msgid "Chimenea"
 msgstr ""
 
-#: includes/class-iip-admin.php:538
+#: includes/class-iip-admin.php:594
 msgid "Deposito Agua"
 msgstr ""
 
-#: includes/class-iip-admin.php:539
+#: includes/class-iip-admin.php:595
 msgid "Descalcificador"
 msgstr ""
 
-#: includes/class-iip-admin.php:540
+#: includes/class-iip-admin.php:596
 msgid "Despensa"
 msgstr ""
 
-#: includes/class-iip-admin.php:541
+#: includes/class-iip-admin.php:597
 msgid "Diáfano"
 msgstr ""
 
-#: includes/class-iip-admin.php:542
+#: includes/class-iip-admin.php:598
 msgid "Esquina"
 msgstr ""
 
-#: includes/class-iip-admin.php:543
+#: includes/class-iip-admin.php:599
 msgid "Galería"
 msgstr "Galería"
 
-#: includes/class-iip-admin.php:544
+#: includes/class-iip-admin.php:600
 msgid "Plazas Garage"
 msgstr ""
 
-#: includes/class-iip-admin.php:545
+#: includes/class-iip-admin.php:601
 msgid "Garaje Doble"
 msgstr ""
 
-#: includes/class-iip-admin.php:546
+#: includes/class-iip-admin.php:602
 msgid "Gas Ciudad "
 msgstr ""
 
-#: includes/class-iip-admin.php:547
+#: includes/class-iip-admin.php:603
 msgid "Gimnasio"
 msgstr ""
 
-#: includes/class-iip-admin.php:548
+#: includes/class-iip-admin.php:604
 msgid "Hab. Juegos"
 msgstr ""
 
-#: includes/class-iip-admin.php:549
+#: includes/class-iip-admin.php:605
 msgid "Hidromasaje"
 msgstr ""
 
-#: includes/class-iip-admin.php:550
+#: includes/class-iip-admin.php:606
 msgid "Hilo Musical"
 msgstr ""
 
-#: includes/class-iip-admin.php:551
+#: includes/class-iip-admin.php:607
 msgid "Jacuzzi"
 msgstr "Jacuzzi"
 
-#: includes/class-iip-admin.php:552
+#: includes/class-iip-admin.php:608
 msgid "Jardín "
 msgstr ""
 
-#: includes/class-iip-admin.php:553
+#: includes/class-iip-admin.php:609
 msgid "Lavandería "
 msgstr ""
 
-#: includes/class-iip-admin.php:554
+#: includes/class-iip-admin.php:610
 msgid "Línea telefónica"
 msgstr ""
 
-#: includes/class-iip-admin.php:555
+#: includes/class-iip-admin.php:611
 msgid "Luminoso"
 msgstr ""
 
-#: includes/class-iip-admin.php:556
+#: includes/class-iip-admin.php:612
 msgid "Luz"
 msgstr "LuzLuz"
 
-#: includes/class-iip-admin.php:557
+#: includes/class-iip-admin.php:613
 msgid "Mirador"
 msgstr ""
 
-#: includes/class-iip-admin.php:558
+#: includes/class-iip-admin.php:614
 msgid "Montacargas"
 msgstr ""
 
-#: includes/class-iip-admin.php:559
+#: includes/class-iip-admin.php:615
 msgid "Muebles"
 msgstr ""
 
-#: includes/class-iip-admin.php:560
+#: includes/class-iip-admin.php:616
 msgid "Ojos de Buey"
 msgstr ""
 
-#: includes/class-iip-admin.php:565
+#: includes/class-iip-admin.php:621
 msgid "Entorno"
 msgstr ""
 
-#: includes/class-iip-admin.php:568
+#: includes/class-iip-admin.php:624
 msgid "Autobuses"
 msgstr ""
 
-#: includes/class-iip-admin.php:569
+#: includes/class-iip-admin.php:625
 msgid "Árboles"
 msgstr ""
 
-#: includes/class-iip-admin.php:570
+#: includes/class-iip-admin.php:626
 msgid "Céntrico"
 msgstr ""
 
-#: includes/class-iip-admin.php:571
+#: includes/class-iip-admin.php:627
 msgid "Centros comerciales"
 msgstr ""
 
-#: includes/class-iip-admin.php:572
+#: includes/class-iip-admin.php:628
 msgid "Centros médicos"
 msgstr ""
 
-#: includes/class-iip-admin.php:573
+#: includes/class-iip-admin.php:629
 msgid "Cerca de Universidad"
 msgstr ""
 
-#: includes/class-iip-admin.php:574
+#: includes/class-iip-admin.php:630
 msgid "Colegios"
 msgstr ""
 
-#: includes/class-iip-admin.php:575
+#: includes/class-iip-admin.php:631
 msgid "Costa"
 msgstr "Costa"
 
-#: includes/class-iip-admin.php:576
+#: includes/class-iip-admin.php:632
 msgid "Golf"
 msgstr "Golf"
 
-#: includes/class-iip-admin.php:577
+#: includes/class-iip-admin.php:633
 msgid "Hospitales"
 msgstr ""
 
-#: includes/class-iip-admin.php:578
+#: includes/class-iip-admin.php:634
 msgid "Metro"
 msgstr "Metro"
 
-#: includes/class-iip-admin.php:579
+#: includes/class-iip-admin.php:635
 msgid "Montaña"
 msgstr ""
 
-#: includes/class-iip-admin.php:580
+#: includes/class-iip-admin.php:636
 msgid "Primera Línea"
 msgstr ""
 
-#: includes/class-iip-admin.php:581
+#: includes/class-iip-admin.php:637
 msgid "Rural"
 msgstr "Rural"
 
-#: includes/class-iip-admin.php:582
+#: includes/class-iip-admin.php:638
 msgid "Supermercados"
 msgstr ""
 
-#: includes/class-iip-admin.php:583
+#: includes/class-iip-admin.php:639
 msgid "Tranvía"
 msgstr ""
 
-#: includes/class-iip-admin.php:584
+#: includes/class-iip-admin.php:640
 msgid "Tren"
 msgstr ""
 
-#: includes/class-iip-admin.php:585
+#: includes/class-iip-admin.php:641
 msgid "Urbanización"
 msgstr ""
 
-#: includes/class-iip-admin.php:586
+#: includes/class-iip-admin.php:642
 msgid "Vallado"
 msgstr ""
 
-#: includes/class-iip-admin.php:587
+#: includes/class-iip-admin.php:643
 msgid "Vigilancia 24H"
 msgstr ""
 
-#: includes/class-iip-admin.php:588
+#: includes/class-iip-admin.php:644
 msgid "Vistas al mar"
 msgstr ""
 
-#: includes/class-iip-admin.php:589
+#: includes/class-iip-admin.php:645
 msgid "Vistas despejadas"
 msgstr ""
 
-#: includes/class-iip-admin.php:590
+#: includes/class-iip-admin.php:646
 msgid "Zona de paso"
 msgstr ""
 
-#: includes/class-iip-admin.php:591
+#: includes/class-iip-admin.php:647
 msgid "Zonas infantiles"
 msgstr ""
 
-#: includes/class-iip-admin.php:596
+#: includes/class-iip-admin.php:652
 msgid "General Description"
 msgstr "Descripción general"
 
-#: includes/class-iip-admin.php:598
+#: includes/class-iip-admin.php:654
 msgid "Descripción General"
 msgstr ""
 
-#: includes/class-iip-admin.php:599
+#: includes/class-iip-admin.php:655
 msgid "Fachada"
 msgstr ""
 
-#: includes/class-iip-admin.php:600
+#: includes/class-iip-admin.php:656
 msgid "Cocina"
 msgstr ""
 
-#: includes/class-iip-admin.php:601
+#: includes/class-iip-admin.php:657
 msgid "Portal"
 msgstr "Portal"
 
-#: includes/class-iip-admin.php:602
+#: includes/class-iip-admin.php:658
 msgid "Baños"
 msgstr ""
 
-#: includes/class-iip-admin.php:607
+#: includes/class-iip-admin.php:663
 msgid "Sell data"
 msgstr ""
 
-#: includes/class-iip-admin.php:609
+#: includes/class-iip-admin.php:665
 msgid "Precio Traspaso"
 msgstr ""
 
-#: includes/class-iip-admin.php:610
+#: includes/class-iip-admin.php:666
 msgid "Precio Propietario "
 msgstr ""
 
-#: includes/class-iip-admin.php:611
+#: includes/class-iip-admin.php:667
 msgid "Valor Honorarios %"
 msgstr ""
 
-#: includes/class-iip-admin.php:612
+#: includes/class-iip-admin.php:668
 msgid "Valor Honorarios €"
 msgstr ""
 
-#: includes/class-iip-admin.php:613
+#: includes/class-iip-admin.php:669
 msgid "I.V.A %"
 msgstr ""
 
-#: includes/class-iip-admin.php:614
+#: includes/class-iip-admin.php:670
 msgid "I.V.A Precio"
 msgstr ""
 
-#: includes/class-iip-admin.php:615
+#: includes/class-iip-admin.php:671
 msgid "Precio Inmobiliaria"
 msgstr ""
 
-#: includes/class-iip-admin.php:616
+#: includes/class-iip-admin.php:672
 msgid "Precio Anterior"
 msgstr ""
 
-#: includes/class-iip-admin.php:617
+#: includes/class-iip-admin.php:673
 msgid "Valoración"
 msgstr ""
 
-#: includes/class-iip-admin.php:618
+#: includes/class-iip-admin.php:674
 msgid "Valor Fiscal"
 msgstr ""
 
-#: includes/class-iip-admin.php:619
+#: includes/class-iip-admin.php:675
 msgid "Precio a consultar"
 msgstr ""
 
-#: includes/class-iip-admin.php:620
+#: includes/class-iip-admin.php:676
 msgid "Exclusivas Desde"
 msgstr ""
 
-#: includes/class-iip-admin.php:621
+#: includes/class-iip-admin.php:677
 msgid "Exclusivas Hasta"
 msgstr ""
+
+#. translators: %1$s: number of properties, %2$s: time
+#: includes/class-iip-cron.php:91
+#, php-format
+msgid "## %1$s - Synced %2$s properties in %3$s"
+msgstr "## %1$s - Propiedades sincronizadas %2$s en %3$s"
 
 #: includes/class-iip-import.php:56
 msgid "Sync"
