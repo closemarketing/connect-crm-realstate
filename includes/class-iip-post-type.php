@@ -169,6 +169,16 @@ class PostType {
 	public function manage_post_type_columns( $column_name, $id ) {
 		switch ( $column_name ) {
 			case 'property_data':
+				// Code.
+				$property_id = get_post_meta( $id, 'property_id', true );
+				echo '<p><strong>' . esc_html__( 'Property ID', 'connect-crm-realstate' ) . '</strong>: ';
+				echo esc_html( $property_id );
+				echo '</p>';
+				// Code.
+				$property_internal_id = get_post_meta( $id, 'property_internal_property_id', true );
+				echo '<p><strong>' . esc_html__( 'Property Internal ID', 'connect-crm-realstate' ) . '</strong>: ';
+				echo esc_html( $property_internal_id );
+				echo '</p>';
 				// Status.
 				$property_enabled = get_post_meta( $id, 'property_enabled', true );
 				echo '<p><strong>' . esc_html__( 'Status', 'connect-crm-realstate' ) . '</strong>: ';
