@@ -310,7 +310,7 @@ class Admin {
 			'<input class="regular-text" type="text" name="conncrmreal_settings[post_type_slug]" id="post_type_slug" value="%s">',
 			isset( $this->settings['post_type_slug'] ) ? esc_attr( $this->settings['post_type_slug'] ) : ''
 		);
-		echo sprintf( 
+		echo sprintf(
 			'<p class="description">%s</p>',
 			__( 'Slug for the post type. If you change this, you need to save the permalinks again.', 'connect-crm-realstate' )
 		);
