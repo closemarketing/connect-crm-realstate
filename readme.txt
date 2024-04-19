@@ -22,6 +22,7 @@ WordPress installation and then activate the Plugin from Plugins page.
 * Option to filter by Postal code.
 *	First released.
 * Saves logs in folder.
+* Syncs from last date of sync.
 
 == Links ==
 
