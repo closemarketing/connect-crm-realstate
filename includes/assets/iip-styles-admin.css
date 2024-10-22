@@ -73,3 +73,41 @@
 .connect-realstate-manual-action #loglist > p.finish {
 	background: #76d771;
 }
+
+
+.connect-realstate-log #logwrapper {
+  border: 1px solid #aaa;
+  margin: 10px auto;
+}
+
+.connect-realstate-log fieldset {
+  padding: 20px;
+  width: auto;
+}
+
+.connect-realstate-log #loglist {
+  border: 1px solid #AAAAAA;
+  height: 380px;
+  overflow: auto;
+}
+
+.connect-realstate-log #loglist>p {
+  margin: 0;
+  padding: 3px 5px;
+}
+
+.connect-realstate-log #loglist>p.odd {
+  background: #dfdfdf;
+}
+
+.connect-realstate-log #loglist>p.finish {
+  background: #76d771;
+}
+
+.connect-realstate-log .error {
+  color: red;
+}
+
+.connect-realstate-log .warning {
+  color: orange;
+}

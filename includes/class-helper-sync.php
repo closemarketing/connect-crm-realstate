@@ -25,11 +25,22 @@ class SYNC {
 	 * @return array
 	 */
 	public static function sync_property( $item ) {
-		$message        = '';
-		$settings       = get_option( 'conncrmreal_settings' );
-		$post_type      = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
-		$property_id    = self::find_property( $item['id'], $post_type );
-		$property_title = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' );
+		$message            = '';
+		$settings           = get_option( 'conncrmreal_settings' );
+		$post_type          = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$filter_postal_code = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
+		$property_id        = self::find_property( $item['id'], $post_type );
+		$property_title     = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' );
+
+		if ( self::cannot_import( $item, $filter_postal_code ) ) {
+			$message  = __( 'NOT Imported', 'connect-crm-realstate' );
+			$message .= self::add_end_message( $item, $property_title );
+
+			return array(
+				'property_id' => $property_id,
+				'message'     => $message,
+			);
+		}
 
 		// Property info.
 		$property_info = array(
@@ -41,6 +52,9 @@ class SYNC {
 		$property_info['meta_input'] = array();
 
 		foreach ( $item as $key => $item_meta ) {
+			if ( 'description' === $key || 'name' === $key ) {
+				continue;
+			}
 			$property_info['meta_input'][ 'property_' . $key ] = $item_meta;
 		}
 
@@ -49,19 +63,69 @@ class SYNC {
 			$property_info['post_name']    = sanitize_title( $property_title );
 			$property_info['post_content'] = isset( $item['description'] ) ? $item['description'] : '';
 			$property_id                   = wp_insert_post( $property_info );
-			$message                      .= __( 'Created Property ID:', 'connect-crm-realstate' );
+			$message                      .= __( 'Created', 'connect-crm-realstate' );
 		} else {
-			$message            .= __( 'Updated Property ID:', 'connect-crm-realstate' );
+			$message            .= __( 'Updated', 'connect-crm-realstate' );
 			$property_info['ID'] = $property_id;
 			wp_update_post( $property_info );
 		}
-		$message .= ' ' . $property_id;
+		$message .= self::add_end_message( $item, $property_title );
+
+		if ( ! empty( $property_id ) ) {
+			update_post_meta( $property_id, 'property_synced', true );
+			delete_post_meta( $property_id, 'property_description' );
+			delete_post_meta( $property_id, 'property_name' );
+		}
 
 		return array(
 			'property_id' => $property_id,
 			'message'     => $message,
 		);
+	}
 
+	/**
+	 * Adds end message.
+	 *
+	 * @param array  $item Item from API.
+	 * @param string $property_title Property title.
+	 * @return string
+	 */
+	private static function add_end_message( $item, $property_title ) {
+		$message  = ' ' . __( 'Property ID:', 'connect-crm-realstate' );
+		$message .= ' ' . $item['id'];
+		$message .= ! empty( $item['internal_property_id'] ) ? ' (' . $item['internal_property_id'] . ')' : '';
+		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $item['city'];
+		return $message;
+	}
+
+	/**
+	 * Filters the property depending of settings.
+	 *
+	 * @param array  $item Item from API.
+	 * @param string $filter_postal_code Postal code filter.
+	 * @return boolean
+	 */
+	private static function cannot_import( $item, $filter_postal_code ) {
+		$property_postal_code = isset( $item['postal_code'] ) ? trim( $item['postal_code'] ) : '';
+
+		if ( empty( $property_postal_code ) ) {
+			return false;
+		}
+
+		$filters = explode( ',', $filter_postal_code );
+		foreach ( $filters as $filter ) {
+			$filter = trim( $filter );
+			if ( empty( $filter ) ) {
+				continue;
+			}
+			if ( $filter === $property_postal_code ) {
+				return false;
+			} elseif ( fnmatch( $filter, $property_postal_code ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -74,10 +138,9 @@ class SYNC {
 	public static function find_property( $property_id, $post_type ) {
 		$property = get_posts(
 			array(
-				'post_type'   => $post_type,
-				'post_status' => 'publish',
-				'fields'      => 'ids',
-				'meta_query'  => array(
+				'post_type'  => $post_type,
+				'fields'     => 'ids',
+				'meta_query' => array(
 					array(
 						'key'     => 'property_id',
 						'value'   => $property_id,
@@ -94,40 +157,47 @@ class SYNC {
 	}
 
 	/**
+	 * Clears property meta.
+	 *
+	 * @return void
+	 */
+	public static function clear_property_meta() {
+		global $wpdb;
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM $wpdb->postmeta
+				WHERE meta_key = '%s'",
+				'property_synced'
+			)
+		);
+	}
+
+	/**
 	 * Sends to trash not synced products.
 	 *
-	 * @param array $products_synced Products synced.
 	 * @return int
 	 */
-	public static function trash_not_synced( $products_synced ) {
+	public static function trash_not_synced() {
 		$settings  = get_option( 'conncrmreal_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 
-		$products_unpublished = 0;
-		$args_query           = array(
-			'post_type'      => $post_type,
+		$args = array(
 			'posts_per_page' => -1,
-			'post__not_in'   => $products_synced,
-			'post_status'    => array( 'publish', 'draft' ),
+			'post_type'      => $post_type,
+			'fields'         => 'ids',
+			'meta_query' => array(
+				array(
+					'key'     => 'property_synced',
+					'compare' => 'NOT EXISTS',
+				),
+			),
 		);
-		// The Query.
-		$the_query = new \WP_Query( $args_query );
+		$posts_to_delete = get_posts( $args );
 
-		// The Loop.
-		if ( $the_query->have_posts() ) {
-			while ( $the_query->have_posts() ) {
-				$the_query->the_post();
-				$post_id = get_the_ID();
-				wp_update_post(
-					array(
-						'ID'          => $post_id,
-						'post_status' => 'trash',
-					)
-				);
-				$products_unpublished++;
-			}
-			wp_reset_postdata();
+		foreach ( $posts_to_delete as $post_id ) {
+			wp_trash_post( $post_id );
 		}
-		return $products_unpublished;
+
+		return count( $posts_to_delete );
 	}
 }

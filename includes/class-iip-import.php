@@ -68,97 +68,64 @@ class Import {
 	 */
 	public function manual_import() {
 		$loop         = isset( $_POST['loop'] ) ? (int) $_POST['loop'] : 0;
+		$pagination   = isset( $_POST['pagination'] ) ? (int) $_POST['pagination'] : 200;
+		$totalprop    = isset( $_POST['totalprop'] ) ? (int) $_POST['totalprop'] : 0;
 		$progress_msg = '';
 
 		if ( check_ajax_referer( 'manual_import_nonce', 'nonce' ) ) {
-			$properties = get_transient( 'connect_query_properties' );
-			if ( ! $properties ) {
-				$result_api = API::get_properties();
-				$properties = 'ok' === $result_api['status'] ? $result_api['data'] : array();
-				set_transient( 'connect_query_properties', $properties, MINUTE_IN_SECONDS * 3 );
-			}
+			$loop_page = $loop % $pagination;
+			$page      = round( $loop / $pagination, 0 ) + 1;
+
 			if ( 0 === $loop ) {
-				$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-woocommerce' ) . '<br/>';
-				update_option( 'connect_crm_realstate_sync', array() );
-			}
-			$item          = $properties[ $loop ];
-			$total_count   = count( $properties );
-			$result_sync   = SYNC::sync_property( $item );
-			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1 . '/' . $total_count;
-			$progress_msg .= ' - ' . $result_sync['message'];
-
-			if ( ! empty( $result_sync['property_id'] ) ) {
-				$property_id = $result_sync['property_id'];
-				$sync        = get_option( 'connect_crm_realstate_sync' );
-				$sync[]      = $property_id;
-				update_option( 'connect_crm_realstate_sync', $sync );
+				SYNC::clear_property_meta();
 			}
 
-			if ( $loop + 1 > $total_count ) {
+			$property = get_transient( 'connreal_query_property_loop_' . $loop_page );
+			if ( ! $property || 0 === $loop_page ) {
+				$result_api   = API::get_properties( $page );
+				$properties   = 'ok' === $result_api['status'] ? $result_api['data'] : array();
+				$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-realstate' ) . '<br/>';
+				$total_count  = ! empty( $total_count ) ? $total_count : 0;
+				$total_count += count( $properties );
+				$i            = 0;
+				foreach ( $properties as $property_api ) {
+					set_transient( 'connreal_query_property_loop_' . $i, $property_api, MINUTE_IN_SECONDS * 3 );
+					$i++;
+				}
+				$property  = $result_api['data'][ $loop_page ];
+				$totalprop = count( $properties );
+			}
+
+			$sync = get_option( 'connect_crm_realstate_sync' );
+			if ( ! empty( $property ) ) {
+				$result_sync   = SYNC::sync_property( $property );
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1;
+				$progress_msg .= ' - ' . $result_sync['message'];
+
+				$finish = $totalprop < $pagination && $totalprop === $loop ? true : false;
+				$finish = 0 === $totalprop ? true : $finish;
+			} else {
+				$finish = true;
+			}
+
+			if ( $finish ) {
 				$count         = SYNC::trash_not_synced( $sync );
-				$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-woocommerce' ) . $count;
+				$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-crm-realstate' ) . $count;
 			}
+
+			delete_transient( 'connreal_query_property_loop_' . $loop_page );
 
 			wp_send_json_success(
 				array(
-					'loop'    => $loop + 1,
-					'message' => $progress_msg,
-					'total'   => $total_count,
+					'loop'       => $loop + 1,
+					'message'    => $progress_msg,
+					'pagination' => $pagination,
+					'totalprop'  => $totalprop,
+					'finish'     => $finish,
 				)
 			);
 		} else {
 			wp_send_json_error( array( 'error' => 'Error' ) );
-		}
-	}
-
-	public function attach_image( $post_id, $img_string ) {
-		if ( ! $img_string || ! $post_id ) {
-			return null;
-		}
-
-		$post         = get_post( $post_id );
-		$upload_dir   = wp_upload_dir();
-		$upload_path  = $upload_dir['path'];
-		$filename     = $post->post_name . '-' . time() . '.png';
-		$image_upload = file_put_contents( $upload_path . $filename, $img_string );
-		// HANDLE UPLOADED FILE
-		if ( ! function_exists( 'wp_handle_sideload' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-		}
-
-		if ( ! function_exists( 'wp_get_current_user' ) ) {
-			require_once ABSPATH . 'wp-includes/pluggable.php';
-		}
-		$file = array(
-			'error'    => '',
-			'tmp_name' => $upload_path . $filename,
-			'name'     => $filename,
-			'type'     => 'image/png',
-			'size'     => filesize( $upload_path . $filename ),
-		);
-		if ( ! empty( $file ) ) {
-			$file_return = wp_handle_sideload( $file, array( 'test_form' => false ) );
-			$filename    = $file_return['file'];
-		}
-		if ( isset( $file_return['file'] ) && isset( $file_return['file'] ) ) {
-			$attachment = array(
-				'post_mime_type' => $file_return['type'],
-				'post_title'     => preg_replace( '/\.[^.]+$/', ' ', basename( $file_return['file'] ) ),
-				'post_content'   => '',
-				'post_status'    => 'inherit',
-				'guid'           => $file_return['url'],
-			);
-			$attach_id  = wp_insert_attachment( $attachment, $filename, $post_id );
-			if ( $attach_id ) {
-				require_once ABSPATH . 'wp-admin/includes/image.php';
-				$post_thumbnail_id = get_post_thumbnail_id( $post_id );
-				if ( $post_thumbnail_id ) {
-					wp_delete_attachment( $post_thumbnail_id, true );
-				}
-				$attach_data = wp_generate_attachment_metadata( $attach_id, $filename );
-				wp_update_attachment_metadata( $attach_id, $attach_data );
-				set_post_thumbnail( $post_id, $attach_id );
-			}
 		}
 	}
 }

@@ -19,24 +19,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class API {
 	/**
-	 * Request to API depending CRM
-	 *
-	 * @param string $method Method of API request.
-	 * @param string $endpoint Endpoint of API request.
-	 * @param array  $query Query of API request.
-	 * @return array
-	 */
-	public static function request( $method, $endpoint, $query = array() ) {
-		$settings     = get_option( 'conncrmreal_settings' );
-		$settings_crm = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
-		if ( 'anaconda' === $settings_crm ) {
-			return self::request_anaconda( $method, $endpoint, $query );
-		} elseif ( 'inmovilla' === $settings_crm ) {
-			return self::request_inmovilla( $method, $endpoint, $query );
-		}
-	}
-
-	/**
 	 * Request to API from Anaconda CRM
 	 *
 	 * @param string $method Method of API request.
@@ -44,7 +26,7 @@ class API {
 	 * @param array  $query Query of API request.
 	 * @return array
 	 */
-	private static function request_anaconda( $method = 'GET', $endpoint, $query ) {
+	private static function request_anaconda( $method = 'GET', $endpoint, $query = array() ) {
 		$settings    = get_option( 'conncrmreal_settings' );
 		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
 
@@ -65,19 +47,21 @@ class API {
 		if ( ! empty( $query ) ) {
 			$args['body'] = $query;
 		}
+
 		$response    = wp_remote_request( 'https://api.anaconda.guru/api/v1/' . $endpoint, $args );
 		$result_body = wp_remote_retrieve_body( $response );
-		$body        = json_decode( $result_body, true );
+		$code        = (int) substr( wp_remote_retrieve_response_code( $response ), 0, 1 );
+		$data        = json_decode( $result_body, true );
 
-		if ( ! is_wp_error( $response ) && ( 200 === $response['response']['code'] || 201 === $response['response']['code'] ) ) {
+		if ( is_wp_error( $response ) || empty( $response['body'] ) || 2 !== $code ) {
 			return array(
-				'status' => 'ok',
-				'data'   => isset( $body ) ? $body : array(),
+				'status' => 'error',
+				'data'   => isset( $data['message'] ) ? $data['message'] : '',
 			);
 		} else {
 			return array(
-				'status' => 'error',
-				'data'   => isset( $body['error_message'] ) ? $body['error_message'] : '',
+				'status' => 'ok',
+				'data'   => $data,
 			);
 		}
 	}
@@ -90,7 +74,29 @@ class API {
 	 * @param array  $query Query of API request.
 	 * @return array
 	 */
-	private static function request_inmovilla( $method = 'GET', $endpoint, $query ) {
+	private static function request_inmovilla( $method = 'GET', $endpoint, $query = array() ) {
+	}
+
+	/**
+	 * Request to properties API from CRM
+	 *
+	 * @param int    $page Page of properties.
+	 * @param string $changed_from Date of changed properties.
+	 * @return array
+	 */
+	public static function get_properties( $page = 0, $changed_from = '' ) {
+		$settings     = get_option( 'conncrmreal_settings' );
+		$settings_crm = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
+		if ( 'anaconda' === $settings_crm && ! empty( $page ) ) {
+			return self::request_anaconda( 'GET', 'properties/?page=' . $page );
+		} elseif ( 'anaconda' === $settings_crm && ! empty( $changed_from ) ) {
+			$query = array(
+				'changed_from' => $changed_from,
+			);
+			return self::request_anaconda( 'POST', 'properties/search', $query );
+		} elseif ( 'inmovilla' === $settings_crm ) {
+			return self::request_inmovilla( 'GET', 'properties' );
+		}
 	}
 
 	/**
@@ -98,7 +104,12 @@ class API {
 	 *
 	 * @return array
 	 */
-	public static function get_properties() {
-		return self::request( 'GET', 'properties' );
+	public static function get_total_properties() {
+		$settings     = get_option( 'conncrmreal_settings' );
+		$settings_crm = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
+		if ( 'anaconda' === $settings_crm ) {
+			return self::request_anaconda( 'POST', 'properties/total_search_properties' );
+		} elseif ( 'inmovilla' === $settings_crm ) {
+		}
 	}
 }

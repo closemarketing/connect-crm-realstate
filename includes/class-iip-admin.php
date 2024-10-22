@@ -79,7 +79,7 @@ class Admin {
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
 
 		echo '<div class="wrap bialty-containter">';
-		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ). '</h2>';
+		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ) . '</h2>';
 		echo '<h2 class="nav-tab-wrapper">';
 		// Import Properties.
 		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-import' ) . '" class="nav-tab ';
@@ -96,10 +96,19 @@ class Admin {
 		echo ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Merge variables', 'connect-crm-realstate' ) . '</a>';
 
+		// Log.
+		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-log' ) . '" class="nav-tab ';
+		echo ( 'iip-log' === $active_tab ? 'nav-tab-active' : '' );
+		echo '">' . esc_html__( 'Log', 'connect-crm-realstate' ) . '</a>';
+
 		echo '</h2>';
 
 		if ( 'iip-import' === $active_tab ) {
 			$this->plugin_import_page();
+		}
+
+		if ( 'iip-log' === $active_tab ) {
+			$this->plugin_log_page();
 		}
 
 		if ( 'iip-settings' === $active_tab ) {
@@ -153,6 +162,19 @@ class Admin {
 			'admin_conncrmreal_settings'
 		);
 
+		$sync_minutes = CCRMRE_SYNC_PERIOD / 60;
+		add_settings_field(
+			'conncrmreal_cron',
+			sprintf(
+				/* translators: %s: minutes */
+				__( 'Sync with Cron (every %s minutes)?', 'connect-crm-realstate' ),
+				$sync_minutes
+			),
+			array( $this, 'cron_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
 		add_settings_field(
 			'conncrmreal_post_type',
 			__( 'Post Type', 'connect-crm-realstate' ),
@@ -170,6 +192,13 @@ class Admin {
 				'admin_conncrmreal_settings'
 			);
 		}
+		add_settings_field(
+			'conncrmreal_postal_code',
+			__( 'Include Properties by Postal Code', 'connect-crm-realstate' ),
+			array( $this, 'postal_code_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
 	}
 
 	/**
@@ -184,8 +213,10 @@ class Admin {
 		$field_values = array(
 			'type',
 			'apipassword',
+			'cron',
 			'post_type',
 			'post_type_slug',
+			'postal_code',
 		);
 
 		foreach ( $field_values as $field_value ) {
@@ -193,6 +224,8 @@ class Admin {
 				$sanitary_values[ $field_value ] = sanitize_text_field( $input[ $field_value ] );
 			}
 		}
+
+		$sanitary_values['api_pagination'] = 'anaconda' === $input['type'] ? 200 : 100;
 
 		return $sanitary_values;
 	}
@@ -225,6 +258,21 @@ class Admin {
 	}
 
 	/**
+	 * Cron callback
+	 *
+	 * @return void
+	 */
+	public function cron_callback() {
+		$cron_option = isset( $this->settings['cron'] ) ? $this->settings['cron'] : 'no';
+		?>
+		<select name="conncrmreal_settings[cron]" id="cron">
+			<option value="no" <?php selected( $cron_option, 'no' ); ?>><?php esc_html_e( 'No', 'connect-crm-realstate' ); ?></option>
+			<option value="yes" <?php selected( $cron_option, 'yes' ); ?>><?php esc_html_e( 'Yes', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<?php
+	}
+
+	/**
 	 * Show title callback
 	 *
 	 * @return void
@@ -253,7 +301,7 @@ class Admin {
 	}
 
 	/**
-	 * Password callback
+	 * Post Type callback
 	 *
 	 * @return void
 	 */
@@ -262,9 +310,25 @@ class Admin {
 			'<input class="regular-text" type="text" name="conncrmreal_settings[post_type_slug]" id="post_type_slug" value="%s">',
 			isset( $this->settings['post_type_slug'] ) ? esc_attr( $this->settings['post_type_slug'] ) : ''
 		);
-		echo sprintf( 
+		echo sprintf(
 			'<p class="description">%s</p>',
 			__( 'Slug for the post type. If you change this, you need to save the permalinks again.', 'connect-crm-realstate' )
+		);
+	}
+
+	/**
+	 * Postal code callback
+	 *
+	 * @return void
+	 */
+	public function postal_code_callback() {
+		printf(
+			'<input class="regular-text" type="text" name="conncrmreal_settings[postal_code]" id="postal_code" value="%s">',
+			isset( $this->settings['postal_code'] ) ? esc_attr( $this->settings['postal_code'] ) : ''
+		);
+		echo sprintf( 
+			'<p class="description">%s</p>',
+			__( 'Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma.', 'connect-crm-realstate' )
 		);
 	}
 
@@ -274,12 +338,56 @@ class Admin {
 	 * @return void
 	 */
 	public function plugin_import_page() {
+		$settings   = get_option( 'conncrmreal_settings' );
+		$pagination = empty( $settings['api_pagination'] ) ? 200 : $settings['api_pagination'];
 		?>
 		<div class="connect-realstate-manual-action">
 			<h2><?php esc_html_e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
 			<p><?php esc_html_e( 'After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?><br/></p>
-			<div id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0);" ><?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?></div>
+			<div id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" ><?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?></div>
 			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Log Page
+	 *
+	 * @return void
+	 */
+	public function plugin_log_page() {
+		?>
+		<div class="connect-realstate-log">
+			<h2><?php esc_html_e( 'Latest cron logs', 'connect-crm-realstate' ); ?></h2>
+			<p><?php esc_html_e( 'After you fillup the API settings, use the button below to import the products. The importing process may take a while and you need to keep this page open to complete it.', 'connect-woocommerce' ); ?>
+			</p>
+
+			<fieldset id="logwrapper">
+				<legend><?php esc_html_e( 'Log', 'connect-woocommerce' ); ?></legend>
+				<div id="loglist">
+					<?php
+					$uploads_dir = wp_upload_dir();
+					$folder      = $uploads_dir['basedir'] . '/ccrmre_logs/';
+					$files       = list_files( $folder, 2 );
+					$index       = 0;
+					foreach ( $files as $file ) {
+						if ( is_file( $file ) ) {
+							$filename = basename( $file );
+						}
+						$class = ( 0 === $index % 2 ) ? 'even' : 'odd';
+						echo '<p class="' . esc_html( $class ) . '">';
+						$file_open = fopen( $file, 'r' );
+						$line      = fgets( $file_open );
+						fclose( $file_open );
+						echo '<a href="' . esc_url( $uploads_dir['baseurl'] . '/ccrmre_logs/' . $filename ) . '" target="_blank">';
+						echo ! empty( esc_html( $line ) ) ? esc_html( $line ) : esc_html( $filename );
+						echo '</a>';
+						echo '</p>';
+						$index++;
+					}
+					?>
+				</div>
+			</fieldset>
 		</div>
 		<?php
 	}

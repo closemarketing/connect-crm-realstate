@@ -1,13 +1,8 @@
-=== Import Inmovilla Properties ===
+=== Connect CRM RealState ===
 Contributors: closemarketing
 Tags: properties, inmovilla
-Donate link: https://www.closemarketing.es/go/donate/
-Requires at least: 3.0
-Tested up to: 5.3
-Stable tag: 0.1
-Version: 0.1
 
-Import Inmovilla properties to your WordPress Installation.
+Import Inmovilla and Anaconda properties to your WordPress Installation.
 
 == Description ==
 
@@ -23,7 +18,11 @@ WordPress installation and then activate the Plugin from Plugins page.
 == Changelog ==
 
 = 1.0.0 =
+* Imports all properties from Anaconda.
+* Option to filter by Postal code.
 *	First released.
+* Saves logs in folder.
+* Syncs from last date of sync.
 
 == Links ==
 
