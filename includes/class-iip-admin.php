@@ -57,7 +57,7 @@ class Admin {
 		add_menu_page(
 			__( 'Connect CRM Real State', 'connect-crm-realstate' ),
 			__( 'Connect CRM Real State', 'connect-crm-realstate' ),
-			'administrator',
+			'manage_options',
 			'iip-options',
 			array( $this, 'plugin_options_page' ),
 			'dashicons-rest-api'
@@ -138,7 +138,7 @@ class Admin {
 			'conncrmreal_settings',
 			array( $this, 'sanitize_fields_settings' )
 		);
-	
+
 		add_settings_section(
 			'admin_conncrmreal_settings',
 			__( 'Settings for Integration with CRM Real State', 'connect-crm-realstate' ),
@@ -282,7 +282,6 @@ class Admin {
 
 		$args = array(
 			'public'   => true,
-			'_builtin' => true,
 		);
 		$post_types = get_post_types( $args );
 		unset( $post_types['attachment'] );
@@ -402,54 +401,53 @@ class Admin {
 	}
 
 	public function plugin_merge_page() {
-		$crm_type = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
+		$crm_type  = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
+		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
 
 		$show_merge_vars = true;
-		
+
 		if ( $show_merge_vars ) {
 			$custom_fields = $this->get_all_custom_fields( $post_type );
 			// Get Options .
-			$properties_fields = $this->get_properties_fields();
-			foreach ( $properties_fields as $property_field ) {
-				$section = esc_html( $property_field['section'] );
-				$property_values[ $section ] = get_option( 'iip_var_' . $section );
+			$properties_fields = API::get_properties_fields( $crm_type );
+
+			if ( 'error' === $properties_fields['status'] ) {
+				echo '<div class="error notice"><p>' . esc_html( $properties_fields['data'] ) . '</p></div>';
+				return;
 			}
+
 			?>
 			<div class="wrap">
 				<h1><?php esc_html_e( 'Merge Variables with custom values', 'connect-crm-realstate' ); ?></h1>
 				<form method="post" action="options.php">
 					<?php settings_fields( 'iip_plugin_merge_group' ); ?>
 					<?php do_settings_sections( 'iip_plugin_merge_group' ); ?>
-
 					<?php
-					$col = 1;
-					foreach ( $properties_fields as $property_field ) {
-						if ( 1 === $col ) {
-							echo '<div class="iip-row">';
+					echo '<table class="form-table iip-table">';
+					echo '<tr valign="top">';
+					echo '<th scope="row"><h3>' . esc_html_e( 'CRM Fields', 'connect-crm-realstate' ) . '</h3></th>';
+					echo '</tr>';
+					$value = '';
+					foreach ( $properties_fields['data'] as $property_field ) {
+						echo '<tr scope="row"><td>' . esc_html( $property_field['label'] );
+						echo ' (' . esc_attr( $property_field['name'] ) . ')</td>';
+						echo '<td><select name="cccrmre_field[' . esc_attr( $property_field['name'] ) . ']">';
+						echo '<option value=""';
+						if ( '' === $value ) {
+							echo ' selected';
 						}
-						echo '<div class="iip-column col-6">';
-						echo '<table class="form-table iip-table">';
-						echo '<tr valign="top">';
-						echo '<th scope="row"><h3>' . esc_html( $property_field['label'] ) . '</h3></th>';
+						echo '></option>';
+						foreach ( $custom_fields as $meta_key ) {
+							echo '<option value="' . esc_html( $meta_key ) . '"';
+							if ( ( $value === $meta_key ) || ( ! $value && 1 === $meta_key ) ) {
+								echo ' selected';
+							}
+							echo '>' . esc_html( $meta_key ) . '</option>';
+						}
+						echo '</select></td>';
 						echo '</tr>';
-						foreach ( $property_field['fields'] as $key => $value ) {
-							$section = esc_html( $property_field['section'] );
-							echo '<th scope="row">' . $value . '</th>';
-							echo '<td><select name="iip_var_' . $section;
-							echo '[' . $key . ']">';
-							$this->fields_to_option( $custom_fields, $property_values[ $section ][ $key ] );
-							echo '</select></td>';
-							echo '</tr>';
-						}
-						echo '</table>';
-						echo '</div>';
-						$col++;
-						if ( $col > 2 ) {
-							echo '</div>';
-							$col = 1;
-						}
 					}
-					echo '</div>';
+					echo '</table>';
 
 					submit_button();
 					?>
@@ -478,28 +476,6 @@ class Admin {
 		$meta_keys = $wpdb->get_col( $sql );
 
 		return $meta_keys;
-	}
-
-	/**
-	 * Converts an array to option html
-	 *
-	 * @param array  $custom_fields Custom fields array.
-	 * @param string $value Value of option selected.
-	 * @return void
-	 */
-	private function fields_to_option( $custom_fields, $value ) {
-		echo '<option value=""';
-		if ( '' === $value ) {
-			echo ' selected';
-		}
-		echo '></option>';
-		foreach ( $custom_fields as $meta_key ) {
-			echo '<option value="' . esc_html( $meta_key ) . '"';
-			if ( ( $value === $meta_key ) || ( ! $value && 1 === $meta_key ) ) {
-				echo ' selected';
-			}
-			echo '>' . esc_html( $meta_key ) . '</option>';
-		}
 	}
 }
 
