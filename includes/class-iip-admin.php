@@ -30,6 +30,12 @@ class Admin {
 	 */
 	private $settings;
 
+	/**
+	 * Settings CRM
+	 *
+	 * @var array
+	 */
+	private $settings_fields;
 
 	/**
 	 * Construct and intialize
@@ -57,7 +63,7 @@ class Admin {
 		add_menu_page(
 			__( 'Connect CRM Real State', 'connect-crm-realstate' ),
 			__( 'Connect CRM Real State', 'connect-crm-realstate' ),
-			'administrator',
+			'manage_options',
 			'iip-options',
 			array( $this, 'plugin_options_page' ),
 			'dashicons-rest-api'
@@ -73,7 +79,8 @@ class Admin {
 	 * @return void
 	 */
 	public function plugin_options_page() {
-		$this->settings = get_option( 'conncrmreal_settings' );
+		$this->settings        = get_option( 'conncrmreal_settings' );
+		$this->settings_fields = get_option( 'conncrmreal_merge_fields' );
 
 		// Set active class for navigation tabs.
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
@@ -120,7 +127,14 @@ class Admin {
 		}
 
 		if ( 'iip-merge' === $active_tab ) {
-			$this->plugin_merge_page();
+			?>
+			<h1><?php esc_html_e( 'Merge Variables with custom values', 'connect-crm-realstate' ); ?></h1>
+			<form method="post" action="options.php">
+				<?php settings_fields( 'iip_plugin_merge_group' ); ?>
+				<?php do_settings_sections( 'conncrmreal_merge_fields' ); ?>
+				<?php submit_button(); ?>
+			</form>
+			<?php
 		}
 	}
 
@@ -138,7 +152,7 @@ class Admin {
 			'conncrmreal_settings',
 			array( $this, 'sanitize_fields_settings' )
 		);
-	
+
 		add_settings_section(
 			'admin_conncrmreal_settings',
 			__( 'Settings for Integration with CRM Real State', 'connect-crm-realstate' ),
@@ -198,6 +212,28 @@ class Admin {
 			array( $this, 'postal_code_callback' ),
 			'conncrmreal_settings',
 			'admin_conncrmreal_settings'
+		);
+
+		// Register our settings.
+		register_setting(
+			'iip_plugin_merge_group',
+			'conncrmreal_merge_fields',
+			array( $this, 'sanitize_fields_settings_merge' )
+		);
+
+		add_settings_section(
+			'iip_plugin_merge_group',
+			__( 'Settings for Integration with CRM Real State', 'connect-crm-realstate' ),
+			array( $this, 'admin_section_settings_info_merge' ),
+			'conncrmreal_merge_fields'
+		);
+
+		add_settings_field(
+			'conncrmreal_merge_fields',
+			__( 'Merge Fields', 'connect-crm-realstate' ),
+			array( $this, 'merge_fields_callback' ),
+			'conncrmreal_merge_fields',
+			'iip_plugin_merge_group'
 		);
 	}
 
@@ -282,7 +318,6 @@ class Admin {
 
 		$args = array(
 			'public'   => true,
-			'_builtin' => true,
 		);
 		$post_types = get_post_types( $args );
 		unset( $post_types['attachment'] );
@@ -401,285 +436,70 @@ class Admin {
 		esc_html_e( 'Put the connection API key settings in order to connect external data.', 'connect-crm-realstate' );
 	}
 
-	public function plugin_merge_page() {
-		
-		$agency_number = get_option( 'iip_agency_number' );
-		$agency_pass   = get_option( 'iip_agency_pass' );
-		$language      = get_option( 'iip_language' );
-		$post_type     = get_option( 'iip_post_type' );
-		if ( $agency_number && $agency_pass ) {
-			$show_merge_vars = true;
-		} else {
-			$show_merge_vars = false;
-		}
-		if ( $show_merge_vars ) {
-			$custom_fields = $this->get_all_custom_fields( $post_type );
-			// Get Options .
-			$properties_fields = $this->get_properties_fields();
-			foreach ( $properties_fields as $property_field ) {
-				$section = esc_html( $property_field['section'] );
-				$property_values[ $section ] = get_option( 'iip_var_' . $section );
-			}
-			?>
-			<div class="wrap">
-				<h1><?php esc_html_e( 'Merge Variables with custom values', 'connect-crm-realstate' ); ?></h1>
-				<form method="post" action="options.php">
-					<?php settings_fields( 'iip_plugin_merge_group' ); ?>
-					<?php do_settings_sections( 'iip_plugin_merge_group' ); ?>
-
-					<?php
-					$col = 1;
-					foreach ( $properties_fields as $property_field ) {
-						if ( 1 === $col ) {
-							echo '<div class="iip-row">';
-						}
-						echo '<div class="iip-column col-6">';
-						echo '<table class="form-table iip-table">';
-						echo '<tr valign="top">';
-						echo '<th scope="row"><h3>' . esc_html( $property_field['label'] ) . '</h3></th>';
-						echo '</tr>';
-						foreach ( $property_field['fields'] as $key => $value ) {
-							$section = esc_html( $property_field['section'] );
-							echo '<th scope="row">' . $value . '</th>';
-							echo '<td><select name="iip_var_' . $section;
-							echo '[' . $key . ']">';
-							$this->fields_to_option( $custom_fields, $property_values[ $section ][ $key ] );
-							echo '</select></td>';
-							echo '</tr>';
-						}
-						echo '</table>';
-						echo '</div>';
-						$col++;
-						if ( $col > 2 ) {
-							echo '</div>';
-							$col = 1;
-						}
-					}
-					echo '</div>';
-
-					submit_button();
-					?>
-				</form>
-			</div>
-			<?php
-		}
-
+	/**
+	 * Info for neo automate section.
+	 *
+	 * @return void
+	 */
+	public function admin_section_settings_info_merge() {
+		esc_html_e( 'Put the connection API key settings in order to connect external data.', 'connect-crm-realstate' );
 	}
 
-	/**
-	 * Properties fields array from Inmovilla
-	 *
-	 * @return array Property Fields.
-	 */
-	private function get_properties_fields() {
-		$properties_fields = [
-			[
-				'section' => 'features',
-				'label'   => __( 'Features', 'connect-crm-realstate' ),
-				'fields'  => [
-					'cod_ofer'     => __( 'Reference', 'connect-crm-realstate' ),
-					'keyacci'      => __( 'Operation Type', 'connect-crm-realstate' ),
-					'key_tipo'     => __( 'Property Type', 'connect-crm-realstate' ),
-					'key_loca'     => __( 'City', 'connect-crm-realstate' ),
-					'key_zona'     => __( 'Zone', 'connect-crm-realstate' ),
-					'zonaauxiliar' => __( 'Complementary Zone', 'connect-crm-realstate' ),
-					'keycalle'     => __( 'Street key', 'connect-crm-realstate' ),
-					'calle'        => __( 'Street', 'connect-crm-realstate' ),
-					'numero'       => __( 'Street number', 'connect-crm-realstate' ),
-					'cp'           => __( 'ZIP', 'connect-crm-realstate' ),
-					'altura'       => __( 'Height', 'connect-crm-realstate' ),
-					'planta'       => __( 'Block', 'connect-crm-realstate' ),
-					'planta'       => __( 'Floor', 'connect-crm-realstate' ),
-					'puerta'       => __( 'Door', 'connect-crm-realstate' ),
-					'escalera'     => __( 'Stairs', 'connect-crm-realstate' ),
-					'bloque'       => __( 'Block', 'connect-crm-realstate' ),
-					'edificio'     => __( 'Building', 'connect-crm-realstate' ),
-					'fecha'        => __( 'Date creation', 'connect-crm-realstate' ),
-					'fechaact'     => __( 'Date updated', 'connect-crm-realstate' ),
-				],
-			],
-			[
-				'section' => 'surfaces',
-				'label'   => __( 'Surfaces', 'connect-crm-realstate' ),
-				'fields'  => [
-					'm_uties'      => __( 'Useful square meters', 'connect-crm-realstate' ),
-					'm_cons'       => __( 'Square Meters built', 'connect-crm-realstate' ),
-					'm_parcela'    => __( 'Square Meters plot', 'connect-crm-realstate' ),
-					'm_terraza'    => __( 'Square Meters terrace', 'connect-crm-realstate' ),
-					'm_cocina'     => __( 'Square Meters kitchen', 'connect-crm-realstate' ),
-					'm_comedor'    => __( 'Square Meters dinning room', 'connect-crm-realstate' ),
-					'm_salon'      => __( 'Square Meters living room', 'connect-crm-realstate' ),
-					'm_patio'      => __( 'Square Meters playground', 'connect-crm-realstate' ),
-					'm_buhardilla' => __( 'Square Meters attic', 'connect-crm-realstate' ),
-					'm_pplanta'    => __( 'Square Meters first floor', 'connect-crm-realstate' ),
-					'm_sotano'     => __( 'Square Meters ground floor', 'connect-crm-realstate' ),
-				],
-			],
-			[
-				'section' => 'distribution',
-				'label'   => __( 'Distribution', 'connect-crm-realstate' ),
-				'fields'  => [
-					'habdobles'    => __( 'Number of Double rooms', 'connect-crm-realstate' ),
-					'habitaciones' => __( 'Number of Rooms', 'connect-crm-realstate' ),
-					'banyos'       => __( 'Number of Bathrooms', 'connect-crm-realstate' ),
-					'aseos'        => __( 'Number of Toilets', 'connect-crm-realstate' ),
-					'salon'        => __( 'Number of Living rooms', 'connect-crm-realstate' ),
-					'numapar'      => __( 'Number of Parkings', 'connect-crm-realstate' ),
-					'numplanta'    => __( 'Number of floors', 'connect-crm-realstate' ),
-					'numplanta'    => __( 'Number of floors', 'connect-crm-realstate' ),
-					'antiguedad'   => __( 'Construction year', 'connect-crm-realstate' ),
-					'distmar'      => __( 'Beach distance', 'connect-crm-realstate' ),
-					'gastos_com'   => __( 'Community Expenses', 'connect-crm-realstate' ),
-					'tgascom'      => __( 'Community periodicity', 'connect-crm-realstate' ),
-					'ibi'          => __( 'I.B.I.', 'connect-crm-realstate' ),
-				],
-			],
-			[
-				'section' => 'property_data',
-				'label'   => __( 'Property Data', 'connect-crm-realstate' ),
-				'fields'  => [
-					'conservacion'    => __( 'Status', 'connect-crm-realstate' ),
-					'keycarpinext'    => __( 'External woodwork', 'connect-crm-realstate' ),
-					'keysuelo'        => __( 'Ground', 'connect-crm-realstate' ),
-					'keyori'          => __( 'Orientation', 'connect-crm-realstate' ),
-					'keycarpin'       => __( 'Internal woodwork', 'connect-crm-realstate' ),
-					'todoext'         => __( 'All external', 'connect-crm-realstate' ),
-					'keyvista'        => __( 'Views', 'connect-crm-realstate' ),
-					'keycalefa'       => __( 'Heating Type', 'connect-crm-realstate' ),
-					'keyagua'         => __( 'Hot water', 'connect-crm-realstate' ),
-					'cocina_inde'     => __( 'Kitchen Type', 'connect-crm-realstate' ),
-					'electro'         => __( 'Home Appliances', 'connect-crm-realstate' ),
-					'tipovpo'         => __( 'Regimen', 'connect-crm-realstate' ),
-					'keyelectricidad' => __( 'Electrical installation', 'connect-crm-realstate' ),
-					'keyfachada'      => __( 'Facade', 'connect-crm-realstate' ),
-				],
-			],
-			[
-				'section' => 'energetic_certification',
-				'label'   => __( 'Energetic certification', 'connect-crm-realstate' ),
-				'fields' => [
-					'energiarecibido' => __( 'Energetic certification', 'connect-crm-realstate' ),
-					'energialetra'    => __( 'Energetic certification rating', 'connect-crm-realstate' ),
-					'energiavalor'    => __( 'Energetic certification value', 'connect-crm-realstate' ),
-					'emisionesletra'  => __( 'Emissions Rating', 'connect-crm-realstate' ),
-					'emisionesvalor'  => __( 'Emissions value', 'connect-crm-realstate' ),
-					'refcertificado'  => __( 'Certification reference', 'connect-crm-realstate' ),
-				],
-			],
-			[
-				'section' => 'features',
-				'label'   => __( 'Features', 'connect-crm-realstate' ),
-				'type'    => 'taxonomy',
-				'fields'  => [
-					'ofertas.adaptadominus'   => __( 'Adaptado PMR', 'connect-crm-realstate' ),
-					'ofertas.agua'            => __( 'Agua', 'connect-crm-realstate' ),
-					'ofertas.airecentral'     => __( 'Aire Acond. Central', 'connect-crm-realstate' ),
-					'ofertas.aire_con'        => __( 'Aire Acondicionado ', 'connect-crm-realstate' ),
-					'ofertas.alarma'          => __( 'Alarma ', 'connect-crm-realstate' ),
-					'ofertas.alarmaincendio'  => __( 'Alarma Incendio', 'connect-crm-realstate' ),
-					'ofertas.alarmarobo'      => __( 'Alarma Robo', 'connect-crm-realstate' ),
-					'ofertas.altillo'         => __( 'Altillo', 'connect-crm-realstate' ),
-					'ofertas.apartseparado'   => __( 'Apart. Separado', 'connect-crm-realstate' ),
-					'ofertas.arma_empo'       => __( 'Armarios empotrados', 'connect-crm-realstate' ),
-					'ofertas.ascensor'        => __( 'Ascensor', 'connect-crm-realstate' ),
-					'ofertas.balcon'          => __( 'Balcón ', 'connect-crm-realstate' ),
-					'ofertas.bar'             => __( 'Bar', 'connect-crm-realstate' ),
-					'ofertas.barbacoa'        => __( 'Barbacoa', 'connect-crm-realstate' ),
-					'ofertas.bombafriocalor'  => __( 'Bomba frío y calor', 'connect-crm-realstate' ),
-					'ofertas.buardilla'       => __( 'Buhardilla ', 'connect-crm-realstate' ),
-					'ofertas.cajafuerte'      => __( 'Caja fuerte', 'connect-crm-realstate' ),
-					'ofertas.calefaccion'     => __( 'Calefacción', 'connect-crm-realstate' ),
-					'ofertas.calefacentral'   => __( 'Calefacción central', 'connect-crm-realstate' ),
-					'ofertas.chimenea'        => __( 'Chimenea', 'connect-crm-realstate' ),
-					'ofertas.depoagua'        => __( 'Deposito Agua', 'connect-crm-realstate' ),
-					'ofertas.descalcificador' => __( 'Descalcificador', 'connect-crm-realstate' ),
-					'ofertas.despensa'        => __( 'Despensa', 'connect-crm-realstate' ),
-					'ofertas.diafano'         => __( 'Diáfano', 'connect-crm-realstate' ),
-					'ofertas.esquina'         => __( 'Esquina', 'connect-crm-realstate' ),
-					'ofertas.galeria'         => __( 'Galería', 'connect-crm-realstate' ),
-					'ofertas.plaza_gara'      => __( 'Plazas Garage', 'connect-crm-realstate' ),
-					'ofertas.garajedoble'     => __( 'Garaje Doble', 'connect-crm-realstate' ),
-					'ofertas.gasciudad'       => __( 'Gas Ciudad ', 'connect-crm-realstate' ),
-					'ofertas.gimnasio'        => __( 'Gimnasio', 'connect-crm-realstate' ),
-					'ofertas.habjuegos'       => __( 'Hab. Juegos', 'connect-crm-realstate' ),
-					'ofertas.hidromasaje'     => __( 'Hidromasaje', 'connect-crm-realstate' ),
-					'ofertas.hilomusical'     => __( 'Hilo Musical', 'connect-crm-realstate' ),
-					'ofertas.jacuzzi'         => __( 'Jacuzzi', 'connect-crm-realstate' ),
-					'ofertas.jardin'          => __( 'Jardín ', 'connect-crm-realstate' ),
-					'ofertas.lavanderia'      => __( 'Lavandería ', 'connect-crm-realstate' ),
-					'ofertas.linea_tlf'       => __( 'Línea telefónica', 'connect-crm-realstate' ),
-					'ofertas.luminoso'        => __( 'Luminoso', 'connect-crm-realstate' ),
-					'ofertas.luz'             => __( 'Luz', 'connect-crm-realstate' ),
-					'ofertas.mirador'         => __( 'Mirador', 'connect-crm-realstate' ),
-					'ofertas.montacargas'     => __( 'Montacargas', 'connect-crm-realstate' ),
-					'ofertas.muebles'         => __( 'Muebles', 'connect-crm-realstate' ),
-					'ofertas.ojobuey'         => __( 'Ojos de Buey', 'connect-crm-realstate' ),
-				],
-			],
-			[
-				'section' => 'entorno',
-				'label'   => __( 'Entorno', 'connect-crm-realstate' ),
-				'type'    => 'taxonomy',
-				'fields'  => [
-					'entorno9'                 => __( 'Autobuses', 'connect-crm-realstate' ),
-					'entorno0'                 => __( 'Árboles', 'connect-crm-realstate' ),
-					'entorno14'                => __( 'Céntrico', 'connect-crm-realstate' ),
-					'entorno10'                => __( 'Centros comerciales', 'connect-crm-realstate' ),
-					'entorno15'                => __( 'Centros médicos', 'connect-crm-realstate' ),
-					'entorno18'                => __( 'Cerca de Universidad', 'connect-crm-realstate' ),
-					'entorno13'                => __( 'Colegios', 'connect-crm-realstate' ),
-					'entorno7'                 => __( 'Costa', 'connect-crm-realstate' ),
-					'entorno4'                 => __( 'Golf', 'connect-crm-realstate' ),
-					'entorno1'                 => __( 'Hospitales', 'connect-crm-realstate' ),
-					'entorno3'                 => __( 'Metro', 'connect-crm-realstate' ),
-					'entorno5'                 => __( 'Montaña', 'connect-crm-realstate' ),
-					'ofertas.primera_line'     => __( 'Primera Línea', 'connect-crm-realstate' ),
-					'entorno6'                 => __( 'Rural', 'connect-crm-realstate' ),
-					'entorno19'                => __( 'Supermercados', 'connect-crm-realstate' ),
-					'entorno11'                => __( 'Tranvía', 'connect-crm-realstate' ),
-					'entorno2'                 => __( 'Tren', 'connect-crm-realstate' ),
-					'ofertas.urbanizacion'     => __( 'Urbanización', 'connect-crm-realstate' ),
-					'entorno8'                 => __( 'Vallado', 'connect-crm-realstate' ),
-					'entorno17'                => __( 'Vigilancia 24H', 'connect-crm-realstate' ),
-					'ofertas.vistasalmar'      => __( 'Vistas al mar', 'connect-crm-realstate' ),
-					'ofertas.vistasdespejadas' => __( 'Vistas despejadas', 'connect-crm-realstate' ),
-					'entorno16'                => __( 'Zona de paso', 'connect-crm-realstate' ),
-					'entorno12'                => __( 'Zonas infantiles', 'connect-crm-realstate' ),
-				],
-			],
-			[
-				'section' => 'general-description',
-				'label'   => __( 'General Description', 'connect-crm-realstate' ),
-				'fields'  => [
-					'ofertas.tinterior'     => __( 'Descripción General', 'connect-crm-realstate' ),
-					'comentadd.tfachadaofe' => __( 'Fachada', 'connect-crm-realstate' ),
-					'comentadd.tcocinaofe'  => __( 'Cocina', 'connect-crm-realstate' ),
-					'comentadd.tpostigoofe' => __( 'Portal', 'connect-crm-realstate' ),
-					'comentadd.tbanoofe'    => __( 'Baños', 'connect-crm-realstate' ),
-				],
-			],
-			[
-				'section' => 'sell-data',
-				'label'   => __( 'Sell data', 'connect-crm-realstate' ),
-				'fields'  => [
-					'ofertas.preciotraspaso' => __( 'Precio Traspaso', 'connect-crm-realstate' ),
-					'ofertas.precio'         => __( 'Precio Propietario ', 'connect-crm-realstate' ),
-					'ofertas.porcen'         => __( 'Valor Honorarios %', 'connect-crm-realstate' ),
-					'ofertas.comision'       => __( 'Valor Honorarios €', 'connect-crm-realstate' ),
-					'ofertas.porceniva'      => __( 'I.V.A %', 'connect-crm-realstate' ),
-					'ofertas.precioiva'      => __( 'I.V.A Precio', 'connect-crm-realstate' ),
-					'ofertas.precioinmo'     => __( 'Precio Inmobiliaria', 'connect-crm-realstate' ),
-					'ofertas.outlet'         => __( 'Precio Anterior', 'connect-crm-realstate' ),
-					'ofertas.tasar'          => __( 'Valoración', 'connect-crm-realstate' ),
-					'ofertas.valorfiscal'    => __( 'Valor Fiscal', 'connect-crm-realstate' ),
-					'ofertas.aconsultar'     => __( 'Precio a consultar', 'connect-crm-realstate' ),
-					'ofertas.alta_exclusiva' => __( 'Exclusivas Desde', 'connect-crm-realstate' ),
-					'ofertas.baja_exclusiva' => __( 'Exclusivas Hasta', 'connect-crm-realstate' ),
-				],
-			],
-		];
+	public function merge_fields_callback() {
+		$crm_type      = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
+		$post_type     = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		$custom_fields = $this->get_all_custom_fields( $post_type );
+		// Get Options .
+		$properties_fields = API::get_properties_fields( $crm_type );
 
-		return $properties_fields;
+		if ( 'error' === $properties_fields['status'] ) {
+			echo '<div class="error notice"><p>' . esc_html( $properties_fields['data'] ) . '</p></div>';
+			return;
+		}
+
+		echo '<table class="form-table iip-table-merge-variables">';
+		echo '<tr valign="top">';
+		echo '<td scope="row"><strong>' . esc_html__( 'CRM Fields', 'connect-crm-realstate' ) . '</strong></td>';
+		echo '<td scope="row"><strong>' . esc_html__( 'WordPress Fields', 'connect-crm-realstate' ) . '</strong></td>';
+		echo '</tr>';
+		$value = '';
+		foreach ( $properties_fields['data'] as $property_field ) {
+			$value = isset( $this->settings_fields[ $property_field['name'] ] ) ? $this->settings_fields[ $property_field['name'] ] : '';
+			echo '<tr scope="row"><td class="ccrmre-label">' . esc_html( $property_field['label'] );
+			echo ' (' . esc_attr( $property_field['name'] ) . ')</td>';
+			echo '<td><select name="conncrmreal_merge_fields[' . esc_attr( $property_field['name'] ) . ']">';
+			echo '<option value=""';
+			selected( $value, '' );
+			echo '></option>';
+			foreach ( $custom_fields as $meta_key ) {
+				echo '<option value="' . esc_html( $meta_key ) . '"';
+				selected( $value, $meta_key );
+				echo '>' . esc_html( $meta_key ) . '</option>';
+			}
+			echo '</select></td>';
+			echo '</tr>';
+		}
+		echo '</table>';
+	}
+
+
+	/**
+	 * Sanitize fiels before saves in DB
+	 *
+	 * @param array $input Input fields.
+	 * @return array
+	 */
+	public function sanitize_fields_settings_merge( $input ) {
+		$sanitary_values = array();
+		$filter_fields   = array_filter( $input );
+
+		foreach ( $filter_fields as $key => $value ) {
+			if ( isset( $input[ $key ] ) ) {
+				$sanitary_values[ $key ] = sanitize_text_field( $value );
+			}
+		}
+
+		return $sanitary_values;
 	}
 
 	/**
@@ -690,38 +510,14 @@ class Admin {
 	 */
 	private function get_all_custom_fields( $post_type ) {
 		global $wpdb, $table_prefix;
-		// If not, query for it and store it for later.
-		$fields    = array();
 		$sql       = "SELECT DISTINCT( {$table_prefix}postmeta.meta_key )
 				FROM {$table_prefix}posts
 				LEFT JOIN {$table_prefix}postmeta
 					ON {$table_prefix}posts.ID = {$table_prefix}postmeta.post_id
-					WHERE {$table_prefix}posts.post_type = '{$post_type}'";
+					WHERE {$table_prefix}posts.post_type = '{$post_type}' ORDER BY {$table_prefix}postmeta.meta_key";
 		$meta_keys = $wpdb->get_col( $sql );
 
 		return $meta_keys;
-	}
-
-	/**
-	 * Converts an array to option html
-	 *
-	 * @param array  $custom_fields Custom fields array.
-	 * @param string $value Value of option selected.
-	 * @return void
-	 */
-	private function fields_to_option( $custom_fields, $value ) {
-		echo '<option value=""';
-		if ( '' === $value ) {
-			echo ' selected';
-		}
-		echo '></option>';
-		foreach ( $custom_fields as $meta_key ) {
-			echo '<option value="' . esc_html( $meta_key ) . '"';
-			if ( ( $value === $meta_key ) || ( ! $value && 1 === $meta_key ) ) {
-				echo ' selected';
-			}
-			echo '>' . esc_html( $meta_key ) . '</option>';
-		}
 	}
 }
 
