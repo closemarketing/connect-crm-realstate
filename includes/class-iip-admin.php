@@ -30,6 +30,12 @@ class Admin {
 	 */
 	private $settings;
 
+	/**
+	 * Settings CRM
+	 *
+	 * @var array
+	 */
+	private $settings_fields;
 
 	/**
 	 * Construct and intialize
@@ -73,7 +79,8 @@ class Admin {
 	 * @return void
 	 */
 	public function plugin_options_page() {
-		$this->settings = get_option( 'conncrmreal_settings' );
+		$this->settings        = get_option( 'conncrmreal_settings' );
+		$this->settings_fields = get_option( 'conncrmreal_merge_fields' );
 
 		// Set active class for navigation tabs.
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
@@ -120,7 +127,14 @@ class Admin {
 		}
 
 		if ( 'iip-merge' === $active_tab ) {
-			$this->plugin_merge_page();
+			?>
+			<h1><?php esc_html_e( 'Merge Variables with custom values', 'connect-crm-realstate' ); ?></h1>
+			<form method="post" action="options.php">
+				<?php settings_fields( 'iip_plugin_merge_group' ); ?>
+				<?php do_settings_sections( 'conncrmreal_merge_fields' ); ?>
+				<?php submit_button(); ?>
+			</form>
+			<?php
 		}
 	}
 
@@ -198,6 +212,28 @@ class Admin {
 			array( $this, 'postal_code_callback' ),
 			'conncrmreal_settings',
 			'admin_conncrmreal_settings'
+		);
+
+		// Register our settings.
+		register_setting(
+			'iip_plugin_merge_group',
+			'conncrmreal_merge_fields',
+			array( $this, 'sanitize_fields_settings_merge' )
+		);
+
+		add_settings_section(
+			'iip_plugin_merge_group',
+			__( 'Settings for Integration with CRM Real State', 'connect-crm-realstate' ),
+			array( $this, 'admin_section_settings_info_merge' ),
+			'conncrmreal_merge_fields'
+		);
+
+		add_settings_field(
+			'conncrmreal_merge_fields',
+			__( 'Merge Fields', 'connect-crm-realstate' ),
+			array( $this, 'merge_fields_callback' ),
+			'conncrmreal_merge_fields',
+			'iip_plugin_merge_group'
 		);
 	}
 
@@ -400,62 +436,70 @@ class Admin {
 		esc_html_e( 'Put the connection API key settings in order to connect external data.', 'connect-crm-realstate' );
 	}
 
-	public function plugin_merge_page() {
-		$crm_type  = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
-		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+	/**
+	 * Info for neo automate section.
+	 *
+	 * @return void
+	 */
+	public function admin_section_settings_info_merge() {
+		esc_html_e( 'Put the connection API key settings in order to connect external data.', 'connect-crm-realstate' );
+	}
 
-		$show_merge_vars = true;
+	public function merge_fields_callback() {
+		$crm_type      = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
+		$post_type     = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		$custom_fields = $this->get_all_custom_fields( $post_type );
+		// Get Options .
+		$properties_fields = API::get_properties_fields( $crm_type );
 
-		if ( $show_merge_vars ) {
-			$custom_fields = $this->get_all_custom_fields( $post_type );
-			// Get Options .
-			$properties_fields = API::get_properties_fields( $crm_type );
-
-			if ( 'error' === $properties_fields['status'] ) {
-				echo '<div class="error notice"><p>' . esc_html( $properties_fields['data'] ) . '</p></div>';
-				return;
-			}
-
-			?>
-			<div class="wrap">
-				<h1><?php esc_html_e( 'Merge Variables with custom values', 'connect-crm-realstate' ); ?></h1>
-				<form method="post" action="options.php">
-					<?php settings_fields( 'iip_plugin_merge_group' ); ?>
-					<?php do_settings_sections( 'iip_plugin_merge_group' ); ?>
-					<?php
-					echo '<table class="form-table iip-table">';
-					echo '<tr valign="top">';
-					echo '<th scope="row"><h3>' . esc_html_e( 'CRM Fields', 'connect-crm-realstate' ) . '</h3></th>';
-					echo '</tr>';
-					$value = '';
-					foreach ( $properties_fields['data'] as $property_field ) {
-						echo '<tr scope="row"><td>' . esc_html( $property_field['label'] );
-						echo ' (' . esc_attr( $property_field['name'] ) . ')</td>';
-						echo '<td><select name="cccrmre_field[' . esc_attr( $property_field['name'] ) . ']">';
-						echo '<option value=""';
-						if ( '' === $value ) {
-							echo ' selected';
-						}
-						echo '></option>';
-						foreach ( $custom_fields as $meta_key ) {
-							echo '<option value="' . esc_html( $meta_key ) . '"';
-							if ( ( $value === $meta_key ) || ( ! $value && 1 === $meta_key ) ) {
-								echo ' selected';
-							}
-							echo '>' . esc_html( $meta_key ) . '</option>';
-						}
-						echo '</select></td>';
-						echo '</tr>';
-					}
-					echo '</table>';
-
-					submit_button();
-					?>
-				</form>
-			</div>
-			<?php
+		if ( 'error' === $properties_fields['status'] ) {
+			echo '<div class="error notice"><p>' . esc_html( $properties_fields['data'] ) . '</p></div>';
+			return;
 		}
 
+		echo '<table class="form-table iip-table-merge-variables">';
+		echo '<tr valign="top">';
+		echo '<td scope="row"><strong>' . esc_html__( 'CRM Fields', 'connect-crm-realstate' ) . '</strong></td>';
+		echo '<td scope="row"><strong>' . esc_html__( 'WordPress Fields', 'connect-crm-realstate' ) . '</strong></td>';
+		echo '</tr>';
+		$value = '';
+		foreach ( $properties_fields['data'] as $property_field ) {
+			$value = isset( $this->settings_fields[ $property_field['name'] ] ) ? $this->settings_fields[ $property_field['name'] ] : '';
+			echo '<tr scope="row"><td class="ccrmre-label">' . esc_html( $property_field['label'] );
+			echo ' (' . esc_attr( $property_field['name'] ) . ')</td>';
+			echo '<td><select name="conncrmreal_merge_fields[' . esc_attr( $property_field['name'] ) . ']">';
+			echo '<option value=""';
+			selected( $value, '' );
+			echo '></option>';
+			foreach ( $custom_fields as $meta_key ) {
+				echo '<option value="' . esc_html( $meta_key ) . '"';
+				selected( $value, $meta_key );
+				echo '>' . esc_html( $meta_key ) . '</option>';
+			}
+			echo '</select></td>';
+			echo '</tr>';
+		}
+		echo '</table>';
+	}
+
+
+	/**
+	 * Sanitize fiels before saves in DB
+	 *
+	 * @param array $input Input fields.
+	 * @return array
+	 */
+	public function sanitize_fields_settings_merge( $input ) {
+		$sanitary_values = array();
+		$filter_fields   = array_filter( $input );
+
+		foreach ( $filter_fields as $key => $value ) {
+			if ( isset( $input[ $key ] ) ) {
+				$sanitary_values[ $key ] = sanitize_text_field( $value );
+			}
+		}
+
+		return $sanitary_values;
 	}
 
 	/**
@@ -466,13 +510,11 @@ class Admin {
 	 */
 	private function get_all_custom_fields( $post_type ) {
 		global $wpdb, $table_prefix;
-		// If not, query for it and store it for later.
-		$fields    = array();
 		$sql       = "SELECT DISTINCT( {$table_prefix}postmeta.meta_key )
 				FROM {$table_prefix}posts
 				LEFT JOIN {$table_prefix}postmeta
 					ON {$table_prefix}posts.ID = {$table_prefix}postmeta.post_id
-					WHERE {$table_prefix}posts.post_type = '{$post_type}'";
+					WHERE {$table_prefix}posts.post_type = '{$post_type}' ORDER BY {$table_prefix}postmeta.meta_key";
 		$meta_keys = $wpdb->get_col( $sql );
 
 		return $meta_keys;

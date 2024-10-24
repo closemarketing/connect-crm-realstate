@@ -111,3 +111,15 @@
 .connect-realstate-log .warning {
   color: orange;
 }
+
+/**
+ * ## Merge variables
+ * --------------------------- */
+
+.form-table.iip-table-merge-variables td {
+	padding-bottom: 0;
+}
+
+.form-table.iip-table-merge-variables td.ccrmre-label {
+	width: 40%;
+}
