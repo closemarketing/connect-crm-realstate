@@ -27,7 +27,7 @@ class SYNC {
 	public static function sync_property( $item, $settings = array(), $settings_fields = array() ) {
 		$message            = '';
 		$settings           = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
-		$settings_fields    = empty( $settings_fields ) ? get_option( 'conncrmreal_settings_fields' ) : $settings_fields;
+		$settings_fields    = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
 		$post_type          = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$filter_postal_code = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
 		$key_id             = isset( $settings['type'] ) && 'inmovilla' === $settings['type'] ? 'cod_ofer' : 'id';
@@ -147,6 +147,8 @@ class SYNC {
 	 *
 	 * @param string $property_id Property ID.
 	 * @param string $post_type Post type.
+	 * @param string $key Meta key.
+	 *
 	 * @return int
 	 */
 	public static function find_property( $property_id, $post_type, $key = 'property_id' ) {

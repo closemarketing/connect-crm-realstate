@@ -445,6 +445,11 @@ class Admin {
 		esc_html_e( 'Put the connection API key settings in order to connect external data.', 'connect-crm-realstate' );
 	}
 
+	/**
+	 * Merge fields callback
+	 *
+	 * @return void
+	 */
 	public function merge_fields_callback() {
 		$crm_type      = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
 		$post_type     = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';

@@ -18,10 +18,12 @@ define( 'CCRMRE_VERSION', '1.0.0-beta.11' );
 define( 'CCRMRE_PLUGIN', __FILE__ );
 define( 'CCRMRE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'CCRMRE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
-define( 'CCRMRE_SYNC_PERIOD', 3600 );
+define( 'CCRMRE_SYNC_PERIOD', 1800 );
 
 // Loads translation.
 load_plugin_textdomain( 'connect-crm-realstate', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+
+require_once CCRMRE_PLUGIN_PATH . 'vendor/woocommerce/action-scheduler/action-scheduler.php';
 
 // Includes files.
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-helper-api.php';
@@ -30,8 +32,6 @@ require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-admin.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-import.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-post-type.php';
 require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-cron.php';
-
-require 'vendor/autoload.php';
 
 new Close\ConnectCRM\RealState\Admin();
 new Close\ConnectCRM\RealState\Import();

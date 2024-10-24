@@ -127,6 +127,7 @@ class API {
 	 * @return array
 	 */
 	public static function get_properties( $page = 0, $changed_from = '' ) {
+		$changed_from = '2024-10-23 04:00:00';
 		$settings     = get_option( 'conncrmreal_settings' );
 		$settings_crm = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 		if ( 'anaconda' === $settings_crm && ! empty( $page ) ) {
@@ -137,7 +138,19 @@ class API {
 			);
 			return self::request_anaconda( 'properties/search', 'POST', $query );
 		} elseif ( 'inmovilla' === $settings_crm ) {
-			return self::request_inmovilla( 'propiedades/?listado' );
+			$changed_from          = strtotime( $changed_from );
+			$result_all_properties = self::request_inmovilla( 'propiedades/?listado' );
+			if ( 'ok' === $result_all_properties['status'] && isset( $result_all_properties['data'] ) ) {
+				$index = 0;
+				foreach ( $result_all_properties['data'] as $property ) {
+					$property_updated = isset( $property['fechaact'] ) ? strtotime( $property['fechaact'] ) : 0;
+					if ( $property_updated < $changed_from ) {
+						unset( $result_all_properties['data'][ $index ] );
+					}
+					++$index;
+				}
+			}
+			return $result_all_properties;
 		}
 	}
 
