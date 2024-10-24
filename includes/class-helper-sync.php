@@ -27,6 +27,7 @@ class SYNC {
 	public static function sync_property( $item ) {
 		$message            = '';
 		$settings           = get_option( 'conncrmreal_settings' );
+		$settings_fields    = get_option( 'conncrmreal_merge_fields' );
 		$post_type          = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$filter_postal_code = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
 		$property_id        = self::find_property( $item['id'], $post_type );
