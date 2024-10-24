@@ -24,14 +24,18 @@ class SYNC {
 	 * @param array $item Item from API.
 	 * @return array
 	 */
-	public static function sync_property( $item ) {
+	public static function sync_property( $item, $settings = array(), $settings_fields = array() ) {
 		$message            = '';
-		$settings           = get_option( 'conncrmreal_settings' );
-		$settings_fields    = get_option( 'conncrmreal_merge_fields' );
+		$settings           = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
+		$settings_fields    = empty( $settings_fields ) ? get_option( 'conncrmreal_settings_fields' ) : $settings_fields;
 		$post_type          = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$filter_postal_code = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
-		$property_id        = self::find_property( $item['id'], $post_type );
-		$property_title     = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' );
+		$key_id             = isset( $settings['type'] ) && 'inmovilla' === $settings['type'] ? 'cod_ofer' : 'id';
+		$meta_name          = isset( $settings_fields[ $key_id ] ) ? $settings_fields[ $key_id ] : $key_id;
+		$property_id        = self::find_property( $item[ $key_id ], $post_type, $meta_name );
+
+		$key_title      = isset( $settings['type'] ) && 'inmovilla' === $settings['type'] ? 'tituloes' : 'name';
+		$property_title = isset( $item[ $key_title ] ) ? $item[ $key_title ] : __( 'Property', 'connect-crm-realstate' );
 
 		if ( self::cannot_import( $item, $filter_postal_code ) ) {
 			$message  = __( 'NOT Imported', 'connect-crm-realstate' );
@@ -52,11 +56,20 @@ class SYNC {
 		// Meta Info.
 		$property_info['meta_input'] = array();
 
-		foreach ( $item as $key => $item_meta ) {
-			if ( 'description' === $key || 'name' === $key ) {
-				continue;
+		// Merge fields.
+		if ( empty( $settings_fields ) ) {
+			// Method without merge fields.
+			foreach ( $item as $key => $item_meta ) {
+				if ( 'description' === $key || 'name' === $key ) {
+					continue;
+				}
+				$property_info['meta_input'][ 'property_' . $key ] = $item_meta;
 			}
-			$property_info['meta_input'][ 'property_' . $key ] = $item_meta;
+		} else {
+			// Method with merge fields.
+			foreach ( $settings_fields as $key => $field ) {
+				$property_info['meta_input'][ $field ] = isset( $item[ $key ] ) ? $item[ $key ] : '';
+			}
 		}
 
 		if ( empty( $property_id ) ) {
@@ -136,14 +149,14 @@ class SYNC {
 	 * @param string $post_type Post type.
 	 * @return int
 	 */
-	public static function find_property( $property_id, $post_type ) {
+	public static function find_property( $property_id, $post_type, $key = 'property_id' ) {
 		$property = get_posts(
 			array(
 				'post_type'  => $post_type,
 				'fields'     => 'ids',
 				'meta_query' => array(
 					array(
-						'key'     => 'property_id',
+						'key'     => $key,
 						'value'   => $property_id,
 						'compare' => '=',
 					),

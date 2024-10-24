@@ -24,12 +24,12 @@ class API {
 	/**
 	 * Request to API from Anaconda CRM
 	 *
-	 * @param string $method Method of API request.
 	 * @param string $endpoint Endpoint of API request.
+	 * @param string $method Method of API request.
 	 * @param array  $query Query of API request.
 	 * @return array
 	 */
-	public static function request_anaconda( $method = 'GET', $endpoint, $query = array() ) {
+	public static function request_anaconda( $endpoint, $method = 'GET', $query = array() ) {
 		$settings    = get_option( 'conncrmreal_settings' );
 		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
 
@@ -128,16 +128,16 @@ class API {
 	 */
 	public static function get_properties( $page = 0, $changed_from = '' ) {
 		$settings     = get_option( 'conncrmreal_settings' );
-		$settings_crm = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
+		$settings_crm = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 		if ( 'anaconda' === $settings_crm && ! empty( $page ) ) {
-			return self::request_anaconda( 'GET', 'properties/?page=' . $page );
+			return self::request_anaconda( 'properties/?page=' . $page );
 		} elseif ( 'anaconda' === $settings_crm && ! empty( $changed_from ) ) {
 			$query = array(
 				'changed_from' => $changed_from,
 			);
-			return self::request_anaconda( 'POST', 'properties/search', $query );
+			return self::request_anaconda( 'properties/search', 'POST', $query );
 		} elseif ( 'inmovilla' === $settings_crm ) {
-			return self::request_inmovilla( 'GET', 'properties' );
+			return self::request_inmovilla( 'propiedades/?listado' );
 		}
 	}
 
@@ -152,6 +152,28 @@ class API {
 		if ( 'anaconda' === $settings_crm ) {
 			return self::request_anaconda( 'POST', 'properties/total_search_properties' );
 		} elseif ( 'inmovilla' === $settings_crm ) {
+			return self::request_inmovilla( 'propiedades/?listado' );
+		}
+	}
+
+	/**
+	 * Request to property API from CRM
+	 *
+	 * @param array|string $property ID of property or incomplete property.
+	 * @return array
+	 */
+	public static function get_property( $property, $crm = '' ) {
+		if ( empty( $crm ) ) {
+			$settings = get_option( 'conncrmreal_settings' );
+			$crm      = isset( $settings['crm'] ) ? $settings['crm'] : 'anaconda';
+		}
+
+		if ( 'anaconda' === $crm ) {
+			return $property;
+		} elseif ( 'inmovilla' === $crm ) {
+			$property_id     = is_array( $property ) ? $property['cod_ofer'] : $property;
+			$result_property = self::request_inmovilla( 'propiedades/?cod_ofer=' . $property_id );
+			return 'ok' === $result_property['status'] ? $result_property['data'] : $property;
 		}
 	}
 
@@ -168,12 +190,18 @@ class API {
 			return self::get_fields_inmovilla();
 		}
 	}
+
+	/**
+	 * Get fields from Anaconda
+	 *
+	 * @return array
+	 */
 	private static function get_fields_anaconda() {
 		return array();
 	}
 
 	/**
-	 * Geg fields from Inmovilla
+	 * Get fields from Inmovilla
 	 *
 	 * @return array
 	 */
@@ -219,6 +247,12 @@ class API {
 		return $inmovilla_fields;
 	}
 
+	/**
+	 * Adds descriptions for fields in Inmovilla
+	 *
+	 * @param string $slug Slug of field.
+	 * @return string
+	 */
 	private static function get_description_field_inmovilla( $slug ) {
 		$labels = array(
 			'adaptadominus' => 'Adaptado PMR (Personas Movilidad Reducida)',

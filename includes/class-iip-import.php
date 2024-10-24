@@ -26,9 +26,25 @@ use Close\ConnectCRM\RealState\API;
  */
 class Import {
 	/**
+	 * Settings
+	 *
+	 * @var array
+	 */
+	private $settings;
+
+	/**
+	 * Settings Fields
+	 *
+	 * @var array
+	 */
+	private $settings_fields;
+
+	/**
 	 * Construct and intialize
 	 */
 	public function __construct() {
+		$this->settings        = get_option( 'conncrmreal_settings' );
+		$this->settings_fields = get_option( 'conncrmreal_merge_fields' );
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_manual_import' ) );
 		add_action( 'wp_ajax_manual_import', array( $this, 'manual_import' ) );
 		add_action( 'wp_ajax_nopriv_manual_import', array( $this, 'manual_import' ) );
@@ -75,6 +91,7 @@ class Import {
 		if ( check_ajax_referer( 'manual_import_nonce', 'nonce' ) ) {
 			$loop_page = $loop % $pagination;
 			$page      = round( $loop / $pagination, 0 ) + 1;
+			$crm       = isset( $this->settings['type'] ) ? $this->settings['type'] : '';
 
 			if ( 0 === $loop ) {
 				SYNC::clear_property_meta();
@@ -98,9 +115,10 @@ class Import {
 
 			$sync = get_option( 'connect_crm_realstate_sync' );
 			if ( ! empty( $property ) ) {
-				$result_sync   = SYNC::sync_property( $property );
-				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1;
-				$progress_msg .= ' - ' . $result_sync['message'];
+				$property_complete = API::get_property( $property, $crm );
+				$result_sync       = SYNC::sync_property( $property_complete, $this->settings, $this->settings_fields );
+				$progress_msg     .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1;
+				$progress_msg     .= ' - ' . $result_sync['message'];
 
 				$finish = $totalprop < $pagination && $totalprop === $loop ? true : false;
 				$finish = 0 === $totalprop ? true : $finish;
