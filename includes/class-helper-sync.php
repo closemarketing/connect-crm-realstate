@@ -27,19 +27,20 @@ class SYNC {
 	public static function sync_property( $item, $settings = array(), $settings_fields = array() ) {
 		$message            = '';
 		$settings           = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
+		$crm                = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 		$settings_fields    = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
 		$post_type          = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$filter_postal_code = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
-		$key_id             = isset( $settings['type'] ) && 'inmovilla' === $settings['type'] ? 'cod_ofer' : 'id';
+		$key_id             = 'inmovilla' === $crm ? 'cod_ofer' : 'id';
 		$meta_name          = isset( $settings_fields[ $key_id ] ) ? $settings_fields[ $key_id ] : $key_id;
 		$property_id        = self::find_property( $item[ $key_id ], $post_type, $meta_name );
 
-		$key_title      = isset( $settings['type'] ) && 'inmovilla' === $settings['type'] ? 'tituloes' : 'name';
+		$key_title      = 'inmovilla' === $crm ? 'tituloes' : 'name';
 		$property_title = isset( $item[ $key_title ] ) ? $item[ $key_title ] : __( 'Property', 'connect-crm-realstate' );
 
 		if ( self::cannot_import( $item, $filter_postal_code ) ) {
 			$message  = __( 'NOT Imported', 'connect-crm-realstate' );
-			$message .= self::add_end_message( $item, $property_title );
+			$message .= self::add_end_message( $item, $property_title, $crm );
 
 			return array(
 				'property_id' => $property_id,
@@ -104,9 +105,9 @@ class SYNC {
 	 * @param string $property_title Property title.
 	 * @return string
 	 */
-	private static function add_end_message( $item, $property_title ) {
-		$message  = ' ' . __( 'Property ID:', 'connect-crm-realstate' );
-		$message .= ' ' . $item['id'];
+	private static function add_end_message( $item, $property_title, $crm = 'anaconda' ) {
+		$message  = ' ' . __( 'Property ID:', 'connect-crm-realstate' ) . ' ';
+		$message .= 'inmovilla' === $crm ? $item['cod_ofer'] : $item['id'];
 		$message .= ! empty( $item['internal_property_id'] ) ? ' (' . $item['internal_property_id'] . ')' : '';
 		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $item['city'];
 		return $message;

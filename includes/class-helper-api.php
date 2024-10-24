@@ -127,7 +127,6 @@ class API {
 	 * @return array
 	 */
 	public static function get_properties( $page = 0, $changed_from = '' ) {
-		$changed_from = '2024-10-23 04:00:00';
 		$settings     = get_option( 'conncrmreal_settings' );
 		$settings_crm = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 		if ( 'anaconda' === $settings_crm && ! empty( $page ) ) {
