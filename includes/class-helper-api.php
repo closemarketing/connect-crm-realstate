@@ -3,7 +3,7 @@
  * Library for API connection
  *
  * Documentation API.
- * Inmovilla: https://procesos.apinmo.com/api/v1/apidoc/
+ * Inmovilla: https://procesos.apinmo.com/apiweb/doc/index.html
  *
  * @package    WordPress
  * @author     David Perez <david@close.technology>
@@ -79,8 +79,55 @@ class API {
 	 */
 	public static function request_inmovilla( $endpoint, $method = 'GET', $query = array() ) {
 		$settings    = get_option( 'conncrmreal_settings' );
+		$numagencia  = isset( $settings['numagencia'] ) ? $settings['numagencia'] : '';
 		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
+		$language    = '';
 
+		/*
+		$query = array( 'tipo', 1, 100, '', '', );
+		$query = array( 'ciudad', 1, 100, '', '', );
+		$query = array( 'zonas', 1, 100, 'key_loca=2013', '', );
+		$query = array( 'destacados', 1, 20, '', 'precioinmo, precioalq', );
+		$query = array( 'paginacion', 1, 20, 'ascensor=1', 'precioinmo, precioalq', );
+		);
+		*/
+		$post_data  = $numagencia . ';' . $apipassword . ';' . $language . ';lostipos';
+		$post_data .= implode( ';', $query_api );
+		$post_data  = rawurlencode( $post_data );
+		$params     = 'param=' . $post_data;
+		if ( isset( $_SERVER['SERVER_NAME'] ) ) {
+			$params .= '&elDominio=' . sanitize_text_field( $_SERVER['SERVER_NAME'] );
+		}
+		$body_data = "{$parametros}&json=1&ia=" . self::get_client_ip();
+
+		$args = array(
+			'method'     => 'POST',
+			'headers'    => array(
+				'Accept'          => 'text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
+				'Cache-Control'   => 'max-age=0',
+				'Connection'      => 'keep-alive',
+				'Keep-Alive'      => '300',
+				'Accept-Charset'  => 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+				'Accept-Language' => 'en-us,en;q=0.5',
+				'Pragma'          => '',
+			),
+			'body'       => $body_data,
+			'cookies'    => $cookie ? array( new WP_Http_Cookie( array( 'name' => 'cookie', 'value' => $cookie ) ) ) : array(),
+			'user-agent'  => 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3',
+			'sslverify'   => false,
+		);
+
+		$response = wp_remote_post( $url, $args );
+
+		// Verificar errores y devolver el cuerpo de la respuesta
+		if (is_wp_error($response)) {
+				return $response->get_error_message();
+		}
+
+		return wp_remote_retrieve_body($response);
+	}
+	
+		/* v1
 		if ( empty( $apipassword ) ) {
 			return array(
 				'status' => 'error',
@@ -117,6 +164,30 @@ class API {
 				'data'   => 'POST' === $method && isset( $body_json['cod_cli'] ) ? $body_json['cod_cli'] : $body_json,
 			);
 		}
+		*/
+	}
+
+	private static function get_client_ip() {
+    $proxy_headers = array(
+			'HTTP_CLIENT_IP',
+			'HTTP_X_FORWARDED_FOR',
+			'HTTP_X_FORWARDED',
+			'HTTP_FORWARDED_FOR',
+			'HTTP_FORWARDED',
+			'HTTP_CF_CONNECTING_IP'
+    );
+
+    foreach ($proxy_headers as $key) {
+        if (!empty($_SERVER[$key])) {
+            $ips = explode(',', $_SERVER[$key]);
+            $ip = trim($ips[0]); // Tomamos la primera IP de la lista
+            if ($ip && $ip !== $_SERVER['REMOTE_ADDR']) {
+                return $ip;
+            }
+        }
+    }
+
+    return $_SERVER['REMOTE_ADDR'];
 	}
 
 	/**
