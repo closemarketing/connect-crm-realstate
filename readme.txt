@@ -4,6 +4,8 @@ Tags: properties, inmovilla
 
 Import Inmovilla and Anaconda properties to your WordPress Installation.
 
+Docs Inmovilla: https://procesos.apinmo.com/apiweb/doc/index.html
+
 == Description ==
 
 
