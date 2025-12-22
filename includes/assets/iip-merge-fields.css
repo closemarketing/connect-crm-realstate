@@ -1,0 +1,45 @@
+/**
+ * Merge Fields Styles
+ *
+ * @package Connect CRM Real State
+ */
+
+.iip-table-merge-variables {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.iip-table-merge-variables thead th {
+	background: #f0f0f1;
+	padding: 10px;
+	text-align: left;
+	border-bottom: 2px solid #c3c4c7;
+}
+
+.iip-table-merge-variables tbody tr {
+	border-bottom: 1px solid #c3c4c7;
+}
+
+.iip-table-merge-variables tbody tr:hover {
+	background: #f6f7f7;
+}
+
+.iip-table-merge-variables td {
+	padding: 15px 10px;
+	vertical-align: middle;
+}
+
+.ccrmre-label {
+	font-weight: 600;
+	width: 40%;
+}
+
+.ccrmre-label .description {
+	color: #646970;
+	font-weight: 400;
+	font-style: italic;
+}
+
+.select2-container {
+	max-width: 100%;
+}

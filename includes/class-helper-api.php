@@ -167,9 +167,11 @@ class API {
 		$data = json_decode( $body, true );
 
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
+			$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' );
+			$message .= is_string( $body ) ? ' - ' . $body : '';
 			return array(
 				'status' => 'error',
-				'data'   => __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' ),
+				'data'   => $message,
 			);
 		}
 
@@ -396,7 +398,41 @@ class API {
 	 * @return array
 	 */
 	private static function get_fields_anaconda() {
-		return array();
+		$anaconda_fields = get_transient( 'ccrmre_query_anaconda_fields' );
+
+		if ( ! $anaconda_fields ) {
+			// Get a sample property to extract fields.
+			$result = self::request_anaconda( 'properties/?page=1' );
+
+			if ( 'ok' !== $result['status'] || empty( $result['data']['data'] ) ) {
+				return array(
+					'status' => 'error',
+					'data'   => __( 'Error getting Anaconda fields. Please check your API connection.', 'connect-crm-realstate' ),
+				);
+			}
+
+			// Get the first property to extract field structure.
+			$sample_property = $result['data']['data'][0];
+			$fields_slug     = array_keys( $sample_property );
+			$fields_slug     = array_filter( $fields_slug );
+
+			$anaconda_fields = array(
+				'status' => 'ok',
+				'data'   => array_map(
+					function ( $slug ) {
+						return array(
+							'name'  => $slug,
+							'label' => ucwords( str_replace( '_', ' ', $slug ) ),
+						);
+					},
+					$fields_slug
+				),
+			);
+
+			set_transient( 'ccrmre_query_anaconda_fields', $anaconda_fields, DAY_IN_SECONDS );
+		}
+
+		return $anaconda_fields;
 	}
 
 	/**
@@ -406,40 +442,39 @@ class API {
 	 */
 	private static function get_fields_inmovilla() {
 		$inmovilla_fields = get_transient( 'ccrmre_query_inmovilla_fields' );
-		$inmovilla_fields = false;
+
 		if ( ! $inmovilla_fields ) {
-			// Generate value for inmovilla_fields.
-			$result_properties = self::request_inmovilla( 'propiedades/?listado' );
+			// Get a sample property to extract fields.
+			$result_properties = self::request_inmovilla( 'paginacion', 1, 1 );
 
-			if ( 'ok' !== $result_properties['status'] && ! isset( $result_properties['data'][0]['cod_ofer'] ) ) {
-				return $result_properties;
-			}
+			if ( 'ok' !== $result_properties['status'] || ! isset( $result_properties['data']['paginacion'][1] ) ) {
+				$message  = __( 'Error getting Inmovilla fields. Please check your API connection.', 'connect-crm-realstate' );
+				$message .= is_string( $result_properties['data'] ) ? ' - ' . $result_properties['data'] : '';
 
-			$cod_ofer        = $result_properties['data'][0]['cod_ofer'];
-			$result_property = self::request_inmovilla( 'propiedades/?cod_ofer=' . $cod_ofer );
-
-			$inmovilla_fields = array(
-				'status' => 'error',
-				'data'   => __( 'Error getting fields', 'connect-crm-realstate' ),
-			);
-
-			if ( 'ok' === $result_property['status'] && isset( $result_property['data'] ) ) {
-				$fields_slug = array_keys( $result_property['data'] );
-				$fields_slug = array_filter( $fields_slug );
-
-				$inmovilla_fields = array(
-					'status' => 'ok',
-					'data'   => array_map(
-						function ( $slug ) {
-							return array(
-								'name'  => $slug,
-								'label' => self::get_description_field_inmovilla( $slug ),
-							);
-						},
-						$fields_slug
-					),
+				return array(
+					'status' => 'error',
+					'data'   => $message,
 				);
 			}
+
+			// Get the first property to extract field structure.
+			$sample_property = $result_properties['data']['paginacion'][1];
+			$fields_slug     = array_keys( $sample_property );
+			$fields_slug     = array_filter( $fields_slug );
+
+			$inmovilla_fields = array(
+				'status' => 'ok',
+				'data'   => array_map(
+					function ( $slug ) {
+						return array(
+							'name'  => $slug,
+							'label' => self::get_description_field_inmovilla( $slug ),
+						);
+					},
+					$fields_slug
+				),
+			);
+
 			set_transient( 'ccrmre_query_inmovilla_fields', $inmovilla_fields, DAY_IN_SECONDS );
 		}
 

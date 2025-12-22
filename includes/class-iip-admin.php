@@ -71,6 +71,68 @@ class Admin {
 
 		// Call register settings function.
 		add_action( 'admin_init', array( $this, 'register_plugin_settings' ) );
+
+		// Enqueue scripts for specific tabs.
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+	}
+
+	/**
+	 * Enqueue admin scripts and styles
+	 *
+	 * @param string $hook Current admin page hook.
+	 * @return void
+	 */
+	public function enqueue_admin_scripts( $hook ) {
+		// Only load on our plugin page.
+		if ( 'toplevel_page_iip-options' !== $hook ) {
+			return;
+		}
+
+		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
+
+		// Enqueue select2 and merge fields scripts only on merge tab.
+		if ( 'iip-merge' === $active_tab && cccrmre_is_license_active() ) {
+			// Enqueue Select2.
+			wp_enqueue_style(
+				'ccrmre-select2',
+				'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+				array(),
+				'4.1.0'
+			);
+			wp_enqueue_script(
+				'ccrmre-select2',
+				'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+				array( 'jquery' ),
+				'4.1.0',
+				true
+			);
+
+			// Enqueue merge fields styles.
+			wp_enqueue_style(
+				'ccrmre-merge-fields',
+				plugin_dir_url( __FILE__ ) . 'assets/iip-merge-fields.css',
+				array(),
+				CCRMRE_VERSION
+			);
+
+			// Enqueue merge fields script.
+			wp_enqueue_script(
+				'ccrmre-merge-fields',
+				plugin_dir_url( __FILE__ ) . 'assets/iip-merge-fields.js',
+				array( 'jquery', 'ccrmre-select2' ),
+				CCRMRE_VERSION,
+				true
+			);
+
+			// Localize script for translations.
+			wp_localize_script(
+				'ccrmre-merge-fields',
+				'ccrmreMergeFields',
+				array(
+					'searchPlaceholder' => __( 'Search WordPress field...', 'connect-crm-realstate' ),
+				)
+			);
+		}
 	}
 
 	/**
@@ -538,29 +600,37 @@ class Admin {
 			return;
 		}
 
+		echo '<div id="ccrmre-merge-container">';
 		echo '<table class="form-table iip-table-merge-variables">';
+		echo '<thead>';
 		echo '<tr valign="top">';
-		echo '<td scope="row"><strong>' . esc_html__( 'CRM Fields', 'connect-crm-realstate' ) . '</strong></td>';
-		echo '<td scope="row"><strong>' . esc_html__( 'WordPress Fields', 'connect-crm-realstate' ) . '</strong></td>';
+		echo '<th scope="col"><strong>' . esc_html__( 'CRM Fields', 'connect-crm-realstate' ) . '</strong></th>';
+		echo '<th scope="col"><strong>' . esc_html__( 'WordPress Fields', 'connect-crm-realstate' ) . '</strong></th>';
 		echo '</tr>';
+		echo '</thead>';
+		echo '<tbody>';
+
 		$value = '';
 		foreach ( $properties_fields['data'] as $property_field ) {
 			$value = isset( $this->settings_fields[ $property_field['name'] ] ) ? $this->settings_fields[ $property_field['name'] ] : '';
-			echo '<tr scope="row"><td class="ccrmre-label">' . esc_html( $property_field['label'] );
-			echo ' (' . esc_attr( $property_field['name'] ) . ')</td>';
-			echo '<td><select name="conncrmreal_merge_fields[' . esc_attr( $property_field['name'] ) . ']">';
+			echo '<tr>';
+			echo '<td class="ccrmre-label">' . esc_html( $property_field['label'] );
+			echo '<br><small class="description">' . esc_attr( $property_field['name'] ) . '</small></td>';
+			echo '<td><select name="conncrmreal_merge_fields[' . esc_attr( $property_field['name'] ) . ']" class="ccrmre-select2-field" style="width: 100%;">';
 			echo '<option value=""';
 			selected( $value, '' );
-			echo '></option>';
+			echo '>' . esc_html__( '-- Select WordPress Field --', 'connect-crm-realstate' ) . '</option>';
 			foreach ( $custom_fields as $meta_key ) {
-				echo '<option value="' . esc_html( $meta_key ) . '"';
+				echo '<option value="' . esc_attr( $meta_key ) . '"';
 				selected( $value, $meta_key );
 				echo '>' . esc_html( $meta_key ) . '</option>';
 			}
 			echo '</select></td>';
 			echo '</tr>';
 		}
+		echo '</tbody>';
 		echo '</table>';
+		echo '</div>';
 	}
 
 
@@ -571,6 +641,10 @@ class Admin {
 	 * @return array
 	 */
 	public function sanitize_fields_settings_merge( $input ) {
+		if ( empty( $input ) ) {
+			return array();
+		}
+
 		$sanitary_values = array();
 		$filter_fields   = array_filter( $input );
 

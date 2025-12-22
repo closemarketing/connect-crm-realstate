@@ -9,3 +9,10 @@ circle.yml
 composer.json
 composer.lock
 .wordpress-org
+
+#Vendor files select2
+vendor/select2/select2/docs/
+vendor/select2/select2/tests/
+vendor/select2/select2/.github/
+vendor/select2/select2/.jshintrc
+vendor/select2/select2/.jshintignore
