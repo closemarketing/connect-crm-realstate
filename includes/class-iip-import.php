@@ -43,8 +43,14 @@ class Import {
 	 * Construct and intialize
 	 */
 	public function __construct() {
+		// Check license before initializing.
+		if ( ! function_exists( 'cccrmre_is_license_active' ) || ! cccrmre_is_license_active() ) {
+			return;
+		}
+
 		$this->settings        = get_option( 'conncrmreal_settings' );
 		$this->settings_fields = get_option( 'conncrmreal_merge_fields' );
+
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_manual_import' ) );
 		add_action( 'wp_ajax_manual_import', array( $this, 'manual_import' ) );
 		add_action( 'wp_ajax_nopriv_manual_import', array( $this, 'manual_import' ) );

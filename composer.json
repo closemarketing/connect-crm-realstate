@@ -1,5 +1,6 @@
 {
     "require": {
-        "woocommerce/action-scheduler": "^3.8"
+        "woocommerce/action-scheduler": "^3.8",
+        "closemarketing/wp-plugin-license-manager": "^1.2"
     }
 }

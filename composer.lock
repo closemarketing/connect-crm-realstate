@@ -4,8 +4,68 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a221566b00a5b0d3afa417571ad255aa",
+    "content-hash": "214743d957afa9711d3f0e0adb1495a3",
     "packages": [
+        {
+            "name": "closemarketing/wp-plugin-license-manager",
+            "version": "1.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/closemarketing/wp-plugin-license-manager.git",
+                "reference": "a3c84ac30e2c7d9b9fd99af29aaca3cfdb155582"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/closemarketing/wp-plugin-license-manager/zipball/a3c84ac30e2c7d9b9fd99af29aaca3cfdb155582",
+                "reference": "a3c84ac30e2c7d9b9fd99af29aaca3cfdb155582",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "php-stubs/wordpress-stubs": "^6.7",
+                "phpcompatibility/phpcompatibility-wp": "*",
+                "phpstan/phpstan": "^1.10",
+                "szepeviktor/phpstan-wordpress": "^1.3",
+                "wp-coding-standards/wpcs": "^3.0",
+                "wp-phpunit/wp-phpunit": "^6.3",
+                "yoast/phpunit-polyfills": "^1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [],
+                "psr-4": {
+                    "Closemarketing\\WPLicenseManager\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "David Perez",
+                    "email": "david@closemarketing.es",
+                    "homepage": "https://close.marketing",
+                    "role": "Developer"
+                }
+            ],
+            "description": "WordPress Plugin License Manager Library - A reusable library for managing WordPress plugin licenses with Enwikuna License Manager",
+            "keywords": [
+                "enwikuna",
+                "license",
+                "license-manager",
+                "plugin",
+                "updates",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/closemarketing/wp-plugin-license-manager/issues",
+                "source": "https://github.com/closemarketing/wp-plugin-license-manager"
+            },
+            "time": "2025-12-15T22:18:51+00:00"
+        },
         {
             "name": "woocommerce/action-scheduler",
             "version": "3.8.2",
