@@ -133,6 +133,37 @@ class Admin {
 				do_settings_sections( 'conncrmreal_settings' );
 				submit_button( esc_html__( 'Save changes', 'connect-crm-realstate' ) );
 				echo '</form>';
+
+				// Add JavaScript to show/hide Inmovilla fields.
+				?>
+				<script type="text/javascript">
+				jQuery(document).ready(function($) {
+					function toggleInmovillaFields() {
+						var selectedType = $('#type').val();
+						var inmovillaFields = [
+							'#numagencia'
+						];
+
+						inmovillaFields.forEach(function(fieldId) {
+							var row = $(fieldId).closest('tr');
+							if (selectedType === 'inmovilla') {
+								row.show();
+							} else {
+								row.hide();
+							}
+						});
+					}
+
+					// Initial state.
+					toggleInmovillaFields();
+
+					// On change.
+					$('#type').on('change', function() {
+						toggleInmovillaFields();
+					});
+				});
+				</script>
+				<?php
 			}
 
 			if ( 'iip-merge' === $active_tab ) {
@@ -191,6 +222,17 @@ class Admin {
 			'conncrmreal_settings',
 			'admin_conncrmreal_settings'
 		);
+
+		// Inmovilla specific fields.
+		if ( isset( $this->settings['type'] ) && 'inmovilla' === $this->settings['type'] ) {
+			add_settings_field(
+				'conncrmreal_numagencia',
+				__( 'Agency Number', 'connect-crm-realstate' ),
+				array( $this, 'numagencia_callback' ),
+				'conncrmreal_settings',
+				'admin_conncrmreal_settings'
+			);
+		}
 
 		$sync_minutes = CCRMRE_SYNC_PERIOD / 60;
 		add_settings_field(
@@ -265,6 +307,7 @@ class Admin {
 		$field_values = array(
 			'type',
 			'apipassword',
+			'numagencia',
 			'cron',
 			'post_type',
 			'post_type_slug',
@@ -303,9 +346,26 @@ class Admin {
 	 * @return void
 	 */
 	public function apipassword_callback() {
+		$type_option = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
+		$label       = 'inmovilla' === $type_option ? __( 'API Password', 'connect-crm-realstate' ) : __( 'API Token', 'connect-crm-realstate' );
+
 		printf(
-			'<input class="regular-text" type="password" name="conncrmreal_settings[apipassword]" id="apipassword" value="%s">',
-			isset( $this->settings['apipassword'] ) ? esc_attr( $this->settings['apipassword'] ) : ''
+			'<input class="regular-text" type="password" name="conncrmreal_settings[apipassword]" id="apipassword" value="%s"><br><small>%s</small>',
+			isset( $this->settings['apipassword'] ) ? esc_attr( $this->settings['apipassword'] ) : '',
+			esc_html( $label )
+		);
+	}
+
+	/**
+	 * Agency Number callback (Inmovilla only)
+	 *
+	 * @return void
+	 */
+	public function numagencia_callback() {
+		printf(
+			'<input class="regular-text" type="text" name="conncrmreal_settings[numagencia]" id="numagencia" value="%s"><br><small>%s</small>',
+			isset( $this->settings['numagencia'] ) ? esc_attr( $this->settings['numagencia'] ) : '',
+			esc_html__( 'Agency number from Inmovilla. Example: 2', 'connect-crm-realstate' )
 		);
 	}
 
