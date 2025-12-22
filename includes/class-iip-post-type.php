@@ -39,6 +39,11 @@ class PostType {
 	 * Construct and intialize
 	 */
 	public function __construct() {
+		// Check license before initializing.
+		if ( ! function_exists( 'cccrmre_is_license_active' ) || ! cccrmre_is_license_active() ) {
+			return;
+		}
+
 		$this->settings     = get_option( 'conncrmreal_settings' );
 		$settings_post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
 

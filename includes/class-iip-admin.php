@@ -88,54 +88,70 @@ class Admin {
 		echo '<div class="wrap bialty-containter">';
 		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ) . '</h2>';
 		echo '<h2 class="nav-tab-wrapper">';
-		// Import Properties.
-		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-import' ) . '" class="nav-tab ';
-		echo ( 'iip-import' === $active_tab ? 'nav-tab-active' : '' );
-		echo '">' . esc_html__( 'Import Properties', 'connect-crm-realstate' ) . '</a>';
 
-		// Settings Properties.
-		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-settings' ) . '" class="nav-tab ';
-		echo ( 'iip-settings' === $active_tab ? 'nav-tab-active' : '' );
-		echo '">' . esc_html__( 'Settings', 'connect-crm-realstate' ) . '</a>';
+		if ( cccrmre_is_license_active() ) {
+			// Import Properties.
+			echo '<a href="' . esc_url( '?page=iip-options&tab=iip-import' ) . '" class="nav-tab ';
+			echo ( 'iip-import' === $active_tab ? 'nav-tab-active' : '' );
+			echo '">' . esc_html__( 'Import Properties', 'connect-crm-realstate' ) . '</a>';
 
-		// Merge variables.
-		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-merge' ) . '" class="nav-tab ';
-		echo ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
-		echo '">' . esc_html__( 'Merge variables', 'connect-crm-realstate' ) . '</a>';
+			// Settings Properties.
+			echo '<a href="' . esc_url( '?page=iip-options&tab=iip-settings' ) . '" class="nav-tab ';
+			echo ( 'iip-settings' === $active_tab ? 'nav-tab-active' : '' );
+			echo '">' . esc_html__( 'Settings', 'connect-crm-realstate' ) . '</a>';
 
-		// Log.
-		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-log' ) . '" class="nav-tab ';
-		echo ( 'iip-log' === $active_tab ? 'nav-tab-active' : '' );
-		echo '">' . esc_html__( 'Log', 'connect-crm-realstate' ) . '</a>';
+			// Merge variables.
+			echo '<a href="' . esc_url( '?page=iip-options&tab=iip-merge' ) . '" class="nav-tab ';
+			echo ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
+			echo '">' . esc_html__( 'Merge variables', 'connect-crm-realstate' ) . '</a>';
+
+			// Log.
+			echo '<a href="' . esc_url( '?page=iip-options&tab=iip-log' ) . '" class="nav-tab ';
+			echo ( 'iip-log' === $active_tab ? 'nav-tab-active' : '' );
+			echo '">' . esc_html__( 'Log', 'connect-crm-realstate' ) . '</a>';
+		}
+
+		// License.
+		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-license' ) . '" class="nav-tab ';
+		echo ( 'iip-license' === $active_tab ? 'nav-tab-active' : '' );
+		echo '">' . esc_html__( 'License', 'connect-crm-realstate' ) . '</a>';
 
 		echo '</h2>';
 
-		if ( 'iip-import' === $active_tab ) {
-			$this->plugin_import_page();
+		if ( cccrmre_is_license_active() ) {
+			if ( 'iip-import' === $active_tab ) {
+				$this->plugin_import_page();
+			}
+
+			if ( 'iip-log' === $active_tab ) {
+				$this->plugin_log_page();
+			}
+
+			if ( 'iip-settings' === $active_tab ) {
+				echo '<form method="post" action="options.php">';
+				settings_fields( 'admin_conncrmreal_settings' );
+				do_settings_sections( 'conncrmreal_settings' );
+				submit_button( esc_html__( 'Save changes', 'connect-crm-realstate' ) );
+				echo '</form>';
+			}
+
+			if ( 'iip-merge' === $active_tab ) {
+				?>
+				<h1><?php esc_html_e( 'Merge Variables with custom values', 'connect-crm-realstate' ); ?></h1>
+				<form method="post" action="options.php">
+					<?php settings_fields( 'iip_plugin_merge_group' ); ?>
+					<?php do_settings_sections( 'conncrmreal_merge_fields' ); ?>
+					<?php submit_button(); ?>
+				</form>
+				<?php
+			}
 		}
 
-		if ( 'iip-log' === $active_tab ) {
-			$this->plugin_log_page();
+		if ( 'iip-license' === $active_tab ) {
+			do_action( 'ccrmre_license_settings_content' );
 		}
 
-		if ( 'iip-settings' === $active_tab ) {
-			echo '<form method="post" action="options.php">';
-			settings_fields( 'admin_conncrmreal_settings' );
-			do_settings_sections( 'conncrmreal_settings' );
-			submit_button( esc_html__( 'Save changes', 'connect-crm-realstate' ) );
-			echo '</form>';
-		}
-
-		if ( 'iip-merge' === $active_tab ) {
-			?>
-			<h1><?php esc_html_e( 'Merge Variables with custom values', 'connect-crm-realstate' ); ?></h1>
-			<form method="post" action="options.php">
-				<?php settings_fields( 'iip_plugin_merge_group' ); ?>
-				<?php do_settings_sections( 'conncrmreal_merge_fields' ); ?>
-				<?php submit_button(); ?>
-			</form>
-			<?php
-		}
+		echo '</div>'; // Close wrap div.
 	}
 
 	/**
