@@ -25,6 +25,11 @@ class Cron {
 	 * Construct of Class
 	 */
 	public function __construct() {
+		// Check license before initializing.
+		if ( ! function_exists( 'cccrmre_is_license_active' ) || ! cccrmre_is_license_active() ) {
+			return;
+		}
+
 		$settings = get_option( 'conncrmreal_settings' );
 
 		if ( isset( $settings['cron'] ) && 'yes' === $settings['cron'] ) {
