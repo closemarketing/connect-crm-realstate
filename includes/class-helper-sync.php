@@ -22,6 +22,8 @@ class SYNC {
 	 * Syncs property from item API.
 	 *
 	 * @param array $item Item from API.
+	 * @param array $settings Settings.
+	 * @param array $settings_fields Settings fields.
 	 * @return array
 	 */
 	public static function sync_property( $item, $settings = array(), $settings_fields = array() ) {
@@ -32,15 +34,24 @@ class SYNC {
 		$post_type          = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$filter_postal_code = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
 		$key_id             = 'inmovilla' === $crm ? 'cod_ofer' : 'id';
+		$property_id        = isset( $item[ $key_id ] ) ? $item[ $key_id ] : '';
 		$meta_name          = isset( $settings_fields[ $key_id ] ) ? $settings_fields[ $key_id ] : $key_id;
-		$property_id        = self::find_property( $item[ $key_id ], $post_type, $meta_name );
+		$property_post_id   = self::find_property( $property_id, $post_type, $meta_name );
 
-		$key_title      = 'inmovilla' === $crm ? 'tituloes' : 'name';
-		$property_title = isset( $item[ $key_title ] ) ? $item[ $key_title ] : __( 'Property', 'connect-crm-realstate' );
+		if ( 'inmovilla' === $crm ) {
+			$descripciones        = isset( $item['descripciones'] ) ? $item['descripciones'] : array();
+			$property_title       = isset( $descripciones['titulo'] ) ? $descripciones['titulo'] : __( 'Property', 'connect-crm-realstate' );
+			$property_description = isset( $descripciones['descrip'] ) ? $descripciones['descrip'] : '';
+			$property_city        = isset( $item['ciudad'] ) ? $item['ciudad'] : '';
+		} else {
+			$property_title       = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' );
+			$property_description = isset( $item['description'] ) ? $item['description'] : '';
+			$property_city        = isset( $item['city'] ) ? $item['city'] : '';
+		}
 
 		if ( self::cannot_import( $item, $filter_postal_code ) ) {
 			$message  = __( 'NOT Imported', 'connect-crm-realstate' );
-			$message .= self::add_end_message( $item, $property_title, $crm );
+			$message .= self::add_end_message( $property_id, $property_title, $property_city );
 
 			return array(
 				'property_id' => $property_id,
@@ -61,7 +72,7 @@ class SYNC {
 		if ( empty( $settings_fields ) ) {
 			// Method without merge fields.
 			foreach ( $item as $key => $item_meta ) {
-				if ( 'description' === $key || 'name' === $key ) {
+				if ( 'description' === $key || 'name' === $key || 'descripciones' === $key ) {
 					continue;
 				}
 				$property_info['meta_input'][ 'property_' . $key ] = $item_meta;
@@ -69,22 +80,25 @@ class SYNC {
 		} else {
 			// Method with merge fields.
 			foreach ( $settings_fields as $key => $field ) {
+				if ( 'descripciones' === $key ) {
+					continue;
+				}
 				$property_info['meta_input'][ $field ] = isset( $item[ $key ] ) ? $item[ $key ] : '';
 			}
 		}
 
-		if ( empty( $property_id ) ) {
+		if ( empty( $property_post_id ) ) {
 			$property_info['post_title']   = $property_title;
 			$property_info['post_name']    = sanitize_title( $property_title );
-			$property_info['post_content'] = isset( $item['description'] ) ? $item['description'] : '';
+			$property_info['post_content'] = $property_description;
 			$property_id                   = wp_insert_post( $property_info );
 			$message                      .= __( 'Created', 'connect-crm-realstate' );
 		} else {
 			$message            .= __( 'Updated', 'connect-crm-realstate' );
-			$property_info['ID'] = $property_id;
+			$property_info['ID'] = $property_post_id;
 			wp_update_post( $property_info );
 		}
-		$message .= self::add_end_message( $item, $property_title );
+		$message .= self::add_end_message( $property_id, $property_title, $property_city );
 
 		if ( ! empty( $property_id ) ) {
 			update_post_meta( $property_id, 'property_synced', true );
@@ -101,15 +115,15 @@ class SYNC {
 	/**
 	 * Adds end message.
 	 *
-	 * @param array  $item Item from API.
+	 * @param string $property_id Property ID.
 	 * @param string $property_title Property title.
+	 * @param string $property_city Property city.
 	 * @return string
 	 */
-	private static function add_end_message( $item, $property_title, $crm = 'anaconda' ) {
+	private static function add_end_message( $property_id, $property_title, $property_city = '' ) {
 		$message  = ' ' . __( 'Property ID:', 'connect-crm-realstate' ) . ' ';
-		$message .= 'inmovilla' === $crm ? $item['cod_ofer'] : $item['id'];
-		$message .= ! empty( $item['internal_property_id'] ) ? ' (' . $item['internal_property_id'] . ')' : '';
-		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $item['city'];
+		$message .= $property_id;
+		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $property_city;
 		return $message;
 	}
 

@@ -64,7 +64,7 @@ class Cron {
 			$date_since = strtotime( 'now - ' . CCRMRE_SYNC_PERIOD . ' seconds' );
 			$last_sync  = gmdate( 'Y/m/d H:i:s', $date_since );
 		}
-		$result_api = API::get_properties( 0, $last_sync );
+		$result_api = API::get_properties( 0, 0, $last_sync );
 
 		if ( 'error' === $result_api['status'] || empty( $result_api['data'] ) ) {
 			return;

@@ -227,6 +227,26 @@ class API {
 	}
 
 	/**
+	 * Get pagination size based on CRM type
+	 *
+	 * @param string $crm CRM type (optional, if not provided will get from settings).
+	 * @return int Pagination size.
+	 */
+	public static function get_pagination_size( $crm = '' ) {
+		if ( empty( $crm ) ) {
+			$settings = get_option( 'conncrmreal_settings' );
+			$crm      = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+		}
+
+		$pagination_sizes = array(
+			'anaconda'  => 200,
+			'inmovilla' => 50,
+		);
+
+		return isset( $pagination_sizes[ $crm ] ) ? $pagination_sizes[ $crm ] : 100;
+	}
+
+	/**
 	 * Request to properties API from CRM
 	 *
 	 * @param int    $page Page of properties (for Anaconda) or page number for pagination (Inmovilla).
@@ -236,6 +256,7 @@ class API {
 	public static function get_properties( $page = 0, $changed_from = '' ) {
 		$settings     = get_option( 'conncrmreal_settings' );
 		$settings_crm = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+		$pagination   = self::get_pagination_size( $settings_crm );
 
 		if ( 'anaconda' === $settings_crm ) {
 			if ( ! empty( $page ) ) {
@@ -248,9 +269,8 @@ class API {
 			}
 		} elseif ( 'inmovilla' === $settings_crm ) {
 			// For Inmovilla, use pagination type to get properties.
-			// Maximum 50 properties per request.
-			$pos_inicial   = $page > 0 ? ( ( $page - 1 ) * 50 ) + 1 : 1;
-			$num_elementos = 50;
+			$pos_inicial   = $page > 0 ? ( ( $page - 1 ) * $pagination ) + 1 : 1;
+			$num_elementos = $pagination;
 			$where         = '';
 			$orden         = 'fecha desc'; // Order by date descending.
 
@@ -355,7 +375,7 @@ class API {
 
 				// Add descriptions if available.
 				if ( isset( $result['data']['descripciones'][ $property_id ] ) ) {
-					$property_data['descripciones'] = $result['data']['descripciones'][ $property_id ];
+					$property_data['descripciones'] = reset( $result['data']['descripciones'][ $property_id ] );
 				}
 
 				// Add photos if available.

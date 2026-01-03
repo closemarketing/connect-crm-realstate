@@ -535,9 +535,10 @@ class Admin {
 			'<input class="regular-text" type="text" name="conncrmreal_settings[postal_code]" id="postal_code" value="%s">',
 			isset( $this->settings['postal_code'] ) ? esc_attr( $this->settings['postal_code'] ) : ''
 		);
-		echo sprintf( 
+		printf(
+			/* translators: %s: description */
 			'<p class="description">%s</p>',
-			__( 'Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma.', 'connect-crm-realstate' )
+			esc_html__( 'Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma.', 'connect-crm-realstate' )
 		);
 	}
 
@@ -548,7 +549,8 @@ class Admin {
 	 */
 	public function plugin_import_page() {
 		$settings   = get_option( 'conncrmreal_settings' );
-		$pagination = empty( $settings['api_pagination'] ) ? 200 : $settings['api_pagination'];
+		$crm_type   = isset( $settings['type'] ) ? $settings['type'] : '';
+		$pagination = API::get_pagination_size( $crm_type );
 		?>
 		<div class="connect-realstate-manual-action">
 			<h2><?php esc_html_e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>

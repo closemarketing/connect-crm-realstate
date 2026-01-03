@@ -78,7 +78,7 @@ class Import {
 				'label_sync'          => __( 'Sync', 'import-holded-products-woocommerce' ),
 				'label_syncing'       => __( 'Syncing', 'import-holded-products-woocommerce' ),
 				'label_sync_complete' => __( 'Finished', 'import-holded-products-woocommerce' ),
-				'nonce'               => wp_create_nonce( 'manual_import_nonce' ),
+				'nonce'               => wp_create_nonce( 'ccrmre_manual_import_nonce' ),
 			)
 		);
 	}
@@ -89,67 +89,99 @@ class Import {
 	 * @return void
 	 */
 	public function manual_import() {
+		// Verify nonce manually for better error handling.
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'ccrmre_manual_import_nonce' ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'Security verification failed. Please refresh the page and try again.', 'connect-crm-realstate' ),
+				)
+			);
+			return;
+		}
+
 		$loop         = isset( $_POST['loop'] ) ? (int) $_POST['loop'] : 0;
-		$pagination   = isset( $_POST['pagination'] ) ? (int) $_POST['pagination'] : 200;
+		$crm          = isset( $this->settings['type'] ) ? $this->settings['type'] : '';
+		$pagination   = isset( $_POST['pagination'] ) ? (int) $_POST['pagination'] : API::get_pagination_size( $crm );
 		$totalprop    = isset( $_POST['totalprop'] ) ? (int) $_POST['totalprop'] : 0;
 		$progress_msg = '';
 
-		if ( check_ajax_referer( 'manual_import_nonce', 'nonce' ) ) {
-			$loop_page = $loop % $pagination;
-			$page      = round( $loop / $pagination, 0 ) + 1;
-			$crm       = isset( $this->settings['type'] ) ? $this->settings['type'] : '';
+		$loop_page = $loop % $pagination;
+		$page      = floor( $loop / $pagination ) + 1;
 
-			if ( 0 === $loop ) {
-				SYNC::clear_property_meta();
+		if ( 0 === $loop ) {
+			SYNC::clear_property_meta();
+		}
+
+		// When starting a new page (loop_page = 0), always fetch from API.
+		if ( 0 === $loop_page ) {
+			// Clear old transients from previous page.
+			for ( $i = 0; $i < $pagination; $i++ ) {
+				delete_transient( 'connreal_query_property_loop_' . $i );
 			}
 
-			$property = get_transient( 'connreal_query_property_loop_' . $loop_page );
-			if ( ! $property || 0 === $loop_page ) {
-				$result_api   = API::get_properties( $page );
-				$properties   = 'ok' === $result_api['status'] ? $result_api['data'] : array();
-				$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-realstate' ) . '<br/>';
-				$total_count  = ! empty( $total_count ) ? $total_count : 0;
-				$total_count += count( $properties );
-				$i            = 0;
+			$result_api   = API::get_properties( $page );
+			$properties   = 'ok' === $result_api['status'] ? $result_api['data'] : array();
+			$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-realstate' ) . '<br/>';
+			$totalprop    = count( $properties );
+
+			// Check if we got properties from API.
+			if ( 0 === $totalprop && $loop > 0 ) {
+				// No more properties from API - we're done.
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'No more properties from API. Import complete.', 'connect-crm-realstate' ) . '<br/>';
+				$property      = null;
+			} else {
+				// Save properties in transients.
+				$i = 0;
 				foreach ( $properties as $property_api ) {
 					set_transient( 'connreal_query_property_loop_' . $i, $property_api, MINUTE_IN_SECONDS * 3 );
 					$i++;
 				}
-				$property  = $result_api['data'][ $loop_page ];
-				$totalprop = count( $properties );
+
+				$property = isset( $properties[0] ) ? $properties[0] : null;
 			}
-
-			$sync = get_option( 'connect_crm_realstate_sync' );
-			if ( ! empty( $property ) ) {
-				$property_complete = API::get_property( $property, $crm );
-				$result_sync       = SYNC::sync_property( $property_complete, $this->settings, $this->settings_fields );
-				$progress_msg     .= '[' . date_i18n( 'H:i:s' ) . '] ' . $loop + 1;
-				$progress_msg     .= ' - ' . $result_sync['message'];
-
-				$finish = $totalprop < $pagination && $totalprop === $loop ? true : false;
-				$finish = 0 === $totalprop ? true : $finish;
-			} else {
-				$finish = true;
-			}
-
-			if ( $finish ) {
-				$count         = SYNC::trash_not_synced( $sync );
-				$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-crm-realstate' ) . $count;
-			}
-
-			delete_transient( 'connreal_query_property_loop_' . $loop_page );
-
-			wp_send_json_success(
-				array(
-					'loop'       => $loop + 1,
-					'message'    => $progress_msg,
-					'pagination' => $pagination,
-					'totalprop'  => $totalprop,
-					'finish'     => $finish,
-				)
-			);
 		} else {
-			wp_send_json_error( array( 'error' => 'Error' ) );
+			// Get property from transient.
+			$property = get_transient( 'connreal_query_property_loop_' . $loop_page );
 		}
+
+		$finish = false;
+		$sync   = get_option( 'connect_crm_realstate_sync' );
+
+		if ( ! empty( $property ) ) {
+			$property_complete = API::get_property( $property, $crm );
+			$result_sync       = SYNC::sync_property( $property_complete, $this->settings, $this->settings_fields );
+			$progress_msg     .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 );
+			$progress_msg     .= ' - ' . $result_sync['message'];
+
+			// Determine if we should finish:
+			// 1. We're at the last property of the current batch (loop_page + 1 === totalprop)
+			// 2. AND the batch has fewer properties than the pagination limit (totalprop < pagination)
+			// This means there are no more properties to fetch.
+			$is_last_in_batch = ( ( $loop_page + 1 ) === $totalprop );
+			$batch_not_full   = ( $totalprop < $pagination );
+			$finish           = $is_last_in_batch && $batch_not_full;
+		} else {
+			$finish = true;
+		}
+
+		if ( $finish ) {
+			$count         = SYNC::trash_not_synced( $sync );
+			$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-crm-realstate' ) . $count;
+
+			// Clear all transients.
+			for ( $i = 0; $i < $pagination; $i++ ) {
+				delete_transient( 'connreal_query_property_loop_' . $i );
+			}
+		}
+
+		wp_send_json_success(
+			array(
+				'loop'       => $loop + 1,
+				'message'    => $progress_msg,
+				'pagination' => $pagination,
+				'totalprop'  => $totalprop,
+				'finish'     => $finish,
+			)
+		);
 	}
 }
