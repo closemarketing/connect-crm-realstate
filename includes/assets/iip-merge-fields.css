@@ -43,3 +43,43 @@
 .select2-container {
 	max-width: 100%;
 }
+
+/* New tag styles */
+.ccrmre-new-tag {
+	color: #2271b1;
+	font-weight: 600;
+}
+
+.select2-results__option .dashicons {
+	vertical-align: middle;
+}
+
+/* Info notice styles */
+#ccrmre-merge-container + .notice-info {
+	margin-top: 20px;
+}
+
+/* Auto-map button */
+#ccrmre-auto-map-btn {
+	margin-bottom: 15px;
+}
+
+/* Spinning animation for loading */
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.dashicons.spin {
+	animation: spin 1s linear infinite;
+}
+
+#ccrmre-auto-map-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+

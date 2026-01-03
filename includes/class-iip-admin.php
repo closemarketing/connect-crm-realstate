@@ -43,6 +43,35 @@ class Admin {
 	 */
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'plugin_settings' ) );
+		add_action( 'admin_notices', array( $this, 'show_admin_notices' ) );
+		add_action( 'wp_ajax_ccrmre_auto_map_fields', array( $this, 'ajax_auto_map_fields' ) );
+	}
+
+	/**
+	 * Show admin notices
+	 *
+	 * @return void
+	 */
+	public function show_admin_notices() {
+		// Check if we just saved merge fields.
+		if ( isset( $_GET['settings-updated'] ) && isset( $_GET['page'] ) && 'iip-options' === $_GET['page'] ) {
+			$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
+
+			if ( 'iip-merge' === $active_tab ) {
+				$merge_fields = get_option( 'conncrmreal_merge_fields' );
+				$count        = is_array( $merge_fields ) ? count( $merge_fields ) : 0;
+
+				echo '<div class="notice notice-success is-dismissible">';
+				echo '<p><strong>' . esc_html__( 'Merge fields saved successfully!', 'connect-crm-realstate' ) . '</strong> ';
+				echo sprintf(
+					/* translators: %d: number of mappings */
+					esc_html( _n( '%d field mapping saved.', '%d field mappings saved.', $count, 'connect-crm-realstate' ) ),
+					(int) $count
+				);
+				echo '</p>';
+				echo '</div>';
+			}
+		}
 	}
 
 	/**
@@ -90,22 +119,45 @@ class Admin {
 
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
 
+		// Enqueue settings scripts on settings tab.
+		if ( 'iip-settings' === $active_tab && cccrmre_is_license_active() ) {
+			wp_enqueue_script(
+				'ccrmre-settings',
+				plugin_dir_url( __FILE__ ) . 'assets/iip-settings.js',
+				array( 'jquery' ),
+				CCRMRE_VERSION,
+				true
+			);
+		}
+
 		// Enqueue select2 and merge fields scripts only on merge tab.
 		if ( 'iip-merge' === $active_tab && cccrmre_is_license_active() ) {
-			// Enqueue Select2.
+			// Enqueue Select2 from local vendor.
 			wp_enqueue_style(
 				'ccrmre-select2',
-				'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+				CCRMRE_PLUGIN_URL . 'vendor/select2/select2/dist/css/select2.min.css',
 				array(),
-				'4.1.0'
+				'4.0.13'
 			);
 			wp_enqueue_script(
 				'ccrmre-select2',
-				'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+				CCRMRE_PLUGIN_URL . 'vendor/select2/select2/dist/js/select2.min.js',
 				array( 'jquery' ),
-				'4.1.0',
+				'4.0.13',
 				true
 			);
+
+			// Enqueue Select2 Spanish translation.
+			$locale = get_locale();
+			if ( strpos( $locale, 'es_' ) === 0 ) {
+				wp_enqueue_script(
+					'ccrmre-select2-i18n',
+					CCRMRE_PLUGIN_URL . 'vendor/select2/select2/dist/js/i18n/es.js',
+					array( 'ccrmre-select2' ),
+					'4.0.13',
+					true
+				);
+			}
 
 			// Enqueue merge fields styles.
 			wp_enqueue_style(
@@ -129,7 +181,16 @@ class Admin {
 				'ccrmre-merge-fields',
 				'ccrmreMergeFields',
 				array(
-					'searchPlaceholder' => __( 'Search WordPress field...', 'connect-crm-realstate' ),
+					'searchPlaceholder' => __( 'Search or create WordPress field...', 'connect-crm-realstate' ),
+					'newFieldLabel'     => __( '(New field)', 'connect-crm-realstate' ),
+					'infoTitle'         => __( 'Creating New Fields:', 'connect-crm-realstate' ),
+					'infoMessage'       => __( 'You can create new WordPress custom fields by typing a name that doesn\'t exist in the list. The field name will be automatically sanitized (lowercase, numbers, and underscores only).', 'connect-crm-realstate' ),
+					'ajaxUrl'           => admin_url( 'admin-ajax.php' ),
+					'nonce'             => wp_create_nonce( 'ccrmre_auto_map_nonce' ),
+					'autoMapping'       => __( 'Auto-mapping fields...', 'connect-crm-realstate' ),
+					'autoMapSuccess'    => __( 'All fields have been auto-mapped successfully!', 'connect-crm-realstate' ),
+					'autoMapError'      => __( 'Error auto-mapping fields. Please try again.', 'connect-crm-realstate' ),
+					'confirmAutoMap'    => __( 'This will auto-generate WordPress field names for all CRM fields. Existing mappings will be preserved. Continue?', 'connect-crm-realstate' ),
 				)
 			);
 		}
@@ -195,43 +256,18 @@ class Admin {
 				do_settings_sections( 'conncrmreal_settings' );
 				submit_button( esc_html__( 'Save changes', 'connect-crm-realstate' ) );
 				echo '</form>';
-
-				// Add JavaScript to show/hide Inmovilla fields.
-				?>
-				<script type="text/javascript">
-				jQuery(document).ready(function($) {
-					function toggleInmovillaFields() {
-						var selectedType = $('#type').val();
-						var inmovillaFields = [
-							'#numagencia'
-						];
-
-						inmovillaFields.forEach(function(fieldId) {
-							var row = $(fieldId).closest('tr');
-							if (selectedType === 'inmovilla') {
-								row.show();
-							} else {
-								row.hide();
-							}
-						});
-					}
-
-					// Initial state.
-					toggleInmovillaFields();
-
-					// On change.
-					$('#type').on('change', function() {
-						toggleInmovillaFields();
-					});
-				});
-				</script>
-				<?php
 			}
 
 			if ( 'iip-merge' === $active_tab ) {
 				?>
 				<h1><?php esc_html_e( 'Merge Variables with custom values', 'connect-crm-realstate' ); ?></h1>
-				<form method="post" action="options.php">
+				<div class="notice notice-info inline">
+					<p>
+						<strong><?php esc_html_e( 'Creating New Fields:', 'connect-crm-realstate' ); ?></strong>
+						<?php esc_html_e( 'You can create new WordPress custom fields by typing a name that doesn\'t exist in the list. The field name will be automatically sanitized (lowercase, numbers, and underscores only).', 'connect-crm-realstate' ); ?>
+					</p>
+				</div>
+				<form method="post" action="options.php" id="ccrmre-merge-form">
 					<?php settings_fields( 'iip_plugin_merge_group' ); ?>
 					<?php do_settings_sections( 'conncrmreal_merge_fields' ); ?>
 					<?php submit_button(); ?>
@@ -575,12 +611,17 @@ class Admin {
 	}
 
 	/**
-	 * Info for neo automate section.
+	 * Info for merge fields section.
 	 *
 	 * @return void
 	 */
 	public function admin_section_settings_info_merge() {
-		esc_html_e( 'Put the connection API key settings in order to connect external data.', 'connect-crm-realstate' );
+		echo '<p>';
+		esc_html_e( 'Map CRM fields to WordPress custom fields. Select an existing field or type a new field name to create it.', 'connect-crm-realstate' );
+		echo '</p>';
+		echo '<p>';
+		esc_html_e( 'Fields marked with (Custom) are saved values that will be created automatically when properties are imported.', 'connect-crm-realstate' );
+		echo '</p>';
 	}
 
 	/**
@@ -599,6 +640,12 @@ class Admin {
 			echo '<div class="error notice"><p>' . esc_html( $properties_fields['data'] ) . '</p></div>';
 			return;
 		}
+
+		// Auto-map button.
+		echo '<button type="button" id="ccrmre-auto-map-btn" class="button button-secondary" style="margin-bottom: 15px;">';
+		echo '<span class="dashicons dashicons-admin-generic" style="margin-top: 3px;"></span> ';
+		esc_html_e( 'Auto-Map All Fields', 'connect-crm-realstate' );
+		echo '</button>';
 
 		echo '<div id="ccrmre-merge-container">';
 		echo '<table class="form-table iip-table-merge-variables">';
@@ -620,6 +667,15 @@ class Admin {
 			echo '<option value=""';
 			selected( $value, '' );
 			echo '>' . esc_html__( '-- Select WordPress Field --', 'connect-crm-realstate' ) . '</option>';
+
+			// Add saved value first if it doesn't exist in custom_fields.
+			if ( ! empty( $value ) && ! in_array( $value, $custom_fields, true ) ) {
+				echo '<option value="' . esc_attr( $value ) . '" selected="selected">';
+				echo esc_html( $value ) . ' ' . esc_html__( '(Custom)', 'connect-crm-realstate' );
+				echo '</option>';
+			}
+
+			// Add all existing custom fields.
 			foreach ( $custom_fields as $meta_key ) {
 				echo '<option value="' . esc_attr( $meta_key ) . '"';
 				selected( $value, $meta_key );
@@ -635,23 +691,43 @@ class Admin {
 
 
 	/**
-	 * Sanitize fiels before saves in DB
+	 * Sanitize fields before saves in DB
 	 *
 	 * @param array $input Input fields.
 	 * @return array
 	 */
 	public function sanitize_fields_settings_merge( $input ) {
-		if ( empty( $input ) ) {
+		if ( ! is_array( $input ) ) {
 			return array();
 		}
 
 		$sanitary_values = array();
-		$filter_fields   = array_filter( $input );
 
-		foreach ( $filter_fields as $key => $value ) {
-			if ( isset( $input[ $key ] ) ) {
-				$sanitary_values[ $key ] = sanitize_text_field( $value );
+		foreach ( $input as $key => $value ) {
+			// Skip empty values.
+			if ( empty( $value ) || ! is_string( $value ) ) {
+				continue;
 			}
+
+			// Sanitize the CRM field key.
+			$sanitized_key = sanitize_text_field( $key );
+
+			// Sanitize the WordPress field name.
+			// Allow lowercase letters, numbers, and underscores only.
+			$sanitized_value = strtolower( trim( $value ) );
+			$sanitized_value = preg_replace( '/[^a-z0-9_]/', '_', $sanitized_value );
+			$sanitized_value = preg_replace( '/_+/', '_', $sanitized_value ); // Remove duplicate underscores.
+			$sanitized_value = trim( $sanitized_value, '_' ); // Remove leading/trailing underscores.
+
+			// Only save if we have a valid value after sanitization.
+			if ( ! empty( $sanitized_value ) && ! empty( $sanitized_key ) ) {
+				$sanitary_values[ $sanitized_key ] = $sanitized_value;
+			}
+		}
+
+		// Log for debugging.
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'CCRMRE Merge Fields Saved: ' . print_r( $sanitary_values, true ) );
 		}
 
 		return $sanitary_values;
@@ -673,6 +749,98 @@ class Admin {
 		$meta_keys = $wpdb->get_col( $sql );
 
 		return $meta_keys;
+	}
+
+	/**
+	 * AJAX handler for auto-mapping fields
+	 *
+	 * @return void
+	 */
+	public function ajax_auto_map_fields() {
+		// Verify nonce.
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'ccrmre_auto_map_nonce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed', 'connect-crm-realstate' ) ) );
+		}
+
+		// Check permissions.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions', 'connect-crm-realstate' ) ) );
+		}
+
+		$settings = get_option( 'conncrmreal_settings' );
+		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+
+		// Get CRM fields.
+		$properties_fields = API::get_properties_fields( $crm_type );
+
+		if ( 'error' === $properties_fields['status'] ) {
+			wp_send_json_error( array( 'message' => $properties_fields['data'] ) );
+		}
+
+		// Get current mappings.
+		$current_mappings = get_option( 'conncrmreal_merge_fields', array() );
+		$new_mappings     = array();
+		$auto_mapped      = 0;
+
+		// Generate WordPress field names for each CRM field.
+		foreach ( $properties_fields['data'] as $property_field ) {
+			$crm_field_name = $property_field['name'];
+
+			// Skip if already mapped.
+			if ( isset( $current_mappings[ $crm_field_name ] ) && ! empty( $current_mappings[ $crm_field_name ] ) ) {
+				$new_mappings[ $crm_field_name ] = $current_mappings[ $crm_field_name ];
+				continue;
+			}
+
+			// Generate WordPress field name from CRM field name.
+			$wp_field_name = $this->generate_wp_field_name( $crm_field_name );
+
+			$new_mappings[ $crm_field_name ] = $wp_field_name;
+			$auto_mapped++;
+		}
+
+		// Save the mappings.
+		update_option( 'conncrmreal_merge_fields', $new_mappings );
+
+		wp_send_json_success(
+			array(
+				'message'     => sprintf(
+					/* translators: %d: number of fields */
+					_n( '%d field auto-mapped successfully!', '%d fields auto-mapped successfully!', $auto_mapped, 'connect-crm-realstate' ),
+					$auto_mapped
+				),
+				'mappings'    => $new_mappings,
+				'auto_mapped' => $auto_mapped,
+			)
+		);
+	}
+
+	/**
+	 * Generate WordPress field name from CRM field name
+	 *
+	 * @param string $crm_field_name CRM field name.
+	 * @return string WordPress field name.
+	 */
+	private function generate_wp_field_name( $crm_field_name ) {
+		// Start with the CRM field name.
+		$wp_field_name = $crm_field_name;
+
+		// Convert to lowercase.
+		$wp_field_name = strtolower( $wp_field_name );
+
+		// Replace special characters with underscores.
+		$wp_field_name = preg_replace( '/[^a-z0-9_]/', '_', $wp_field_name );
+
+		// Remove duplicate underscores.
+		$wp_field_name = preg_replace( '/_+/', '_', $wp_field_name );
+
+		// Remove leading/trailing underscores.
+		$wp_field_name = trim( $wp_field_name, '_' );
+
+		// Add prefix to avoid conflicts.
+		$wp_field_name = 'crm_' . $wp_field_name;
+
+		return $wp_field_name;
 	}
 }
 

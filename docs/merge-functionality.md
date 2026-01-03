@@ -42,14 +42,50 @@ The interface displays a table with two columns:
 
 The WordPress Fields dropdown uses Select2, providing:
 - **Search functionality**: Type to quickly find a field
+- **Create new fields**: Type a new field name to create it on the fly
 - **Clear selection**: Click the × to remove a mapping
 - **Responsive design**: Works well on all screen sizes
 
-### 4. Saving Mappings
+#### Creating New WordPress Fields
+
+You can create new custom fields directly from the merge interface:
+
+1. **Type a field name** that doesn't exist in the dropdown
+2. **The name is auto-sanitized**: 
+   - Converted to lowercase
+   - Special characters replaced with underscores
+   - Multiple underscores collapsed to one
+   - Leading/trailing underscores removed
+3. **Visual indicator**: New fields show with a "+" icon and "(New field)" label
+4. **Automatic creation**: The field will be created when you save and import properties
+
+**Example:**
+- You type: `My Property Price`
+- System creates: `my_property_price`
+- This field will be used as a custom field key in WordPress
+
+### 4. Auto-Map All Fields
+
+For quick setup, use the **Auto-Map All Fields** button:
+
+1. **Click the button** above the field list
+2. **Confirm the action** in the dialog
+3. **System automatically generates** WordPress field names for all CRM fields
+4. **Preserves existing mappings** - only maps unmapped fields
+5. **Auto-saves** the mappings after completion
+
+**Auto-generated field names:**
+- Based on CRM field names
+- Prefixed with `crm_` to avoid conflicts
+- Sanitized (lowercase, underscores only)
+- Example: `precioinmo` → `crm_precioinmo`
+
+### 5. Saving Mappings
 
 Click **Save Changes** to store your field mappings. The plugin saves:
 - An array of `CRM_field_name => wordpress_field_name` pairs
 - Only non-empty mappings (empty selections are not saved)
+- Shows success message with count of saved mappings
 
 ## Configuration by CRM Type
 
@@ -176,9 +212,31 @@ Retrieves field structure from Inmovilla API with Spanish labels.
 3. **Regular Review**: Periodically review mappings when CRM or WordPress fields change
 4. **Backup First**: Always backup your database before bulk imports
 
+## Technical Implementation
+
+### Select2 Library
+
+The plugin uses Select2 4.0.13 for enhanced dropdown functionality:
+
+- **Installation**: Via Composer (`composer require select2/select2`)
+- **Location**: `vendor/select2/select2/dist/`
+- **Files Used**:
+  - CSS: `select2.min.css`
+  - JS: `select2.min.js`
+  - i18n: `i18n/es.js` (Spanish translation)
+
+**Benefits:**
+- Local assets (no external CDN)
+- Better performance and security
+- Offline capability
+- Version control via Composer
+
+For detailed information, see: [Select2 Local Setup Documentation](select2-local-setup.md)
+
 ## Support
 
 For issues or questions:
 - Check the plugin logs at **Connect CRM Real State** → **Log** tab
 - Contact Close·marketing support
 - Review API documentation for your CRM
+- See [Select2 Documentation](https://select2.org/) for Select2-specific issues
