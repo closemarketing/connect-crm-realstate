@@ -6,9 +6,20 @@
 circle.yml
 .DS_Store
 .github
+.cursor
 composer.json
 composer.lock
 .wordpress-org
+
+# PHP Linting and Testing
+.phpcs.xml.dist
+.phpunit.result.cache
+phpunit.xml.dist
+phpcs.xml.dist
+phpstan.neon.dist
+.phplint.yml
+tests/
+bin/
 
 # Vendor files - Select2 (keep only dist folder)
 vendor/select2/select2/docs/

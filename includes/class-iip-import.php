@@ -44,7 +44,7 @@ class Import {
 	 */
 	public function __construct() {
 		// Check license before initializing.
-		if ( ! function_exists( 'cccrmre_is_license_active' ) || ! cccrmre_is_license_active() ) {
+		if ( ! function_exists( 'ccrmre_is_license_active' ) || ! ccrmre_is_license_active() ) {
 			return;
 		}
 
@@ -59,25 +59,31 @@ class Import {
 	/**
 	 * Manual import Requests
 	 *
+	 * @param string $hook Current admin page hook.
 	 * @return void
 	 */
-	public function scripts_manual_import() {
+	public function scripts_manual_import( $hook ) {
+		// Only load on plugin settings page.
+		if ( 'toplevel_page_iip-options' !== $hook ) {
+			return;
+		}
+
 		wp_enqueue_script(
-			'connect-realstate-manual',
-			CCRMRE_PLUGIN_URL . 'includes/assets/connect-realstate-manual.js',
+			'ccrmre-manual-sync',
+			CCRMRE_PLUGIN_URL . 'includes/assets/iip-manual-sync.js',
 			array(),
 			CCRMRE_VERSION,
 			true
 		);
 
 		wp_localize_script(
-			'connect-realstate-manual',
+			'ccrmre-manual-sync',
 			'ajaxAction',
 			array(
 				'url'                 => admin_url( 'admin-ajax.php' ),
-				'label_sync'          => __( 'Sync', 'import-holded-products-woocommerce' ),
-				'label_syncing'       => __( 'Syncing', 'import-holded-products-woocommerce' ),
-				'label_sync_complete' => __( 'Finished', 'import-holded-products-woocommerce' ),
+				'label_sync'          => __( 'Sync', 'connect-crm-realstate' ),
+				'label_syncing'       => __( 'Syncing', 'connect-crm-realstate' ),
+				'label_sync_complete' => __( 'Finished', 'connect-crm-realstate' ),
 				'nonce'               => wp_create_nonce( 'ccrmre_manual_import_nonce' ),
 			)
 		);
@@ -134,7 +140,7 @@ class Import {
 				$i = 0;
 				foreach ( $properties as $property_api ) {
 					set_transient( 'connreal_query_property_loop_' . $i, $property_api, MINUTE_IN_SECONDS * 3 );
-					$i++;
+					++$i;
 				}
 
 				$property = isset( $properties[0] ) ? $properties[0] : null;
@@ -145,7 +151,6 @@ class Import {
 		}
 
 		$finish = false;
-		$sync   = get_option( 'connect_crm_realstate_sync' );
 
 		if ( ! empty( $property ) ) {
 			$property_complete = API::get_property( $property, $crm );
@@ -165,7 +170,7 @@ class Import {
 		}
 
 		if ( $finish ) {
-			$count         = SYNC::trash_not_synced( $sync );
+			$count         = SYNC::trash_not_synced();
 			$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-crm-realstate' ) . $count;
 
 			// Clear all transients.

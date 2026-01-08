@@ -385,3 +385,4 @@ fetch( ajaxUrl, {
 - [check_ajax_referer() Reference](https://developer.wordpress.org/reference/functions/check_ajax_referer/)
 - [wp_verify_nonce() Reference](https://developer.wordpress.org/reference/functions/wp_verify_nonce/)
 - [wp_create_nonce() Reference](https://developer.wordpress.org/reference/functions/wp_create_nonce/)
+

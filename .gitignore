@@ -8,3 +8,6 @@ node_modules/
 # OS or Editor folders
 ._*.cache
 .DS_Store
+
+# PHP Linting
+.phpunit.result.cache

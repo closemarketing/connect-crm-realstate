@@ -36,7 +36,7 @@ define( 'CCRMRE_LICENSE_PRODUCT_UUID', 'CONINMO-5F3A954F-0717-4B13-8305-8AE2AAC0
  *
  * @return bool
  */
-function cccrmre_is_license_active() {
+function ccrmre_is_license_active() {
 	global $ccrmre_license;
 
 	if ( ! $ccrmre_license ) {
@@ -135,7 +135,7 @@ add_action(
 			new Close\ConnectCRM\RealState\Admin();
 
 			// Only load plugin functionality if license is active.
-			if ( ! cccrmre_is_license_active() ) {
+			if ( ! ccrmre_is_license_active() ) {
 				add_action(
 					'admin_notices',
 					function () {

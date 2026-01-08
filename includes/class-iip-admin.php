@@ -39,7 +39,6 @@ class Admin {
 
 	/**
 	 * Construct and intialize
-	 *
 	 */
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'plugin_settings' ) );
@@ -63,7 +62,7 @@ class Admin {
 
 				echo '<div class="notice notice-success is-dismissible">';
 				echo '<p><strong>' . esc_html__( 'Merge fields saved successfully!', 'connect-crm-realstate' ) . '</strong> ';
-				echo sprintf(
+				printf(
 					/* translators: %d: number of mappings */
 					esc_html( _n( '%d field mapping saved.', '%d field mappings saved.', $count, 'connect-crm-realstate' ) ),
 					(int) $count
@@ -120,7 +119,7 @@ class Admin {
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
 
 		// Enqueue settings scripts on settings tab.
-		if ( 'iip-settings' === $active_tab && cccrmre_is_license_active() ) {
+		if ( 'iip-settings' === $active_tab && ccrmre_is_license_active() ) {
 			wp_enqueue_script(
 				'ccrmre-settings',
 				plugin_dir_url( __FILE__ ) . 'assets/iip-settings.js',
@@ -131,7 +130,7 @@ class Admin {
 		}
 
 		// Enqueue select2 and merge fields scripts only on merge tab.
-		if ( 'iip-merge' === $active_tab && cccrmre_is_license_active() ) {
+		if ( 'iip-merge' === $active_tab && ccrmre_is_license_active() ) {
 			// Enqueue Select2 from local vendor.
 			wp_enqueue_style(
 				'ccrmre-select2',
@@ -143,7 +142,7 @@ class Admin {
 				'ccrmre-select2',
 				CCRMRE_PLUGIN_URL . 'vendor/select2/select2/dist/js/select2.min.js',
 				array( 'jquery' ),
-				'4.0.13',
+				CCRMRE_VERSION,
 				true
 			);
 
@@ -154,7 +153,7 @@ class Admin {
 					'ccrmre-select2-i18n',
 					CCRMRE_PLUGIN_URL . 'vendor/select2/select2/dist/js/i18n/es.js',
 					array( 'ccrmre-select2' ),
-					'4.0.13',
+					CCRMRE_VERSION,
 					true
 				);
 			}
@@ -212,7 +211,7 @@ class Admin {
 		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ) . '</h2>';
 		echo '<h2 class="nav-tab-wrapper">';
 
-		if ( cccrmre_is_license_active() ) {
+		if ( ccrmre_is_license_active() ) {
 			// Import Properties.
 			echo '<a href="' . esc_url( '?page=iip-options&tab=iip-import' ) . '" class="nav-tab ';
 			echo ( 'iip-import' === $active_tab ? 'nav-tab-active' : '' );
@@ -241,7 +240,7 @@ class Admin {
 
 		echo '</h2>';
 
-		if ( cccrmre_is_license_active() ) {
+		if ( ccrmre_is_license_active() ) {
 			if ( 'iip-import' === $active_tab ) {
 				$this->plugin_import_page();
 			}
@@ -490,8 +489,8 @@ class Admin {
 	public function post_type_callback() {
 		$post_type_option = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'show';
 
-		$args = array(
-			'public'   => true,
+		$args       = array(
+			'public' => true,
 		);
 		$post_types = get_post_types( $args );
 		unset( $post_types['attachment'] );
@@ -519,9 +518,9 @@ class Admin {
 			'<input class="regular-text" type="text" name="conncrmreal_settings[post_type_slug]" id="post_type_slug" value="%s">',
 			isset( $this->settings['post_type_slug'] ) ? esc_attr( $this->settings['post_type_slug'] ) : ''
 		);
-		echo sprintf(
+		printf(
 			'<p class="description">%s</p>',
-			__( 'Slug for the post type. If you change this, you need to save the permalinks again.', 'connect-crm-realstate' )
+			esc_html__( 'Slug for the post type. If you change this, you need to save the permalinks again.', 'connect-crm-realstate' )
 		);
 	}
 
@@ -555,9 +554,64 @@ class Admin {
 		<div class="connect-realstate-manual-action">
 			<h2><?php esc_html_e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
 			<p><?php esc_html_e( 'After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?><br/></p>
-			<div id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" ><?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?></div>
+			<div class="import-button-wrapper">
+				<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
+					<?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?>
+				</button>
+				<span class="spinner"></span>
+			</div>
 			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
 		</div>
+		<style>
+			.connect-realstate-manual-action .import-button-wrapper {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				margin-bottom: 15px;
+			}
+			.connect-realstate-manual-action .spinner {
+				float: none;
+				margin: 0;
+				display: none;
+			}
+			.connect-realstate-manual-action .spinner.is-active {
+				display: block;
+				visibility: visible;
+			}
+			.connect-realstate-manual-action #manual_import:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+			.connect-realstate-manual-action #logwrapper {
+				margin-top: 20px;
+				padding: 15px;
+				background: #f0f0f1;
+				border: 1px solid #c3c4c7;
+				border-radius: 4px;
+			}
+			.connect-realstate-manual-action #loglist {
+				max-height: 400px;
+				overflow-y: auto;
+				background: white;
+				padding: 10px;
+				border-radius: 3px;
+			}
+			.connect-realstate-manual-action #loglist p {
+				margin: 5px 0;
+				padding: 5px 10px;
+				border-left: 3px solid #0073aa;
+			}
+			.connect-realstate-manual-action #loglist p.odd {
+				background: #f9f9f9;
+			}
+			.connect-realstate-manual-action #loglist p.even {
+				background: white;
+			}
+			.connect-realstate-manual-action #loglist p.error {
+				border-left-color: #d63638;
+				background: #fcf0f1;
+			}
+		</style>
 		<?php
 	}
 
@@ -570,11 +624,11 @@ class Admin {
 		?>
 		<div class="connect-realstate-log">
 			<h2><?php esc_html_e( 'Latest cron logs', 'connect-crm-realstate' ); ?></h2>
-			<p><?php esc_html_e( 'After you fillup the API settings, use the button below to import the products. The importing process may take a while and you need to keep this page open to complete it.', 'connect-woocommerce' ); ?>
+			<p><?php esc_html_e( 'After you fillup the API settings, use the button below to import the products. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?>
 			</p>
 
 			<fieldset id="logwrapper">
-				<legend><?php esc_html_e( 'Log', 'connect-woocommerce' ); ?></legend>
+				<legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend>
 				<div id="loglist">
 					<?php
 					$uploads_dir = wp_upload_dir();
@@ -584,17 +638,21 @@ class Admin {
 					foreach ( $files as $file ) {
 						if ( is_file( $file ) ) {
 							$filename = basename( $file );
+							$class    = ( 0 === $index % 2 ) ? 'even' : 'odd';
+							echo '<p class="' . esc_html( $class ) . '">';
+							$file_open = fopen( $file, 'r' );
+							if ( $file_open ) {
+								$line = fgets( $file_open );
+								fclose( $file_open );
+							} else {
+								$line = '';
+							}
+							echo '<a href="' . esc_url( $uploads_dir['baseurl'] . '/ccrmre_logs/' . $filename ) . '" target="_blank">';
+							echo ! empty( esc_html( $line ) ) ? esc_html( $line ) : esc_html( $filename );
+							echo '</a>';
+							echo '</p>';
+							++$index;
 						}
-						$class = ( 0 === $index % 2 ) ? 'even' : 'odd';
-						echo '<p class="' . esc_html( $class ) . '">';
-						$file_open = fopen( $file, 'r' );
-						$line      = fgets( $file_open );
-						fclose( $file_open );
-						echo '<a href="' . esc_url( $uploads_dir['baseurl'] . '/ccrmre_logs/' . $filename ) . '" target="_blank">';
-						echo ! empty( esc_html( $line ) ) ? esc_html( $line ) : esc_html( $filename );
-						echo '</a>';
-						echo '</p>';
-						$index++;
 					}
 					?>
 				</div>
@@ -742,13 +800,17 @@ class Admin {
 	 * @return array Array of metakeys.
 	 */
 	private function get_all_custom_fields( $post_type ) {
-		global $wpdb, $table_prefix;
-		$sql       = "SELECT DISTINCT( {$table_prefix}postmeta.meta_key )
-				FROM {$table_prefix}posts
-				LEFT JOIN {$table_prefix}postmeta
-					ON {$table_prefix}posts.ID = {$table_prefix}postmeta.post_id
-					WHERE {$table_prefix}posts.post_type = '{$post_type}' ORDER BY {$table_prefix}postmeta.meta_key";
-		$meta_keys = $wpdb->get_col( $sql );
+		global $wpdb;
+		$meta_keys = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT( {$wpdb->postmeta}.meta_key )
+				FROM {$wpdb->posts}
+				LEFT JOIN {$wpdb->postmeta}
+					ON {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id
+					WHERE {$wpdb->posts}.post_type = %s ORDER BY {$wpdb->postmeta}.meta_key",
+				$post_type
+			)
+		);
 
 		return $meta_keys;
 	}
@@ -798,7 +860,7 @@ class Admin {
 			$wp_field_name = $this->generate_wp_field_name( $crm_field_name );
 
 			$new_mappings[ $crm_field_name ] = $wp_field_name;
-			$auto_mapped++;
+			++$auto_mapped;
 		}
 
 		// Save the mappings.

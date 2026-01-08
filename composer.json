@@ -3,5 +3,23 @@
         "woocommerce/action-scheduler": "^3.8",
         "closemarketing/wp-plugin-license-manager": "^1.2",
         "select2/select2": "^4.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "*",
+        "wp-coding-standards/wpcs": "*",
+        "szepeviktor/phpstan-wordpress": "*",
+        "phpstan/extension-installer": "*",
+        "phpcompatibility/phpcompatibility-wp": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "scripts": {
+        "format": "phpcbf --standard=.phpcs.xml.dist",
+        "lint": "phpcs --standard=.phpcs.xml.dist",
+        "phpstan": "phpstan analyse --memory-limit=2048M"
     }
 }

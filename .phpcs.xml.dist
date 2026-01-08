@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Coding Standards based custom ruleset for your plugin">
+	<description>Generally-applicable sniffs for WordPress plugins.</description>
+
+	<file>.</file>
+	<exclude-pattern>/tests/</exclude-pattern>
+	<exclude-pattern>/vendor/</exclude-pattern>
+	<exclude-pattern>/node_modules/</exclude-pattern>
+	<exclude-pattern>/docs/</exclude-pattern>
+	<exclude-pattern>/languages/</exclude-pattern>
+
+	<arg value="sp"/> <!-- Show sniff and progress -->
+	<arg name="basepath" value="./"/><!-- Strip the file paths down to the relevant bit -->
+	<arg name="colors"/>
+	<arg name="extensions" value="php"/>
+	<arg name="parallel" value="8"/>
+
+	<config name="testVersion" value="7.0-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<config name="minimum_supported_wp_version" value="4.6"/>
+	<rule ref="WordPress"/>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="CCRMRE"/>
+				<element value="ccrmre"/>
+				<element value="connect_crm_realstate"/>
+				<element value="conncrmreal"/>
+				<element value="inmovilla"/>
+				<element value="Close\ConnectCRM"/>
+			</property>
+		</properties>
+	</rule>
+	<!-- Exclude filename rules as project uses IIP prefix convention -->
+	<rule ref="WordPress.Files.FileName">
+		<properties>
+			<property name="strict_class_file_names" value="false"/>
+		</properties>
+	</rule>
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="connect-crm-realstate"/>
+				<element value="wordpress-seo"/>
+				<element value="rankmath"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.WhiteSpace.ControlStructureSpacing">
+		<properties>
+			<property name="blank_line_check" value="true"/>
+		</properties>
+	</rule>
+
+	<!-- Exclude specific warnings that are appropriate for this project -->
+	<!-- Allow direct file operations for logging functionality -->
+	<rule ref="WordPress.WP.AlternativeFunctions.file_system_operations_fopen">
+		<exclude-pattern>*/class-iip-admin.php</exclude-pattern>
+		<exclude-pattern>*/class-iip-cron.php</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.WP.AlternativeFunctions.file_system_operations_fclose">
+		<exclude-pattern>*/class-iip-admin.php</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.WP.AlternativeFunctions.file_system_operations_mkdir">
+		<exclude-pattern>*/class-iip-cron.php</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents">
+		<exclude-pattern>*/class-iip-cron.php</exclude-pattern>
+	</rule>
+
+	<!-- Allow debug functions when wrapped in WP_DEBUG checks -->
+	<rule ref="WordPress.PHP.DevelopmentFunctions.error_log_error_log">
+		<exclude-pattern>*/class-iip-admin.php</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.PHP.DevelopmentFunctions.error_log_print_r">
+		<exclude-pattern>*/class-iip-admin.php</exclude-pattern>
+	</rule>
+
+	<!-- Allow nonce-free $_GET for display logic (not data modification) -->
+	<rule ref="WordPress.Security.NonceVerification.Recommended">
+		<exclude-pattern>*/class-iip-admin.php</exclude-pattern>
+	</rule>
+
+	<!-- Allow direct database queries with prepare() for custom functionality -->
+	<rule ref="WordPress.DB.DirectDatabaseQuery.DirectQuery">
+		<exclude-pattern>*/class-iip-admin.php</exclude-pattern>
+		<exclude-pattern>*/class-helper-sync.php</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.DB.DirectDatabaseQuery.NoCaching">
+		<exclude-pattern>*/class-iip-admin.php</exclude-pattern>
+		<exclude-pattern>*/class-helper-sync.php</exclude-pattern>
+	</rule>
+
+	<!-- Allow meta_query for complex property searches -->
+	<rule ref="WordPress.DB.SlowDBQuery.slow_db_query_meta_query">
+		<exclude-pattern>*/class-helper-sync.php</exclude-pattern>
+	</rule>
+</ruleset>
+

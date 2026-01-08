@@ -410,6 +410,8 @@ class API {
 		} elseif ( 'inmovilla' === $crm ) {
 			return self::get_fields_inmovilla();
 		}
+
+		return array();
 	}
 
 	/**

@@ -197,7 +197,7 @@ class SYNC {
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM $wpdb->postmeta
-				WHERE meta_key = '%s'",
+				WHERE meta_key = %s",
 				'property_synced'
 			)
 		);
@@ -212,11 +212,11 @@ class SYNC {
 		$settings  = get_option( 'conncrmreal_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 
-		$args = array(
+		$args            = array(
 			'posts_per_page' => -1,
 			'post_type'      => $post_type,
 			'fields'         => 'ids',
-			'meta_query' => array(
+			'meta_query'     => array(
 				array(
 					'key'     => 'property_synced',
 					'compare' => 'NOT EXISTS',

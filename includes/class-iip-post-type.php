@@ -54,7 +54,6 @@ class PostType {
 
 			add_filter( 'manage_edit-' . $settings_post_type . '_columns', array( $this, 'add_property_columns' ) );
 			add_action( 'manage_' . $settings_post_type . '_posts_custom_column', array( $this, 'manage_post_type_columns' ), 10, 2 );
-
 		}
 	}
 
@@ -140,9 +139,12 @@ class PostType {
 	 * Adds columns to post type post_type
 	 *
 	 * @param array $post_type_columns  Header of admin post type list.
-	 * @return array $post_type_columns New elements for header.
+	 * @return array $new_columns New elements for header.
 	 */
 	public function add_property_columns( $post_type_columns ) {
+		// Build custom columns from scratch instead of modifying existing.
+		unset( $post_type_columns ); // Explicitly clear to show intention.
+
 		$new_columns['cb']            = '<input type="checkbox" />';
 		$new_columns['title']         = __( 'Title', 'connect-crm-realstate' );
 		$new_columns['property_data'] = __( 'Property', 'connect-crm-realstate' );
