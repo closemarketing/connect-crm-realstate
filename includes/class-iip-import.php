@@ -120,15 +120,26 @@ class Import {
 
 		// When starting a new page (loop_page = 0), always fetch from API.
 		if ( ( 0 === $loop_page && 0 < $pagination ) || ( 0 === $loop && -1 === $pagination ) ) {
-			// Clear old transients from previous page.
-			for ( $i = 0; $i < $pagination; $i++ ) {
-				delete_transient( 'connreal_query_property_loop_' . $i );
-			}
-
 			$result_api   = API::get_properties( $page );
 			$properties   = 'ok' === $result_api['status'] ? $result_api['data'] : array();
 			$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-realstate' ) . '<br/>';
 			$totalprop    = count( $properties );
+
+			if ( 'error' === $result_api['status'] ) {
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ';
+				$progress_msg .= $result_api['data'] ?? __( 'Error connecting with API. Please check your API connection.', 'connect-crm-realstate' ) . '<br/>';
+				$finish        = true;
+
+				wp_send_json_success(
+					array(
+						'loop'       => 0,
+						'message'    => $progress_msg,
+						'pagination' => 0,
+						'totalprop'  => 0,
+						'finish'     => true,
+					)
+				);
+			}
 
 			// Check if we got properties from API.
 			if ( 0 === $totalprop && $loop > 0 ) {
@@ -151,17 +162,26 @@ class Import {
 		}
 
 		$finish = false;
-
 		if ( ! empty( $property ) ) {
-			$property_complete = API::get_property( $property, $crm );
-			$result_sync       = SYNC::sync_property( $property_complete, $this->settings, $this->settings_fields );
-			$progress_msg     .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 );
-			$progress_msg     .= ' - ' . $result_sync['message'];
+			// Check if property is available in listing (optimization).
+			$is_available = SYNC::is_property_available( $property, $crm );
 
-			// Add link to view/edit the post.
-			if ( ! empty( $result_sync['post_id'] ) ) {
-				$edit_link     = get_edit_post_link( $result_sync['post_id'] );
-				$progress_msg .= ' - <a href="' . esc_url( $edit_link ) . '" target="_blank">' . __( 'View Post', 'connect-crm-realstate' ) . '</a>';
+			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ';
+			if ( ! $is_available ) {
+				// Property is not available, handle according to settings.
+				$result_sync   = SYNC::handle_unavailable_property( $property, $this->settings, $this->settings_fields, $crm );
+				$progress_msg .= $result_sync['message'];
+			} else {
+				// Property is available, sync full details.
+				$property_complete = API::get_property( $property, $crm );
+				$result_sync       = SYNC::sync_property( $property_complete, $this->settings, $this->settings_fields );
+				$progress_msg     .= $result_sync['message'];
+
+				// Add link to view/edit the post.
+				if ( ! empty( $result_sync['post_id'] ) ) {
+					$edit_link     = get_edit_post_link( $result_sync['post_id'] );
+					$progress_msg .= ' - <a href="' . esc_url( $edit_link ) . '" target="_blank">' . __( 'View Post', 'connect-crm-realstate' ) . '</a>';
+				}
 			}
 
 			// Determine if we should finish.
@@ -183,17 +203,10 @@ class Import {
 			$count         = SYNC::trash_not_synced();
 			$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-crm-realstate' ) . $count;
 
-			// Clear all transients.
-			if ( -1 === $pagination ) {
-				// Clear all transients for no-pagination mode.
-				for ( $i = 0; $i < $totalprop; $i++ ) {
-					delete_transient( 'connreal_query_property_loop_' . $i );
-				}
-			} else {
-				// Clear transients for pagination mode.
-				for ( $i = 0; $i < $pagination; $i++ ) {
-					delete_transient( 'connreal_query_property_loop_' . $i );
-				}
+			// Clear transients.
+			$size_clean = -1 === $pagination ? $totalprop : $pagination;
+			for ( $i = 0; $i < $size_clean; $i++ ) {
+				delete_transient( 'connreal_query_property_loop_' . $i );
 			}
 		}
 

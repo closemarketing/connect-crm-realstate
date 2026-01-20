@@ -369,6 +369,14 @@ class Admin {
 			'admin_conncrmreal_settings'
 		);
 
+		add_settings_field(
+			'conncrmreal_sold_action',
+			__( 'Action for Sold/Unavailable Properties', 'connect-crm-realstate' ),
+			array( $this, 'sold_action_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
 		// Register our settings.
 		register_setting(
 			'iip_plugin_merge_group',
@@ -539,6 +547,27 @@ class Admin {
 			/* translators: %s: description */
 			'<p class="description">%s</p>',
 			esc_html__( 'Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma.', 'connect-crm-realstate' )
+		);
+	}
+
+	/**
+	 * Sold action callback
+	 *
+	 * @return void
+	 */
+	public function sold_action_callback() {
+		$sold_action = isset( $this->settings['sold_action'] ) ? $this->settings['sold_action'] : 'draft';
+		?>
+		<select name="conncrmreal_settings[sold_action]" id="sold_action">
+			<option value="draft" <?php selected( $sold_action, 'draft' ); ?>><?php esc_html_e( 'Unpublish (Set to Draft)', 'connect-crm-realstate' ); ?></option>
+			<option value="keep" <?php selected( $sold_action, 'keep' ); ?>><?php esc_html_e( 'Keep Published', 'connect-crm-realstate' ); ?></option>
+			<option value="trash" <?php selected( $sold_action, 'trash' ); ?>><?php esc_html_e( 'Move to Trash', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<?php
+		printf(
+			/* translators: %s: description */
+			'<p class="description">%s</p>',
+			esc_html__( 'Choose what to do with properties that are sold or no longer available in the CRM.', 'connect-crm-realstate' )
 		);
 	}
 

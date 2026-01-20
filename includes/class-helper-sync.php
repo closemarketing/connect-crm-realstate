@@ -254,6 +254,88 @@ class SYNC {
 	}
 
 	/**
+	 * Checks if property is available in listing.
+	 *
+	 * @param array  $property Property data from listing.
+	 * @param string $crm CRM type.
+	 * @return bool
+	 */
+	public static function is_property_available( $property, $crm ) {
+		if ( 'inmovilla_procesos' === $crm ) {
+			// Check nodisponible field (1 = not available, 0 = available).
+			return ! isset( $property['nodisponible'] ) || 1 !== (int) $property['nodisponible'];
+		} elseif ( 'inmovilla' === $crm ) {
+			// Check estado field in Inmovilla APIWEB.
+			return ! isset( $property['estado'] ) || 'V' !== $property['estado'];
+		} elseif ( 'anaconda' === $crm ) {
+			// Check operation_status field in Anaconda.
+			return ! isset( $property['operation_status'] ) || 'Vendido' !== $property['operation_status'];
+		}
+
+		// Default: assume available.
+		return true;
+	}
+
+	/**
+	 * Handles unavailable property according to settings.
+	 *
+	 * @param array  $property Property data from listing.
+	 * @param array  $settings Settings.
+	 * @param array  $settings_fields Settings fields.
+	 * @param string $crm CRM type.
+	 * @return array
+	 */
+	public static function handle_unavailable_property( $property, $settings = array(), $settings_fields = array(), $crm = 'anaconda' ) {
+		$settings         = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
+		$settings_fields  = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
+		$post_type        = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$sold_action      = isset( $settings['sold_action'] ) ? $settings['sold_action'] : 'draft';
+		$key_id           = ( 'inmovilla' === $crm || 'inmovilla_procesos' === $crm ) ? 'cod_ofer' : 'id';
+		$property_id      = isset( $property[ $key_id ] ) ? $property[ $key_id ] : '';
+		$meta_name        = isset( $settings_fields[ $key_id ] ) ? $settings_fields[ $key_id ] : $key_id;
+		$property_post_id = self::find_property( $property_id, $post_type, $meta_name );
+
+		if ( empty( $property_post_id ) ) {
+			// Property doesn't exist in WordPress, skip it.
+			return array(
+				'property_id' => $property_id,
+				'message'     => __( 'Skipped (Not Available in CRM)', 'connect-crm-realstate' ),
+			);
+		}
+
+		// Property exists, apply action according to settings.
+		$message = '';
+
+		switch ( $sold_action ) {
+			case 'draft':
+				wp_update_post(
+					array(
+						'ID'          => $property_post_id,
+						'post_status' => 'draft',
+					)
+				);
+				$message = __( 'Unpublished (Set to Draft)', 'connect-crm-realstate' );
+				break;
+
+			case 'trash':
+				wp_trash_post( $property_post_id );
+				$message = __( 'Moved to Trash', 'connect-crm-realstate' );
+				break;
+
+			case 'keep':
+			default:
+				$message = __( 'Kept Published (Not Available)', 'connect-crm-realstate' );
+				break;
+		}
+
+		return array(
+			'property_id' => $property_id,
+			'post_id'     => $property_post_id,
+			'message'     => $message,
+		);
+	}
+
+	/**
 	 * Sends to trash not synced products.
 	 *
 	 * @return int

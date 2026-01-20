@@ -289,8 +289,6 @@ class API {
 		$result_body = wp_remote_retrieve_body( $response );
 		$code        = wp_remote_retrieve_response_code( $response );
 
-		$data = json_decode( $result_body, true );
-
 		if ( is_wp_error( $response ) ) {
 			return array(
 				'status' => 'error',
@@ -300,15 +298,16 @@ class API {
 
 		// Check for HTTP errors.
 		if ( $code < 200 || $code >= 300 ) {
-			// translators: %d: HTTP error code.
-			$error_message = isset( $data['mensaje'] ) ? $data['mensaje'] : sprintf( __( 'Inmovilla Procesos API returned error code: %d', 'connect-crm-realstate' ), $code );
 			return array(
 				'status' => 'error',
-				'data'   => $error_message,
+				// translators: %d: HTTP error code.
+				'data'   => sprintf( __( 'Inmovilla Procesos API returned error code: %d', 'connect-crm-realstate' ), $code ),
 			);
 		}
 
 		// Validate JSON response.
+		$data = json_decode( $result_body, true );
+
 		if ( null === $data ) {
 			return array(
 				'status' => 'error',
@@ -489,6 +488,7 @@ class API {
 			$result = self::request_inmovilla_procesos( 'propiedades/?cod_ofer=' . $cod_ofer );
 
 			if ( 'ok' === $result['status'] && isset( $result['data'] ) ) {
+				$result['data']['fotos'] = self::get_property_photos( $result['data'] );
 				return $result['data'];
 			}
 
@@ -696,6 +696,32 @@ class API {
 		}
 
 		return $inmovilla_fields;
+	}
+	/**
+	 * Get property photos from Inmovilla Procesos
+	 *
+	 * @param array $property Property.
+	 *
+	 * @return array
+	 */
+	public static function get_property_photos( $property ) {
+		$numagencia = isset( $property['numagencia'] ) ? $property['numagencia'] : '';
+		$cod_ofer   = isset( $property['cod_ofer'] ) ? $property['cod_ofer'] : '';
+		$fotoletra  = isset( $property['fotoletra'] ) ? $property['fotoletra'] : '';
+		$numfotos   = isset( $property['numfotos'] ) ? (int) $property['numfotos'] : 0;
+
+		// Validate required fields.
+		if ( empty( $numagencia ) || empty( $cod_ofer ) || empty( $fotoletra ) || $numfotos <= 0 ) {
+			return array();
+		}
+
+		$photo_urls = array();
+
+		for ( $i = 1; $i <= $numfotos; $i++ ) {
+			$photo_urls[] = "https://fotos15.inmovilla.com/{$numagencia}/{$cod_ofer}/{$fotoletra}-{$i}.jpg";
+		}
+
+		return $photo_urls;
 	}
 
 	/**
