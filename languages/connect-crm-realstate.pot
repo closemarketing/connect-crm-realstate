@@ -2,14 +2,14 @@
 # This file is distributed under the GNU General Public License version 3.0.
 msgid ""
 msgstr ""
-"Project-Id-Version: Connect CRM Real State 1.0.0-beta.11\n"
+"Project-Id-Version: Connect CRM Real State 1.0.0-beta.12\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/connect-crm-realstate\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-01-08T07:42:02+00:00\n"
+"POT-Creation-Date: 2026-01-15T07:30:57+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: connect-crm-realstate\n"
@@ -106,16 +106,40 @@ msgstr ""
 msgid "Invalid JSON response from Inmovilla API"
 msgstr ""
 
-#: includes/class-helper-api.php:313
-#: includes/class-helper-api.php:345
+#: includes/class-helper-api.php:268
+msgid "Inmovilla Procesos API token is not configured"
+msgstr ""
+
+#: includes/class-helper-api.php:301
+msgid "Inmovilla Procesos API returned error code: %d"
+msgstr ""
+
+#: includes/class-helper-api.php:312
+msgid "Invalid JSON response from Inmovilla Procesos API"
+msgstr ""
+
+#: includes/class-helper-api.php:424
+#: includes/class-helper-api.php:468
 msgid "CRM type not configured"
 msgstr ""
 
-#: includes/class-helper-api.php:432
+#: includes/class-helper-api.php:572
 msgid "Error getting Anaconda fields. Please check your API connection."
 msgstr ""
 
-#: includes/class-helper-api.php:473
+#: includes/class-helper-api.php:615
+msgid "Error getting Inmovilla Procesos fields. Please check your API connection."
+msgstr ""
+
+#: includes/class-helper-api.php:648
+msgid "Error getting Inmovilla Procesos property details."
+msgstr ""
+
+#: includes/class-helper-api.php:654
+msgid "No properties found in Inmovilla Procesos."
+msgstr ""
+
+#: includes/class-helper-api.php:675
 msgid "Error getting Inmovilla fields. Please check your API connection."
 msgstr ""
 
@@ -192,7 +216,7 @@ msgid "Connect CRM Real State Settings"
 msgstr ""
 
 #: includes/class-iip-admin.php:218
-#: includes/class-iip-admin.php:555
+#: includes/class-iip-admin.php:556
 msgid "Import Properties"
 msgstr ""
 
@@ -205,8 +229,8 @@ msgid "Merge variables"
 msgstr ""
 
 #: includes/class-iip-admin.php:233
-#: includes/class-iip-admin.php:563
-#: includes/class-iip-admin.php:631
+#: includes/class-iip-admin.php:564
+#: includes/class-iip-admin.php:632
 msgid "Log"
 msgstr ""
 
@@ -265,99 +289,103 @@ msgid "Anaconda"
 msgstr ""
 
 #: includes/class-iip-admin.php:435
-msgid "Inmovilla"
+msgid "Inmovilla APIWEB"
 msgstr ""
 
-#: includes/class-iip-admin.php:447
+#: includes/class-iip-admin.php:436
+msgid "Inmovilla Procesos"
+msgstr ""
+
+#: includes/class-iip-admin.php:448
 msgid "API Password"
 msgstr ""
 
-#: includes/class-iip-admin.php:447
+#: includes/class-iip-admin.php:448
 msgid "API Token"
 msgstr ""
 
-#: includes/class-iip-admin.php:465
+#: includes/class-iip-admin.php:466
 msgid "Agency number from Inmovilla. Example: 2"
 msgstr ""
 
-#: includes/class-iip-admin.php:478
+#: includes/class-iip-admin.php:479
 msgid "No"
 msgstr ""
 
-#: includes/class-iip-admin.php:479
+#: includes/class-iip-admin.php:480
 msgid "Yes"
 msgstr ""
 
-#: includes/class-iip-admin.php:499
+#: includes/class-iip-admin.php:500
 msgid "Created by this plugin"
 msgstr ""
 
-#: includes/class-iip-admin.php:523
+#: includes/class-iip-admin.php:524
 msgid "Slug for the post type. If you change this, you need to save the permalinks again."
 msgstr ""
 
-#: includes/class-iip-admin.php:540
+#: includes/class-iip-admin.php:541
 msgid "Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma."
 msgstr ""
 
-#: includes/class-iip-admin.php:556
+#: includes/class-iip-admin.php:557
 msgid "After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it."
 msgstr ""
 
-#: includes/class-iip-admin.php:559
+#: includes/class-iip-admin.php:560
 msgid "Start Import"
 msgstr ""
 
-#: includes/class-iip-admin.php:626
+#: includes/class-iip-admin.php:627
 msgid "Latest cron logs"
 msgstr ""
 
-#: includes/class-iip-admin.php:627
+#: includes/class-iip-admin.php:628
 msgid "After you fillup the API settings, use the button below to import the products. The importing process may take a while and you need to keep this page open to complete it."
 msgstr ""
 
-#: includes/class-iip-admin.php:670
+#: includes/class-iip-admin.php:671
 msgid "Put the connection API key settings in order to connect external data."
 msgstr ""
 
-#: includes/class-iip-admin.php:680
+#: includes/class-iip-admin.php:681
 msgid "Map CRM fields to WordPress custom fields. Select an existing field or type a new field name to create it."
 msgstr ""
 
-#: includes/class-iip-admin.php:683
+#: includes/class-iip-admin.php:684
 msgid "Fields marked with (Custom) are saved values that will be created automatically when properties are imported."
 msgstr ""
 
-#: includes/class-iip-admin.php:707
+#: includes/class-iip-admin.php:708
 msgid "Auto-Map All Fields"
 msgstr ""
 
-#: includes/class-iip-admin.php:714
+#: includes/class-iip-admin.php:715
 msgid "CRM Fields"
 msgstr ""
 
-#: includes/class-iip-admin.php:715
+#: includes/class-iip-admin.php:716
 msgid "WordPress Fields"
 msgstr ""
 
-#: includes/class-iip-admin.php:729
+#: includes/class-iip-admin.php:730
 msgid "-- Select WordPress Field --"
 msgstr ""
 
-#: includes/class-iip-admin.php:734
+#: includes/class-iip-admin.php:735
 msgid "(Custom)"
 msgstr ""
 
-#: includes/class-iip-admin.php:826
+#: includes/class-iip-admin.php:827
 msgid "Security check failed"
 msgstr ""
 
-#: includes/class-iip-admin.php:831
+#: includes/class-iip-admin.php:832
 msgid "Insufficient permissions"
 msgstr ""
 
 #. translators: %d: number of fields
-#: includes/class-iip-admin.php:873
+#: includes/class-iip-admin.php:874
 msgid "%d field auto-mapped successfully!"
 msgid_plural "%d fields auto-mapped successfully!"
 msgstr[0] ""

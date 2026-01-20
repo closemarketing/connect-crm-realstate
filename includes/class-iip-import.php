@@ -119,7 +119,7 @@ class Import {
 		}
 
 		// When starting a new page (loop_page = 0), always fetch from API.
-		if ( 0 === $loop_page ) {
+		if ( ( 0 === $loop_page && 0 < $pagination ) || ( 0 === $loop && -1 === $pagination ) ) {
 			// Clear old transients from previous page.
 			for ( $i = 0; $i < $pagination; $i++ ) {
 				delete_transient( 'connreal_query_property_loop_' . $i );
@@ -147,7 +147,7 @@ class Import {
 			}
 		} else {
 			// Get property from transient.
-			$property = get_transient( 'connreal_query_property_loop_' . $loop_page );
+			$property = get_transient( 'connreal_query_property_loop_' . $loop );
 		}
 
 		$finish = false;
@@ -158,13 +158,23 @@ class Import {
 			$progress_msg     .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 );
 			$progress_msg     .= ' - ' . $result_sync['message'];
 
-			// Determine if we should finish:
-			// 1. We're at the last property of the current batch (loop_page + 1 === totalprop)
-			// 2. AND the batch has fewer properties than the pagination limit (totalprop < pagination)
-			// This means there are no more properties to fetch.
-			$is_last_in_batch = ( ( $loop_page + 1 ) === $totalprop );
-			$batch_not_full   = ( $totalprop < $pagination );
-			$finish           = $is_last_in_batch && $batch_not_full;
+			// Add link to view/edit the post.
+			if ( ! empty( $result_sync['post_id'] ) ) {
+				$edit_link     = get_edit_post_link( $result_sync['post_id'] );
+				$progress_msg .= ' - <a href="' . esc_url( $edit_link ) . '" target="_blank">' . __( 'View Post', 'connect-crm-realstate' ) . '</a>';
+			}
+
+			// Determine if we should finish.
+			if ( -1 === $pagination ) {
+				// No pagination: finish when we've processed all properties.
+				$finish = ( ( $loop + 1 ) >= $totalprop );
+			} else {
+				// With pagination: finish when we're at the last property of a partial batch.
+				$loop_page        = $loop % $pagination;
+				$is_last_in_batch = ( ( $loop_page + 1 ) === $totalprop );
+				$batch_not_full   = ( $totalprop < $pagination );
+				$finish           = $is_last_in_batch && $batch_not_full;
+			}
 		} else {
 			$finish = true;
 		}
@@ -174,8 +184,16 @@ class Import {
 			$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-crm-realstate' ) . $count;
 
 			// Clear all transients.
-			for ( $i = 0; $i < $pagination; $i++ ) {
-				delete_transient( 'connreal_query_property_loop_' . $i );
+			if ( -1 === $pagination ) {
+				// Clear all transients for no-pagination mode.
+				for ( $i = 0; $i < $totalprop; $i++ ) {
+					delete_transient( 'connreal_query_property_loop_' . $i );
+				}
+			} else {
+				// Clear transients for pagination mode.
+				for ( $i = 0; $i < $pagination; $i++ ) {
+					delete_transient( 'connreal_query_property_loop_' . $i );
+				}
 			}
 		}
 

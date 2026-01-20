@@ -33,17 +33,24 @@ class SYNC {
 		$settings_fields    = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
 		$post_type          = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$filter_postal_code = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
-		$key_id             = 'inmovilla' === $crm ? 'cod_ofer' : 'id';
+		$key_id             = ( 'inmovilla' === $crm || 'inmovilla_procesos' === $crm ) ? 'cod_ofer' : 'id';
 		$property_id        = isset( $item[ $key_id ] ) ? $item[ $key_id ] : '';
 		$meta_name          = isset( $settings_fields[ $key_id ] ) ? $settings_fields[ $key_id ] : $key_id;
 		$property_post_id   = self::find_property( $property_id, $post_type, $meta_name );
 
-		if ( 'inmovilla' === $crm ) {
+		if ( 'inmovilla_procesos' === $crm ) {
+			// Inmovilla Procesos: descripciones and tituloes are direct strings.
+			$property_title       = isset( $item['tituloes'] ) ? $item['tituloes'] : __( 'Property', 'connect-crm-realstate' );
+			$property_description = isset( $item['descripciones'] ) ? $item['descripciones'] : '';
+			$property_city        = isset( $item['ciudad'] ) ? $item['ciudad'] : '';
+		} elseif ( 'inmovilla' === $crm ) {
+			// Inmovilla APIWEB: descripciones is an array with titulo and descrip.
 			$descripciones        = isset( $item['descripciones'] ) ? $item['descripciones'] : array();
 			$property_title       = isset( $descripciones['titulo'] ) ? $descripciones['titulo'] : __( 'Property', 'connect-crm-realstate' );
 			$property_description = isset( $descripciones['descrip'] ) ? $descripciones['descrip'] : '';
 			$property_city        = isset( $item['ciudad'] ) ? $item['ciudad'] : '';
 		} else {
+			// Anaconda.
 			$property_title       = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' );
 			$property_description = isset( $item['description'] ) ? $item['description'] : '';
 			$property_city        = isset( $item['city'] ) ? $item['city'] : '';
@@ -58,6 +65,8 @@ class SYNC {
 				'message'     => $message,
 			);
 		}
+
+		$property_description = self::process_description( $property_description );
 
 		// Property info.
 		$property_info = array(
@@ -91,7 +100,7 @@ class SYNC {
 			$property_info['post_title']   = $property_title;
 			$property_info['post_name']    = sanitize_title( $property_title );
 			$property_info['post_content'] = $property_description;
-			$property_id                   = wp_insert_post( $property_info );
+			$property_post_id              = wp_insert_post( $property_info );
 			$message                      .= __( 'Created', 'connect-crm-realstate' );
 		} else {
 			$message            .= __( 'Updated', 'connect-crm-realstate' );
@@ -100,16 +109,57 @@ class SYNC {
 		}
 		$message .= self::add_end_message( $property_id, $property_title, $property_city );
 
-		if ( ! empty( $property_id ) ) {
-			update_post_meta( $property_id, 'property_synced', true );
-			delete_post_meta( $property_id, 'property_description' );
-			delete_post_meta( $property_id, 'property_name' );
+		if ( ! empty( $property_post_id ) ) {
+			update_post_meta( $property_post_id, 'property_synced', true );
+			delete_post_meta( $property_post_id, 'property_description' );
+			delete_post_meta( $property_post_id, 'property_name' );
 		}
 
 		return array(
 			'property_id' => $property_id,
+			'post_id'     => $property_post_id,
 			'message'     => $message,
 		);
+	}
+
+	/**
+	 * Processes the description.
+	 *
+	 * @param string $description Description.
+	 * @return string
+	 */
+	public static function process_description( $description ) {
+		// Split by ~ to get lines.
+		$lines = explode( '~', $description );
+
+		// Filter empty lines and trim whitespace.
+		$lines = array_filter(
+			array_map(
+				function ( $line ) {
+					return trim( $line );
+				},
+				$lines
+			),
+			function ( $line ) {
+				return ! empty( $line );
+			}
+		);
+
+		// Convert to Gutenberg blocks.
+		$blocks = array();
+
+		foreach ( $lines as $line ) {
+			// Convert **text** to <strong>text</strong>.
+			$line = preg_replace( '/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $line );
+
+			// Create paragraph block.
+			$blocks[] = '<!-- wp:paragraph -->';
+			$blocks[] = '<p>' . $line . '</p>';
+			$blocks[] = '<!-- /wp:paragraph -->';
+			$blocks[] = '';
+		}
+
+		return implode( "\n", $blocks );
 	}
 
 	/**

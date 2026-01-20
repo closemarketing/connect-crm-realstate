@@ -59,7 +59,7 @@ msgid "Connect CRM Real State Settings"
 msgstr "Ajustes de Connect CRM Real State"
 
 #: includes/class-iip-admin.php:218
-#: includes/class-iip-admin.php:555
+#: includes/class-iip-admin.php:556
 msgid "Import Properties"
 msgstr "Importar propiedades"
 
@@ -72,8 +72,8 @@ msgid "Merge variables"
 msgstr "Fusionar variables"
 
 #: includes/class-iip-admin.php:233
-#: includes/class-iip-admin.php:563
-#: includes/class-iip-admin.php:631
+#: includes/class-iip-admin.php:564
+#: includes/class-iip-admin.php:632
 msgid "Log"
 msgstr "Registro"
 
@@ -116,47 +116,43 @@ msgstr "Incluir inmuebles por código postal"
 msgid "Anaconda"
 msgstr "Anaconda"
 
-#: includes/class-iip-admin.php:435
-msgid "Inmovilla"
-msgstr "Inmovilla"
-
-#: includes/class-iip-admin.php:478
+#: includes/class-iip-admin.php:479
 msgid "No"
 msgstr "No"
 
-#: includes/class-iip-admin.php:479
+#: includes/class-iip-admin.php:480
 msgid "Yes"
 msgstr "Sí"
 
-#: includes/class-iip-admin.php:499
+#: includes/class-iip-admin.php:500
 msgid "Created by this plugin"
 msgstr "Creado por este plugin"
 
-#: includes/class-iip-admin.php:523
+#: includes/class-iip-admin.php:524
 msgid "Slug for the post type. If you change this, you need to save the permalinks again."
 msgstr "Slug para el tipo de entrada. Si cambia esto, es necesario guardar los permalinks de nuevo."
 
-#: includes/class-iip-admin.php:540
+#: includes/class-iip-admin.php:541
 msgid "Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma."
 msgstr "Incluir todas las propiedades por Código Postal. Si está en blanco, importará todas las propiedades. Añade los códigos postales que deseas importar. Por ejemplo: 18100. Puede utilizar un marcador como 18* para incluir toda Granada. Añada varias zonas separadas por comas."
 
-#: includes/class-iip-admin.php:556
+#: includes/class-iip-admin.php:557
 msgid "After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it."
 msgstr "Después de rellenar los ajustes, utilice el botón de abajo para importar las propiedades. El proceso de importación puede tardar un poco y es necesario mantener esta página abierta para completarlo."
 
-#: includes/class-iip-admin.php:559
+#: includes/class-iip-admin.php:560
 msgid "Start Import"
 msgstr "Iniciar importación"
 
-#: includes/class-iip-admin.php:626
+#: includes/class-iip-admin.php:627
 msgid "Latest cron logs"
 msgstr "Últimos registros de cron"
 
-#: includes/class-iip-admin.php:627
+#: includes/class-iip-admin.php:628
 msgid "After you fillup the API settings, use the button below to import the products. The importing process may take a while and you need to keep this page open to complete it."
 msgstr "Después de rellenar los ajustes de API, utilice el botón de abajo para importar los productos. El proceso de importación puede tardar un poco y es necesario mantener esta página abierta para completarlo."
 
-#: includes/class-iip-admin.php:670
+#: includes/class-iip-admin.php:671
 msgid "Put the connection API key settings in order to connect external data."
 msgstr "Poner la configuración de la clave de la API de conexión con el fin de conectar los datos externos."
 
@@ -332,16 +328,16 @@ msgstr "La API de Inmovilla devolvió el código de error: %d"
 msgid "Invalid JSON response from Inmovilla API"
 msgstr "Respuesta JSON inválida de la API de Inmovilla"
 
-#: includes/class-helper-api.php:313
-#: includes/class-helper-api.php:345
+#: includes/class-helper-api.php:424
+#: includes/class-helper-api.php:468
 msgid "CRM type not configured"
 msgstr "Tipo de CRM no configurado"
 
-#: includes/class-helper-api.php:432
+#: includes/class-helper-api.php:572
 msgid "Error getting Anaconda fields. Please check your API connection."
 msgstr "Error al obtener los campos de Anaconda. Por favor verifica tu conexión API."
 
-#: includes/class-helper-api.php:473
+#: includes/class-helper-api.php:675
 msgid "Error getting Inmovilla fields. Please check your API connection."
 msgstr "Error al obtener los campos de Inmovilla. Por favor verifica tu conexión API."
 
@@ -402,56 +398,56 @@ msgstr "Número de Agencia"
 msgid "Merge Fields"
 msgstr "Fusionar Campos"
 
-#: includes/class-iip-admin.php:447
+#: includes/class-iip-admin.php:448
 msgid "API Password"
 msgstr "Contraseña API"
 
-#: includes/class-iip-admin.php:447
+#: includes/class-iip-admin.php:448
 msgid "API Token"
 msgstr "Token API"
 
-#: includes/class-iip-admin.php:465
+#: includes/class-iip-admin.php:466
 msgid "Agency number from Inmovilla. Example: 2"
 msgstr "Número de agencia de Inmovilla. Ejemplo: 2"
 
-#: includes/class-iip-admin.php:680
+#: includes/class-iip-admin.php:681
 msgid "Map CRM fields to WordPress custom fields. Select an existing field or type a new field name to create it."
 msgstr "Mapea los campos del CRM a campos personalizados de WordPress. Selecciona un campo existente o escribe un nuevo nombre de campo para crearlo."
 
-#: includes/class-iip-admin.php:683
+#: includes/class-iip-admin.php:684
 msgid "Fields marked with (Custom) are saved values that will be created automatically when properties are imported."
 msgstr "Los campos marcados con (Personalizado) son valores guardados que se crearán automáticamente cuando se importen las propiedades."
 
-#: includes/class-iip-admin.php:707
+#: includes/class-iip-admin.php:708
 msgid "Auto-Map All Fields"
 msgstr "Auto-Mapear Todos los Campos"
 
-#: includes/class-iip-admin.php:714
+#: includes/class-iip-admin.php:715
 msgid "CRM Fields"
 msgstr "Campos CRM"
 
-#: includes/class-iip-admin.php:715
+#: includes/class-iip-admin.php:716
 msgid "WordPress Fields"
 msgstr "Campos WordPress"
 
-#: includes/class-iip-admin.php:729
+#: includes/class-iip-admin.php:730
 msgid "-- Select WordPress Field --"
 msgstr "-- Seleccionar Campo de WordPress --"
 
-#: includes/class-iip-admin.php:734
+#: includes/class-iip-admin.php:735
 msgid "(Custom)"
 msgstr "(Personalizado)"
 
-#: includes/class-iip-admin.php:826
+#: includes/class-iip-admin.php:827
 msgid "Security check failed"
 msgstr "Falló la verificación de seguridad"
 
-#: includes/class-iip-admin.php:831
+#: includes/class-iip-admin.php:832
 msgid "Insufficient permissions"
 msgstr "Permisos insuficientes"
 
 #. translators: %d: number of fields
-#: includes/class-iip-admin.php:873
+#: includes/class-iip-admin.php:874
 msgid "%d field auto-mapped successfully!"
 msgid_plural "%d fields auto-mapped successfully!"
 msgstr[0] "¡%d campo auto-mapeado exitosamente!"
@@ -472,3 +468,35 @@ msgstr "ID de Propiedad"
 #: includes/class-iip-post-type.php:207
 msgid "Property Internal ID"
 msgstr "ID Interno de Propiedad"
+
+#: includes/class-helper-api.php:268
+msgid "Inmovilla Procesos API token is not configured"
+msgstr "El token de la API de Inmovilla Procesos no está configurado"
+
+#: includes/class-helper-api.php:301
+msgid "Inmovilla Procesos API returned error code: %d"
+msgstr "La API de Inmovilla Procesos devolvió el código de error: %d"
+
+#: includes/class-helper-api.php:312
+msgid "Invalid JSON response from Inmovilla Procesos API"
+msgstr "Respuesta JSON inválida de la API de Inmovilla Procesos"
+
+#: includes/class-helper-api.php:615
+msgid "Error getting Inmovilla Procesos fields. Please check your API connection."
+msgstr "Error al obtener los campos de Inmovilla Procesos. Por favor verifica tu conexión API."
+
+#: includes/class-helper-api.php:648
+msgid "Error getting Inmovilla Procesos property details."
+msgstr "Error al obtener los detalles de la propiedad de Inmovilla Procesos."
+
+#: includes/class-helper-api.php:654
+msgid "No properties found in Inmovilla Procesos."
+msgstr "No se encontraron propiedades en Inmovilla Procesos."
+
+#: includes/class-iip-admin.php:435
+msgid "Inmovilla APIWEB"
+msgstr "Inmovilla APIWEB"
+
+#: includes/class-iip-admin.php:436
+msgid "Inmovilla Procesos"
+msgstr "Inmovilla Procesos"

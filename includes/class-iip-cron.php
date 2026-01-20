@@ -26,7 +26,7 @@ class Cron {
 	 */
 	public function __construct() {
 		// Check license before initializing.
-		if ( ! function_exists( 'cccrmre_is_license_active' ) || ! cccrmre_is_license_active() ) {
+		if ( ! function_exists( 'ccrmre_is_license_active' ) || ! ccrmre_is_license_active() ) {
 			return;
 		}
 

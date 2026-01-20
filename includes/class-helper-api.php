@@ -239,11 +239,87 @@ class API {
 		}
 
 		$pagination_sizes = array(
-			'anaconda'  => 200,
-			'inmovilla' => 50,
+			'anaconda'           => 200,
+			'inmovilla'          => 50,
+			'inmovilla_procesos' => -1,
 		);
 
 		return isset( $pagination_sizes[ $crm ] ) ? $pagination_sizes[ $crm ] : 100;
+	}
+
+	/**
+	 * Request to Inmovilla Procesos API (REST API v1)
+	 *
+	 * Documentation: https://procesos.inmovilla.com/api/v1
+	 *
+	 * @param string $endpoint Endpoint path (e.g., 'propiedades/?listado').
+	 * @param string $method HTTP method (GET, POST, PUT, DELETE).
+	 * @param array  $body Body data for POST/PUT requests.
+	 * @return array
+	 */
+	public static function request_inmovilla_procesos( $endpoint, $method = 'GET', $body = array() ) {
+		$settings    = get_option( 'conncrmreal_settings' );
+		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
+
+		// Validate required settings.
+		if ( empty( $apipassword ) ) {
+			return array(
+				'status' => 'error',
+				'data'   => __( 'Inmovilla Procesos API token is not configured', 'connect-crm-realstate' ),
+			);
+		}
+
+		// Build request arguments.
+		$args = array(
+			'method'  => $method,
+			'headers' => array(
+				'Content-Type' => 'application/json',
+				'Token'        => $apipassword,
+			),
+			'timeout' => 300,
+		);
+
+		if ( ! empty( $body ) && in_array( $method, array( 'POST', 'PUT' ), true ) ) {
+			$args['body'] = wp_json_encode( $body );
+		}
+
+		// Make API request.
+		$api_url     = 'https://procesos.inmovilla.com/api/v1/' . $endpoint;
+		$response    = wp_remote_request( $api_url, $args );
+		$result_body = wp_remote_retrieve_body( $response );
+		$code        = wp_remote_retrieve_response_code( $response );
+
+		$data = json_decode( $result_body, true );
+
+		if ( is_wp_error( $response ) ) {
+			return array(
+				'status' => 'error',
+				'data'   => $response->get_error_message(),
+			);
+		}
+
+		// Check for HTTP errors.
+		if ( $code < 200 || $code >= 300 ) {
+			// translators: %d: HTTP error code.
+			$error_message = isset( $data['mensaje'] ) ? $data['mensaje'] : sprintf( __( 'Inmovilla Procesos API returned error code: %d', 'connect-crm-realstate' ), $code );
+			return array(
+				'status' => 'error',
+				'data'   => $error_message,
+			);
+		}
+
+		// Validate JSON response.
+		if ( null === $data ) {
+			return array(
+				'status' => 'error',
+				'data'   => __( 'Invalid JSON response from Inmovilla Procesos API', 'connect-crm-realstate' ),
+			);
+		}
+
+		return array(
+			'status' => 'ok',
+			'data'   => $data,
+		);
 	}
 
 	/**
@@ -267,6 +343,34 @@ class API {
 				);
 				return self::request_anaconda( 'properties/search', 'POST', $query );
 			}
+		} elseif ( 'inmovilla_procesos' === $settings_crm ) {
+			// For Inmovilla Procesos, get all properties in one call (no server-side pagination).
+			$result = self::request_inmovilla_procesos( 'propiedades/?listado' );
+
+			if ( 'ok' === $result['status'] && is_array( $result['data'] ) ) {
+				$all_properties = $result['data'];
+
+				// Filter by date if changed_from is specified.
+				if ( ! empty( $changed_from ) ) {
+					$changed_timestamp = strtotime( $changed_from );
+					$all_properties    = array_filter(
+						$all_properties,
+						function ( $prop ) use ( $changed_timestamp ) {
+							$fechaact = isset( $prop['fechaact'] ) ? strtotime( $prop['fechaact'] ) : 0;
+							return $fechaact >= $changed_timestamp;
+						}
+					);
+					$all_properties    = array_values( $all_properties ); // Re-index array.
+				}
+
+				return array(
+					'status' => 'ok',
+					'data'   => $all_properties,
+					'meta'   => array( 'total' => count( $all_properties ) ),
+				);
+			}
+
+			return $result;
 		} elseif ( 'inmovilla' === $settings_crm ) {
 			// For Inmovilla, use pagination type to get properties.
 			$pos_inicial   = $page > 0 ? ( ( $page - 1 ) * $pagination ) + 1 : 1;
@@ -325,6 +429,18 @@ class API {
 
 		if ( 'anaconda' === $settings_crm ) {
 			return self::request_anaconda( 'properties/total_search_properties', 'POST' );
+		} elseif ( 'inmovilla_procesos' === $settings_crm ) {
+			// For Inmovilla Procesos, get the listado and count properties.
+			$result = self::request_inmovilla_procesos( 'propiedades/?listado' );
+
+			if ( 'ok' === $result['status'] && is_array( $result['data'] ) ) {
+				return array(
+					'status' => 'ok',
+					'data'   => array( 'total' => count( $result['data'] ) ),
+				);
+			}
+
+			return $result;
 		} elseif ( 'inmovilla' === $settings_crm ) {
 			// For Inmovilla, use listar_propiedades_disponibles to get all property codes.
 			$result = self::request_inmovilla( 'listar_propiedades_disponibles', 1, 5000 );
@@ -362,6 +478,21 @@ class API {
 		if ( 'anaconda' === $crm ) {
 			// Anaconda returns complete property data in listings.
 			return $property;
+		} elseif ( 'inmovilla_procesos' === $crm ) {
+			// For Inmovilla Procesos, use GET /propiedades/?cod_ofer={cod_ofer}.
+			$cod_ofer = is_array( $property ) && isset( $property['cod_ofer'] ) ? $property['cod_ofer'] : $property;
+
+			if ( empty( $cod_ofer ) ) {
+				return array();
+			}
+
+			$result = self::request_inmovilla_procesos( 'propiedades/?cod_ofer=' . $cod_ofer );
+
+			if ( 'ok' === $result['status'] && isset( $result['data'] ) ) {
+				return $result['data'];
+			}
+
+			return array();
 		} elseif ( 'inmovilla' === $crm ) {
 			// For Inmovilla, use 'ficha' type to get complete property details.
 			$property_id = is_array( $property ) ? $property['cod_ofer'] : $property;
@@ -407,6 +538,8 @@ class API {
 	public static function get_properties_fields( $crm = 'anaconda' ) {
 		if ( 'anaconda' === $crm ) {
 			return self::get_fields_anaconda();
+		} elseif ( 'inmovilla_procesos' === $crm ) {
+			return self::get_fields_inmovilla_procesos();
 		} elseif ( 'inmovilla' === $crm ) {
 			return self::get_fields_inmovilla();
 		}
@@ -455,6 +588,68 @@ class API {
 		}
 
 		return $anaconda_fields;
+	}
+
+	/**
+	 * Get fields from Inmovilla Procesos
+	 *
+	 * @return array
+	 */
+	private static function get_fields_inmovilla_procesos() {
+		$inmovilla_fields = get_transient( 'ccrmre_query_inmovilla_procesos_fields' );
+
+		if ( ! $inmovilla_fields ) {
+			// Get a sample property to extract fields.
+			$result = self::request_inmovilla_procesos( 'propiedades/?listado' );
+
+			if ( 'ok' !== $result['status'] || empty( $result['data'] ) || ! is_array( $result['data'] ) ) {
+				return array(
+					'status' => 'error',
+					'data'   => __( 'Error getting Inmovilla Procesos fields. Please check your API connection.', 'connect-crm-realstate' ),
+				);
+			}
+
+			// Get the first property and fetch its complete details.
+			$first_property = $result['data'][0];
+			$cod_ofer       = isset( $first_property['cod_ofer'] ) ? $first_property['cod_ofer'] : '';
+
+			if ( ! empty( $cod_ofer ) ) {
+				$property_result = self::request_inmovilla_procesos( 'propiedades/?cod_ofer=' . $cod_ofer );
+
+				if ( 'ok' === $property_result['status'] && isset( $property_result['data'] ) ) {
+					$sample_property = $property_result['data'];
+					$fields_slug     = array_keys( $sample_property );
+					$fields_slug     = array_filter( $fields_slug );
+
+					$inmovilla_fields = array(
+						'status' => 'ok',
+						'data'   => array_map(
+							function ( $slug ) {
+								return array(
+									'name'  => $slug,
+									'label' => ucwords( str_replace( '_', ' ', $slug ) ),
+								);
+							},
+							$fields_slug
+						),
+					);
+
+					set_transient( 'ccrmre_query_inmovilla_procesos_fields', $inmovilla_fields, DAY_IN_SECONDS );
+				} else {
+					return array(
+						'status' => 'error',
+						'data'   => __( 'Error getting Inmovilla Procesos property details.', 'connect-crm-realstate' ),
+					);
+				}
+			} else {
+				return array(
+					'status' => 'error',
+					'data'   => __( 'No properties found in Inmovilla Procesos.', 'connect-crm-realstate' ),
+				);
+			}
+		}
+
+		return $inmovilla_fields;
 	}
 
 	/**

@@ -432,7 +432,8 @@ class Admin {
 		?>
 		<select name="conncrmreal_settings[type]" id="type">
 			<option value="anaconda" <?php selected( $type_option, 'anaconda' ); ?>><?php esc_html_e( 'Anaconda', 'connect-crm-realstate' ); ?></option>
-			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?>><?php esc_html_e( 'Inmovilla', 'connect-crm-realstate' ); ?></option>
+			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?>><?php esc_html_e( 'Inmovilla APIWEB', 'connect-crm-realstate' ); ?></option>
+			<option value="inmovilla_procesos" <?php selected( $type_option, 'inmovilla_procesos' ); ?>><?php esc_html_e( 'Inmovilla Procesos', 'connect-crm-realstate' ); ?></option>
 		</select>
 		<?php
 	}
@@ -444,7 +445,7 @@ class Admin {
 	 */
 	public function apipassword_callback() {
 		$type_option = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
-		$label       = 'inmovilla' === $type_option ? __( 'API Password', 'connect-crm-realstate' ) : __( 'API Token', 'connect-crm-realstate' );
+		$label       = in_array( $type_option, array( 'inmovilla', 'inmovilla_procesos' ), true ) ? __( 'API Password', 'connect-crm-realstate' ) : __( 'API Token', 'connect-crm-realstate' );
 
 		printf(
 			'<input class="regular-text" type="password" name="conncrmreal_settings[apipassword]" id="apipassword" value="%s"><br><small>%s</small>',
