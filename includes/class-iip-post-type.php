@@ -118,20 +118,79 @@ class PostType {
 	 * @return void
 	 */
 	public function metabox_show_property( $post ) {
-		$meta = get_post_meta( $post->ID );
-		?>
-		<table>
-			<?php
-			foreach ( $meta as $key => $value ) {
-				if ( false === strpos( $key, 'property_' ) ) {
-					continue;
+		// Get merge fields configuration.
+		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
+
+		if ( empty( $merge_fields ) ) {
+			echo '<p>' . esc_html__( 'No merge fields configured. Please configure merge fields in the plugin settings.', 'connect-crm-realstate' ) . '</p>';
+			return;
+		}
+
+		// Get CRM type to show correct labels.
+		$settings = get_option( 'conncrmreal_settings', array() );
+		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+
+		// Get property fields from API to get labels.
+		$api_fields   = API::get_properties_fields( $crm_type );
+		$field_labels = array();
+
+		if ( isset( $api_fields['data'] ) && is_array( $api_fields['data'] ) ) {
+			foreach ( $api_fields['data'] as $field ) {
+				if ( isset( $field['name'] ) && isset( $field['label'] ) ) {
+					$field_labels[ $field['name'] ] = $field['label'];
 				}
-				echo '<tr>';
-				echo '<td><strong>' . esc_attr( $key ) . '</strong></td>';
-				echo '<td>' . esc_attr( $value[0] ) . '</td>';
-				echo '</tr>';
 			}
-			?>
+		}
+
+		?>
+		<style>
+			.property-meta-table {
+				width: 100%;
+				border-collapse: collapse;
+			}
+			.property-meta-table th,
+			.property-meta-table td {
+				padding: 10px;
+				text-align: left;
+				border-bottom: 1px solid #ddd;
+			}
+			.property-meta-table th {
+				background-color: #f0f0f1;
+				font-weight: 600;
+			}
+			.property-meta-table tr:hover {
+				background-color: #f9f9f9;
+			}
+		</style>
+		<table class="property-meta-table">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'CRM Field', 'connect-crm-realstate' ); ?></th>
+					<th><?php esc_html_e( 'WordPress Field', 'connect-crm-realstate' ); ?></th>
+					<th><?php esc_html_e( 'Value', 'connect-crm-realstate' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				foreach ( $merge_fields as $crm_field => $wp_field ) {
+					if ( empty( $wp_field ) ) {
+						continue;
+					}
+
+					// Get value from post meta.
+					$value = get_post_meta( $post->ID, $wp_field, true );
+
+					// Get label for CRM field.
+					$crm_label = isset( $field_labels[ $crm_field ] ) ? $field_labels[ $crm_field ] : $crm_field;
+
+					echo '<tr>';
+					echo '<td><strong>' . esc_html( $crm_label ) . '</strong><br/><small>' . esc_html( $crm_field ) . '</small></td>';
+					echo '<td><code>' . esc_html( $wp_field ) . '</code></td>';
+					echo '<td>' . esc_html( is_array( $value ) ? wp_json_encode( $value ) : $value ) . '</td>';
+					echo '</tr>';
+				}
+				?>
+			</tbody>
 		</table>
 		<?php
 	}
