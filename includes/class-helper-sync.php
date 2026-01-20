@@ -113,6 +113,15 @@ class SYNC {
 			update_post_meta( $property_post_id, 'property_synced', true );
 			delete_post_meta( $property_post_id, 'property_description' );
 			delete_post_meta( $property_post_id, 'property_name' );
+
+			// Save photo URLs for properties (without downloading).
+			if ( isset( $item['fotos'] ) && is_array( $item['fotos'] ) && ! empty( $item['fotos'] ) ) {
+				// Save first photo as featured image URL.
+				update_post_meta( $property_post_id, 'ccrmre_featured_image_url', $item['fotos'][0] );
+
+				// Save all photos for gallery.
+				update_post_meta( $property_post_id, 'ccrmre_gallery_urls', $item['fotos'] );
+			}
 		}
 
 		return array(

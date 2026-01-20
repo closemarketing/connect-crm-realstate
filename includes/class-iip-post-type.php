@@ -110,6 +110,15 @@ class PostType {
 			'property',
 			'normal'
 		);
+
+		add_meta_box(
+			'property-photos',
+			__( 'Property Photos', 'connect-crm-realstate' ),
+			array( $this, 'metabox_show_photos' ),
+			'property',
+			'side',
+			'high'
+		);
 	}
 	/**
 	 * Metabox inputs for post type.
@@ -143,25 +152,6 @@ class PostType {
 		}
 
 		?>
-		<style>
-			.property-meta-table {
-				width: 100%;
-				border-collapse: collapse;
-			}
-			.property-meta-table th,
-			.property-meta-table td {
-				padding: 10px;
-				text-align: left;
-				border-bottom: 1px solid #ddd;
-			}
-			.property-meta-table th {
-				background-color: #f0f0f1;
-				font-weight: 600;
-			}
-			.property-meta-table tr:hover {
-				background-color: #f9f9f9;
-			}
-		</style>
 		<table class="property-meta-table">
 			<thead>
 				<tr>
@@ -194,6 +184,57 @@ class PostType {
 		</table>
 		<?php
 	}
+
+	/**
+	 * Metabox for property photos in sidebar.
+	 *
+	 * @param object $post Post object.
+	 * @return void
+	 */
+	public function metabox_show_photos( $post ) {
+		$featured_image_url = get_post_meta( $post->ID, 'ccrmre_featured_image_url', true );
+		$gallery_urls       = get_post_meta( $post->ID, 'ccrmre_gallery_urls', true );
+
+		if ( empty( $featured_image_url ) && ( empty( $gallery_urls ) || ! is_array( $gallery_urls ) ) ) {
+			?>
+			<div class="ccrmre-no-photos">
+				<p><?php esc_html_e( 'No photos available from CRM', 'connect-crm-realstate' ); ?></p>
+			</div>
+			<?php
+			return;
+		}
+
+		// Show Featured Image.
+		if ( ! empty( $featured_image_url ) ) {
+			?>
+			<div class="ccrmre-sidebar-featured">
+				<strong><?php esc_html_e( 'Featured Image', 'connect-crm-realstate' ); ?></strong>
+				<img src="<?php echo esc_url( $featured_image_url ); ?>" alt="<?php echo esc_attr( get_the_title( $post->ID ) ); ?>" />
+				<p><?php echo esc_url( $featured_image_url ); ?></p>
+			</div>
+			<?php
+		}
+
+		// Show Gallery.
+		if ( ! empty( $gallery_urls ) && is_array( $gallery_urls ) && count( $gallery_urls ) > 1 ) {
+			?>
+			<div class="ccrmre-sidebar-gallery">
+				<h4>
+					<?php
+					/* translators: %d: number of photos */
+					echo esc_html( sprintf( __( 'Gallery (%d photos)', 'connect-crm-realstate' ), count( $gallery_urls ) ) );
+					?>
+				</h4>
+				<div class="ccrmre-sidebar-gallery-grid">
+					<?php foreach ( $gallery_urls as $photo_url ) : ?>
+						<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( get_the_title( $post->ID ) ); ?>" title="<?php echo esc_attr( $photo_url ); ?>" />
+					<?php endforeach; ?>
+				</div>
+			</div>
+			<?php
+		}
+	}
+
 	/**
 	 * Adds columns to post type post_type
 	 *

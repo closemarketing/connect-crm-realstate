@@ -152,6 +152,8 @@ add_action(
 			require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-import.php';
 			require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-post-type.php';
 			require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-cron.php';
+			require_once CCRMRE_PLUGIN_PATH . 'includes/class-featured-image-url.php';
+			require_once CCRMRE_PLUGIN_PATH . 'includes/class-gallery.php';
 
 			// Initialize plugin classes only if license is active.
 			new Close\ConnectCRM\RealState\Import();

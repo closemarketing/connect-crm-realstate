@@ -377,6 +377,14 @@ class Admin {
 			'admin_conncrmreal_settings'
 		);
 
+		add_settings_field(
+			'conncrmreal_show_gallery',
+			__( 'Auto Display Photo Gallery', 'connect-crm-realstate' ),
+			array( $this, 'show_gallery_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
 		// Register our settings.
 		register_setting(
 			'iip_plugin_merge_group',
@@ -417,6 +425,8 @@ class Admin {
 			'post_type',
 			'post_type_slug',
 			'postal_code',
+			'sold_action',
+			'show_gallery',
 		);
 
 		foreach ( $field_values as $field_value ) {
@@ -568,6 +578,26 @@ class Admin {
 			/* translators: %s: description */
 			'<p class="description">%s</p>',
 			esc_html__( 'Choose what to do with properties that are sold or no longer available in the CRM.', 'connect-crm-realstate' )
+		);
+	}
+
+	/**
+	 * Show gallery callback
+	 *
+	 * @return void
+	 */
+	public function show_gallery_callback() {
+		$show_gallery = isset( $this->settings['show_gallery'] ) ? $this->settings['show_gallery'] : 'no';
+		?>
+		<select name="conncrmreal_settings[show_gallery]" id="show_gallery">
+			<option value="no" <?php selected( $show_gallery, 'no' ); ?>><?php esc_html_e( 'No - Use shortcode only', 'connect-crm-realstate' ); ?></option>
+			<option value="yes" <?php selected( $show_gallery, 'yes' ); ?>><?php esc_html_e( 'Yes - Auto display after title', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<?php
+		printf(
+			/* translators: %s: shortcode */
+			'<p class="description">%s <code>[property_gallery]</code></p>',
+			esc_html__( 'Enable automatic display of photo gallery carousel after the property title, or use the shortcode manually:', 'connect-crm-realstate' )
 		);
 	}
 
