@@ -385,6 +385,14 @@ class Admin {
 			'admin_conncrmreal_settings'
 		);
 
+		add_settings_field(
+			'conncrmreal_show_property_info',
+			__( 'Auto Display Property Info Box', 'connect-crm-realstate' ),
+			array( $this, 'show_property_info_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
 		// Register our settings.
 		register_setting(
 			'iip_plugin_merge_group',
@@ -427,6 +435,7 @@ class Admin {
 			'postal_code',
 			'sold_action',
 			'show_gallery',
+			'show_property_info',
 		);
 
 		foreach ( $field_values as $field_value ) {
@@ -598,6 +607,26 @@ class Admin {
 			/* translators: %s: shortcode */
 			'<p class="description">%s <code>[property_gallery]</code></p>',
 			esc_html__( 'Enable automatic display of photo gallery carousel after the property title, or use the shortcode manually:', 'connect-crm-realstate' )
+		);
+	}
+
+	/**
+	 * Show property info callback
+	 *
+	 * @return void
+	 */
+	public function show_property_info_callback() {
+		$show_property_info = isset( $this->settings['show_property_info'] ) ? $this->settings['show_property_info'] : 'no';
+		?>
+		<select name="conncrmreal_settings[show_property_info]" id="show_property_info">
+			<option value="no" <?php selected( $show_property_info, 'no' ); ?>><?php esc_html_e( 'No - Use shortcode only', 'connect-crm-realstate' ); ?></option>
+			<option value="yes" <?php selected( $show_property_info, 'yes' ); ?>><?php esc_html_e( 'Yes - Auto display after content', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<?php
+		printf(
+			/* translators: %s: shortcode */
+			'<p class="description">%s <code>[property_info]</code></p>',
+			esc_html__( 'Enable automatic display of property information box with icons and price, or use the shortcode manually:', 'connect-crm-realstate' )
 		);
 	}
 
