@@ -122,32 +122,46 @@ class Import {
 
 		// When starting a new page (loop_page = 0), always fetch from API.
 		if ( ( 0 === $loop_page && 0 < $pagination ) || ( 0 === $loop && -1 === $pagination ) ) {
-			$result_api   = API::get_properties( $page );
+			$result_api   = API::get_properties( $crm, $page );
 			$properties   = 'ok' === $result_api['status'] ? $result_api['data'] : array();
 			$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-realstate' ) . '<br/>';
-			$totalprop    = count( $properties );
+
+			// Filter properties if mode is 'updated'.
+			if ( 'updated' === $mode && ! empty( $properties ) ) {
+				$properties    = $this->filter_properties_to_update( $properties, $crm );
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . sprintf(
+					/* translators: %d: number of properties to update */
+					__( 'Filtering properties to update... Found %d properties.', 'connect-crm-realstate' ),
+					count( $properties )
+				) . '<br/>';
+			}
+
+			$totalprop = count( $properties );
 
 			if ( 'error' === $result_api['status'] ) {
-				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ';
-				$progress_msg .= $result_api['data'] ?? __( 'Error connecting with API. Please check your API connection.', 'connect-crm-realstate' ) . '<br/>';
-				$finish        = true;
+				$error_message  = $result_api['data'] ?? __( 'Error connecting with API. Please check your API connection.', 'connect-crm-realstate' );
+				$error_message .= '. ' . __( 'If your credentials are correct, wait a few minutes and try again.', 'connect-crm-realstate' );
 
-				wp_send_json_success(
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $error_message . '<br/>';
+
+				wp_send_json_error(
 					array(
-						'loop'       => 0,
-						'message'    => $progress_msg,
-						'pagination' => 0,
-						'totalprop'  => 0,
-						'finish'     => true,
+						'message' => $progress_msg,
+						'loop'    => $loop,
 					)
 				);
 			}
 
 			// Check if we got properties from API.
-			if ( 0 === $totalprop && $loop > 0 ) {
-				// No more properties from API - we're done.
-				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'No more properties from API. Import complete.', 'connect-crm-realstate' ) . '<br/>';
-				$property      = null;
+			if ( 0 === $totalprop ) {
+				if ( 0 === $loop ) {
+					// First loop and no properties found.
+					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'No properties found to import.', 'connect-crm-realstate' ) . '</strong><br/>';
+				} else {
+					// No more properties from API - we're done.
+					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'No more properties from API. Import complete.', 'connect-crm-realstate' ) . '<br/>';
+				}
+				$property = null;
 			} else {
 				// Save properties in transients.
 				$i = 0;
@@ -428,5 +442,75 @@ class Import {
 
 		// Fallback to default property_id.
 		return 'property_id';
+	}
+
+	/**
+	 * Filter properties to only include those that need updating
+	 *
+	 * @param array  $properties List of properties from API.
+	 * @param string $crm_type CRM type.
+	 * @return array Filtered list of properties
+	 */
+	private function filter_properties_to_update( $properties, $crm_type ) {
+		// Get WordPress properties data with cache.
+		$wp_transient_key = 'ccrmre_wp_properties_' . $crm_type;
+		$wp_properties    = get_transient( $wp_transient_key );
+
+		if ( false === $wp_properties ) {
+			$wp_properties = $this->get_wordpress_property_data( $crm_type );
+			set_transient( $wp_transient_key, $wp_properties, 10 * MINUTE_IN_SECONDS );
+		}
+
+		$wp_ids = array_keys( $wp_properties );
+
+		// Filter properties.
+		$filtered = array();
+		foreach ( $properties as $property ) {
+			$property_info = API::get_property_info( $property, $crm_type );
+			$property_id   = ! empty( $property_info['id'] ) ? $property_info['id'] : $property_info['reference'];
+
+			if ( empty( $property_id ) ) {
+				continue;
+			}
+
+			// Check if property is new.
+			if ( ! in_array( $property_id, $wp_ids, true ) ) {
+				$filtered[] = $property;
+				continue;
+			}
+
+			// Check if property is outdated (date or status changed).
+			if ( isset( $wp_properties[ $property_id ] ) ) {
+				$wp_data      = $wp_properties[ $property_id ];
+				$needs_update = false;
+
+				// Get dates and status.
+				$api_date   = $property_info['last_updated'];
+				$wp_date    = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
+				$api_status = $property_info['status'];
+				$wp_status  = isset( $wp_data['status'] ) ? $wp_data['status'] : null;
+
+				// Check if date is newer in API.
+				if ( ! empty( $api_date ) && ! empty( $wp_date ) ) {
+					$api_timestamp = strtotime( $api_date );
+					$wp_timestamp  = strtotime( $wp_date );
+
+					if ( $api_timestamp > $wp_timestamp ) {
+						$needs_update = true;
+					}
+				}
+
+				// Check if status has changed.
+				if ( $api_status !== $wp_status ) {
+					$needs_update = true;
+				}
+
+				if ( $needs_update ) {
+					$filtered[] = $property;
+				}
+			}
+		}
+
+		return $filtered;
 	}
 }

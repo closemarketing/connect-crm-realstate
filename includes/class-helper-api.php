@@ -570,6 +570,7 @@ class API {
 					$property['ref']      = empty( $property['ref'] ) ? $property_info['reference'] : $property['ref'];
 					$property['fechaact'] = empty( $property['fechaact'] ) ? $property_info['last_updated'] : $property['fechaact'];
 				}
+				$property['cod_ofer'] = $property_id;
 
 				return $property;
 			}
