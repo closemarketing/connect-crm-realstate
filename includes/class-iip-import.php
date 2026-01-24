@@ -107,6 +107,7 @@ class Import {
 		}
 
 		$loop         = isset( $_POST['loop'] ) ? (int) $_POST['loop'] : 0;
+		$mode         = isset( $_POST['mode'] ) ? sanitize_text_field( wp_unslash( $_POST['mode'] ) ) : 'updated';
 		$crm          = isset( $this->settings['type'] ) ? $this->settings['type'] : '';
 		$pagination   = isset( $_POST['pagination'] ) ? (int) $_POST['pagination'] : API::get_pagination_size( $crm );
 		$totalprop    = isset( $_POST['totalprop'] ) ? (int) $_POST['totalprop'] : 0;
@@ -225,7 +226,7 @@ class Import {
 	/**
 	 * Get import statistics
 	 *
-	 * Returns property counts from API, Web, to import, and to delete
+	 * Returns property counts from API, Web, to import (new + outdated), and to delete
 	 *
 	 * @return void
 	 */
@@ -238,34 +239,94 @@ class Import {
 			wp_send_json_error( array( 'message' => __( 'CRM type not configured', 'connect-crm-realstate' ) ) );
 		}
 
-		// Get properties from API.
-		$api_result = API::get_all_property_ids( $crm_type );
+		// Get properties from API with dates (with 10-minute cache).
+		$transient_key = 'ccrmre_api_properties_' . $crm_type;
+		$api_result    = get_transient( $transient_key );
 
-		if ( 'error' === $api_result['status'] ) {
-			wp_send_json_error( array( 'message' => $api_result['data'] ) );
+		if ( false === $api_result ) {
+			// No cache, fetch from API.
+			$api_result = API::get_all_property_ids( $crm_type, true );
+
+			if ( 'error' === $api_result['status'] ) {
+				wp_send_json_error( array( 'message' => $api_result['data'] ) );
+			}
+
+			// Cache for 10 minutes.
+			set_transient( $transient_key, $api_result, 10 * MINUTE_IN_SECONDS );
 		}
 
 		$api_properties = isset( $api_result['data'] ) ? $api_result['data'] : array();
 		$api_count      = count( $api_properties );
+		$api_ids        = array_keys( $api_properties );
 
-		// Get properties from WordPress.
-		$wp_properties = $this->get_wordpress_property_refs( $crm_type );
-		$wp_count      = count( $wp_properties );
+		// Get properties from WordPress with dates (with 10-minute cache).
+		$wp_transient_key = 'ccrmre_wp_properties_' . $crm_type;
+		$wp_properties    = get_transient( $wp_transient_key );
 
-		// Calculate to import (in API but not in WP).
-		$to_import    = array_diff( $api_properties, $wp_properties );
-		$import_count = count( $to_import );
+		if ( false === $wp_properties ) {
+			// No cache, fetch from database.
+			$wp_properties = $this->get_wordpress_property_data( $crm_type );
+
+			// Cache for 10 minutes.
+			set_transient( $wp_transient_key, $wp_properties, 10 * MINUTE_IN_SECONDS );
+		}
+
+		$wp_count = count( $wp_properties );
+		$wp_ids   = array_keys( $wp_properties );
+
+		// Calculate NEW properties (in API but not in WP).
+		$new_properties = array_diff( $api_ids, $wp_ids );
+		$new_count      = count( $new_properties );
+
+		// Calculate OUTDATED properties (in both, but with changes in date OR status).
+		$outdated_count = 0;
+		foreach ( $wp_properties as $wp_id => $wp_data ) {
+			if ( isset( $api_properties[ $wp_id ] ) ) {
+				$api_data     = $api_properties[ $wp_id ];
+				$needs_update = false;
+
+				// Get dates and status.
+				$api_date   = isset( $api_data['last_updated'] ) ? $api_data['last_updated'] : null;
+				$wp_date    = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
+				$api_status = isset( $api_data['status'] ) ? $api_data['status'] : null;
+				$wp_status  = isset( $wp_data['status'] ) ? $wp_data['status'] : null;
+
+				// Check if date is newer in API.
+				if ( ! empty( $api_date ) && ! empty( $wp_date ) ) {
+					$api_timestamp = strtotime( $api_date );
+					$wp_timestamp  = strtotime( $wp_date );
+
+					if ( $api_timestamp > $wp_timestamp ) {
+						$needs_update = true;
+					}
+				}
+
+				// Check if status has changed.
+				if ( $api_status !== $wp_status ) {
+					$needs_update = true;
+				}
+
+				if ( $needs_update ) {
+					++$outdated_count;
+				}
+			}
+		}
+
+		// Total to import = new + outdated.
+		$import_count = $new_count + $outdated_count;
 
 		// Calculate to delete (in WP but not in API).
-		$to_delete    = array_diff( $wp_properties, $api_properties );
+		$to_delete    = array_diff( $wp_ids, $api_ids );
 		$delete_count = count( $to_delete );
 
 		wp_send_json_success(
 			array(
-				'api_count'    => $api_count,
-				'wp_count'     => $wp_count,
-				'import_count' => $import_count,
-				'delete_count' => $delete_count,
+				'api_count'      => $api_count,
+				'wp_count'       => $wp_count,
+				'import_count'   => $import_count,
+				'new_count'      => $new_count,
+				'outdated_count' => $outdated_count,
+				'delete_count'   => $delete_count,
 			)
 		);
 	}
@@ -295,6 +356,50 @@ class Import {
 		// phpcs:enable
 
 		return array_filter( $results );
+	}
+
+	/**
+	 * Get WordPress property data with dates and status
+	 *
+	 * @param string $crm_type CRM type.
+	 * @return array Associative array of property_id => array(last_updated, status)
+	 */
+	private function get_wordpress_property_data( $crm_type ) {
+		global $wpdb;
+
+		$meta_key = $this->get_reference_meta_key( $crm_type );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT 
+					pm1.meta_value as property_ref, 
+					pm2.meta_value as last_updated,
+					pm3.meta_value as status
+				FROM {$wpdb->postmeta} pm1
+				INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
+				LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = 'ccrmre_last_updated'
+				LEFT JOIN {$wpdb->postmeta} pm3 ON p.ID = pm3.post_id AND pm3.meta_key = 'ccrmre_status'
+				WHERE p.post_type = 'property'
+				AND p.post_status != 'trash'
+				AND pm1.meta_key = %s",
+				$meta_key
+			),
+			ARRAY_A
+		);
+		// phpcs:enable
+
+		$property_data = array();
+		foreach ( $results as $row ) {
+			if ( ! empty( $row['property_ref'] ) ) {
+				$property_data[ $row['property_ref'] ] = array(
+					'last_updated' => $row['last_updated'],
+					'status'       => $row['status'],
+				);
+			}
+		}
+
+		return $property_data;
 	}
 
 	/**

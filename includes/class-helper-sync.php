@@ -114,6 +114,15 @@ class SYNC {
 			delete_post_meta( $property_post_id, 'property_description' );
 			delete_post_meta( $property_post_id, 'property_name' );
 
+			// Save last updated date and status from CRM.
+			$property_info_meta = API::get_property_info( $item, $crm );
+			if ( ! empty( $property_info_meta['last_updated'] ) ) {
+				update_post_meta( $property_post_id, 'ccrmre_last_updated', $property_info_meta['last_updated'] );
+			}
+			if ( isset( $property_info_meta['status'] ) ) {
+				update_post_meta( $property_post_id, 'ccrmre_status', $property_info_meta['status'] );
+			}
+
 			// Save photo URLs for properties (without downloading).
 			if ( isset( $item['fotos'] ) && is_array( $item['fotos'] ) && ! empty( $item['fotos'] ) ) {
 				// Save first photo as featured image URL.
@@ -122,6 +131,9 @@ class SYNC {
 				// Save all photos for gallery.
 				update_post_meta( $property_post_id, 'ccrmre_gallery_urls', $item['fotos'] );
 			}
+
+			// Clear statistics cache after syncing.
+			delete_transient( 'ccrmre_wp_properties_' . $crm );
 		}
 
 		return array(

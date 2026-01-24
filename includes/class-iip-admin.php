@@ -674,8 +674,11 @@ class Admin {
 					</div>
 					<div class="ccrmre-stat-content">
 						<div class="ccrmre-stat-value" id="stat-import-count">--</div>
-						<div class="ccrmre-stat-label"><?php esc_html_e( 'To Import', 'connect-crm-realstate' ); ?></div>
-						<div class="ccrmre-stat-sublabel"><?php esc_html_e( 'New properties', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'To Import/Update', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel">
+							<span id="stat-new-count">--</span> <?php esc_html_e( 'new', 'connect-crm-realstate' ); ?> + 
+							<span id="stat-outdated-count">--</span> <?php esc_html_e( 'outdated', 'connect-crm-realstate' ); ?>
+						</div>
 					</div>
 				</div>
 
@@ -692,6 +695,10 @@ class Admin {
 			</div>
 
 			<div class="import-button-wrapper">
+				<select id="import-mode" class="import-mode-select">
+					<option value="updated"><?php esc_html_e( 'Properties to update', 'connect-crm-realstate' ); ?></option>
+					<option value="all"><?php esc_html_e( 'All properties', 'connect-crm-realstate' ); ?></option>
+				</select>
 				<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
 					<?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?>
 				</button>
@@ -785,6 +792,41 @@ class Admin {
 				gap: 10px;
 				margin-bottom: 15px;
 			}
+			
+			#import-mode {
+				height: 40px;
+				padding: 0 12px;
+				font-size: 14px;
+				border: 1px solid #2271b1;
+				border-radius: 3px;
+				background: white;
+				color: #2271b1;
+				cursor: pointer;
+				min-width: 180px;
+				line-height: 38px;
+			}
+			
+			#import-mode:focus {
+				outline: none;
+				border-color: #135e96;
+				box-shadow: 0 0 0 1px #135e96;
+			}
+			
+			#import-mode:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+			
+			.connect-realstate-manual-action #manual_import,
+			.connect-realstate-manual-action #refresh_stats {
+				height: 40px;
+				padding: 0 16px;
+				font-size: 14px;
+				line-height: 38px;
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+			}
 			.connect-realstate-manual-action .spinner {
 				float: none;
 				margin: 0;
@@ -852,6 +894,8 @@ class Admin {
 						document.getElementById('stat-api-count').textContent = response.data.api_count.toLocaleString();
 						document.getElementById('stat-wp-count').textContent = response.data.wp_count.toLocaleString();
 						document.getElementById('stat-import-count').textContent = response.data.import_count.toLocaleString();
+						document.getElementById('stat-new-count').textContent = response.data.new_count.toLocaleString();
+						document.getElementById('stat-outdated-count').textContent = response.data.outdated_count.toLocaleString();
 						document.getElementById('stat-delete-count').textContent = response.data.delete_count.toLocaleString();
 					} else {
 						alert('Error: ' + (response.data.message || 'Unknown error'));

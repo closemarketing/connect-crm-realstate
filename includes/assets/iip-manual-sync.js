@@ -1,10 +1,19 @@
 function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
-	// Get the spinner element.
+	// Get the spinner element and mode select.
 	const spinner = element.parentElement.querySelector('.spinner');
+	const importMode = document.getElementById('import-mode');
+	const refreshButton = document.getElementById('refresh_stats');
+	const mode = importMode ? importMode.value : 'updated';
 
 	// Add disabled state and show spinner.
 	element.disabled = true;
 	element.textContent = ajaxAction.label_syncing;
+	if ( importMode ) {
+		importMode.disabled = true;
+	}
+	if ( refreshButton ) {
+		refreshButton.disabled = true;
+	}
 	if ( spinner ) {
 		spinner.classList.add('is-active');
 	}
@@ -20,7 +29,7 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
 			'Content-Type': 'application/x-www-form-urlencoded',
 			'Cache-Control': 'no-cache',
 		},
-		body: 'action=manual_import&nonce=' + ajaxAction.nonce + '&loop=' + loop + '&pagination=' + pagination + '&totalprop=' + totalprop,
+		body: 'action=manual_import&nonce=' + ajaxAction.nonce + '&loop=' + loop + '&pagination=' + pagination + '&totalprop=' + totalprop + '&mode=' + mode,
 	})
 	.then( (resp) => resp.json() )
 	.then( function(results) {
@@ -30,6 +39,12 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
 			} else {
 				element.disabled = false;
 				element.textContent = ajaxAction.label_sync;
+				if ( importMode ) {
+					importMode.disabled = false;
+				}
+				if ( refreshButton ) {
+					refreshButton.disabled = false;
+				}
 				if ( spinner ) {
 					spinner.classList.remove('is-active');
 				}
@@ -38,6 +53,12 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
 		} else {
 			element.disabled = false;
 			element.textContent = ajaxAction.label_sync;
+			if ( importMode ) {
+				importMode.disabled = false;
+			}
+			if ( refreshButton ) {
+				refreshButton.disabled = false;
+			}
 			if ( spinner ) {
 				spinner.classList.remove('is-active');
 			}
@@ -66,6 +87,12 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
 		console.error('Import error:', err);
 		element.disabled = false;
 		element.textContent = ajaxAction.label_sync;
+		if ( importMode ) {
+			importMode.disabled = false;
+		}
+		if ( refreshButton ) {
+			refreshButton.disabled = false;
+		}
 		if ( spinner ) {
 			spinner.classList.remove('is-active');
 		}
