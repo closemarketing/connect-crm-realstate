@@ -54,6 +54,7 @@ class Import {
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_manual_import' ) );
 		add_action( 'wp_ajax_manual_import', array( $this, 'manual_import' ) );
 		add_action( 'wp_ajax_nopriv_manual_import', array( $this, 'manual_import' ) );
+		add_action( 'wp_ajax_get_import_stats', array( $this, 'get_import_stats' ) );
 	}
 
 	/**
@@ -219,5 +220,108 @@ class Import {
 				'finish'     => $finish,
 			)
 		);
+	}
+
+	/**
+	 * Get import statistics
+	 *
+	 * Returns property counts from API, Web, to import, and to delete
+	 *
+	 * @return void
+	 */
+	public function get_import_stats() {
+		check_ajax_referer( 'ccrmre_import_nonce', 'security' );
+
+		$crm_type = isset( $this->settings['type'] ) ? $this->settings['type'] : '';
+
+		if ( empty( $crm_type ) ) {
+			wp_send_json_error( array( 'message' => __( 'CRM type not configured', 'connect-crm-realstate' ) ) );
+		}
+
+		// Get properties from API.
+		$api_result = API::get_all_property_ids( $crm_type );
+
+		if ( 'error' === $api_result['status'] ) {
+			wp_send_json_error( array( 'message' => $api_result['data'] ) );
+		}
+
+		$api_properties = isset( $api_result['data'] ) ? $api_result['data'] : array();
+		$api_count      = count( $api_properties );
+
+		// Get properties from WordPress.
+		$wp_properties = $this->get_wordpress_property_refs( $crm_type );
+		$wp_count      = count( $wp_properties );
+
+		// Calculate to import (in API but not in WP).
+		$to_import    = array_diff( $api_properties, $wp_properties );
+		$import_count = count( $to_import );
+
+		// Calculate to delete (in WP but not in API).
+		$to_delete    = array_diff( $wp_properties, $api_properties );
+		$delete_count = count( $to_delete );
+
+		wp_send_json_success(
+			array(
+				'api_count'    => $api_count,
+				'wp_count'     => $wp_count,
+				'import_count' => $import_count,
+				'delete_count' => $delete_count,
+			)
+		);
+	}
+
+	/**
+	 * Get WordPress property references
+	 *
+	 * @param string $crm_type CRM type.
+	 * @return array Array of property references
+	 */
+	private function get_wordpress_property_refs( $crm_type ) {
+		global $wpdb;
+
+		$meta_key = $this->get_reference_meta_key( $crm_type );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$results = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT meta_value FROM {$wpdb->postmeta} pm
+				INNER JOIN {$wpdb->posts} p ON pm.post_id = p.ID
+				WHERE p.post_type = 'property'
+				AND p.post_status != 'trash'
+				AND pm.meta_key = %s",
+				$meta_key
+			)
+		);
+		// phpcs:enable
+
+		return array_filter( $results );
+	}
+
+	/**
+	 * Get reference meta key based on CRM type
+	 *
+	 * @param string $crm_type CRM type.
+	 * @return string Meta key for property reference
+	 */
+	private function get_reference_meta_key( $crm_type ) {
+		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
+
+		// Try to find the reference field in merge fields.
+		if ( 'anaconda' === $crm_type ) {
+			if ( isset( $merge_fields['id'] ) ) {
+				return $merge_fields['id'];
+			}
+		} elseif ( 'inmovilla' === $crm_type ) {
+			if ( isset( $merge_fields['referencia'] ) ) {
+				return $merge_fields['referencia'];
+			}
+		} elseif ( 'inmovilla_procesos' === $crm_type ) {
+			if ( isset( $merge_fields['cod_ofer'] ) ) {
+				return $merge_fields['cod_ofer'];
+			}
+		}
+
+		// Fallback to default property_id.
+		return 'property_id';
 	}
 }

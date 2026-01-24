@@ -643,15 +643,142 @@ class Admin {
 		<div class="connect-realstate-manual-action">
 			<h2><?php esc_html_e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
 			<p><?php esc_html_e( 'After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?><br/></p>
+			
+			<!-- Import Statistics -->
+			<div class="ccrmre-import-stats">
+				<div class="ccrmre-stat-card">
+					<div class="ccrmre-stat-icon ccrmre-icon-api">
+						<span class="dashicons dashicons-cloud"></span>
+					</div>
+					<div class="ccrmre-stat-content">
+						<div class="ccrmre-stat-value" id="stat-api-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'Properties in API', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel"><?php echo esc_html( ucfirst( str_replace( '_', ' ', $crm_type ) ) ); ?></div>
+					</div>
+				</div>
+
+				<div class="ccrmre-stat-card">
+					<div class="ccrmre-stat-icon ccrmre-icon-wp">
+						<span class="dashicons dashicons-wordpress-alt"></span>
+					</div>
+					<div class="ccrmre-stat-content">
+						<div class="ccrmre-stat-value" id="stat-wp-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'Properties in WordPress', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel"><?php esc_html_e( 'Published properties', 'connect-crm-realstate' ); ?></div>
+					</div>
+				</div>
+
+				<div class="ccrmre-stat-card ccrmre-stat-import">
+					<div class="ccrmre-stat-icon ccrmre-icon-import">
+						<span class="dashicons dashicons-download"></span>
+					</div>
+					<div class="ccrmre-stat-content">
+						<div class="ccrmre-stat-value" id="stat-import-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'To Import', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel"><?php esc_html_e( 'New properties', 'connect-crm-realstate' ); ?></div>
+					</div>
+				</div>
+
+				<div class="ccrmre-stat-card ccrmre-stat-delete">
+					<div class="ccrmre-stat-icon ccrmre-icon-delete">
+						<span class="dashicons dashicons-trash"></span>
+					</div>
+					<div class="ccrmre-stat-content">
+						<div class="ccrmre-stat-value" id="stat-delete-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'To Remove', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel"><?php esc_html_e( 'Not in API', 'connect-crm-realstate' ); ?></div>
+					</div>
+				</div>
+			</div>
+
 			<div class="import-button-wrapper">
 				<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
 					<?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?>
+				</button>
+				<button type="button" id="refresh_stats" name="refresh_stats" class="button button-large" onclick="loadImportStats();">
+					<span class="dashicons dashicons-update"></span>
+					<?php esc_html_e( 'Refresh Statistics', 'connect-crm-realstate' ); ?>
 				</button>
 				<span class="spinner"></span>
 			</div>
 			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
 		</div>
 		<style>
+			.ccrmre-import-stats {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				gap: 20px;
+				margin: 20px 0 30px;
+			}
+			.ccrmre-stat-card {
+				background: white;
+				border: 1px solid #c3c4c7;
+				border-radius: 8px;
+				padding: 20px;
+				display: flex;
+				align-items: center;
+				gap: 15px;
+				box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+				transition: transform 0.2s, box-shadow 0.2s;
+			}
+			.ccrmre-stat-card:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+			}
+			.ccrmre-stat-icon {
+				width: 50px;
+				height: 50px;
+				border-radius: 8px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
+			.ccrmre-icon-api {
+				background: #e8f4fd;
+				color: #0073aa;
+			}
+			.ccrmre-icon-wp {
+				background: #f0f0f1;
+				color: #2c3338;
+			}
+			.ccrmre-icon-import {
+				background: #ecf7ed;
+				color: #00a32a;
+			}
+			.ccrmre-icon-delete {
+				background: #fcf0f1;
+				color: #d63638;
+			}
+			.ccrmre-stat-icon .dashicons {
+				font-size: 28px;
+				width: 28px;
+				height: 28px;
+			}
+			.ccrmre-stat-content {
+				flex: 1;
+			}
+			.ccrmre-stat-value {
+				font-size: 32px;
+				font-weight: 700;
+				line-height: 1.2;
+				color: #1d2327;
+			}
+			.ccrmre-stat-label {
+				font-size: 13px;
+				font-weight: 600;
+				color: #50575e;
+				margin-top: 5px;
+			}
+			.ccrmre-stat-sublabel {
+				font-size: 12px;
+				color: #787c82;
+				margin-top: 2px;
+			}
+			.ccrmre-stat-card.loading .ccrmre-stat-value {
+				opacity: 0.5;
+			}
+
 			.connect-realstate-manual-action .import-button-wrapper {
 				display: flex;
 				align-items: center;
@@ -667,9 +794,13 @@ class Admin {
 				display: block;
 				visibility: visible;
 			}
-			.connect-realstate-manual-action #manual_import:disabled {
+			.connect-realstate-manual-action #manual_import:disabled,
+			.connect-realstate-manual-action #refresh_stats:disabled {
 				opacity: 0.6;
 				cursor: not-allowed;
+			}
+			.connect-realstate-manual-action #refresh_stats .dashicons {
+				margin-right: 5px;
 			}
 			.connect-realstate-manual-action #logwrapper {
 				margin-top: 20px;
@@ -701,6 +832,46 @@ class Admin {
 				background: #fcf0f1;
 			}
 		</style>
+		<script>
+		function loadImportStats() {
+			const btn = document.getElementById('refresh_stats');
+			const cards = document.querySelectorAll('.ccrmre-stat-card');
+			
+			btn.disabled = true;
+			cards.forEach(card => card.classList.add('loading'));
+
+			jQuery.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				data: {
+					action: 'get_import_stats',
+					security: '<?php echo esc_js( wp_create_nonce( 'ccrmre_import_nonce' ) ); ?>'
+				},
+				success: function(response) {
+					if (response.success) {
+						document.getElementById('stat-api-count').textContent = response.data.api_count.toLocaleString();
+						document.getElementById('stat-wp-count').textContent = response.data.wp_count.toLocaleString();
+						document.getElementById('stat-import-count').textContent = response.data.import_count.toLocaleString();
+						document.getElementById('stat-delete-count').textContent = response.data.delete_count.toLocaleString();
+					} else {
+						alert('Error: ' + (response.data.message || 'Unknown error'));
+					}
+				},
+				error: function() {
+					alert('<?php echo esc_js( __( 'Error loading statistics', 'connect-crm-realstate' ) ); ?>');
+				},
+				complete: function() {
+					btn.disabled = false;
+					cards.forEach(card => card.classList.remove('loading'));
+				}
+			});
+		}
+
+		// Load stats on page load
+		jQuery(document).ready(function() {
+			loadImportStats();
+		});
+		</script>
 		<?php
 	}
 

@@ -70,6 +70,64 @@ class API {
 	}
 
 	/**
+	 * Get all property IDs from API
+	 *
+	 * Returns only basic property identifiers without fetching full details
+	 *
+	 * @param string $crm_type CRM type (anaconda, inmovilla, inmovilla_procesos).
+	 * @return array Array with status and list of property IDs/references
+	 */
+	public static function get_all_property_ids( $crm_type ) {
+		$property_ids = array();
+		$page         = 1;
+		$has_more     = true;
+		$pagination   = self::get_pagination_size( $crm_type );
+
+		while ( $has_more ) {
+			$result = self::get_properties( $crm_type, $page );
+
+			if ( 'error' === $result['status'] ) {
+				return $result;
+			}
+
+			$properties = isset( $result['data'] ) ? $result['data'] : array();
+
+			if ( empty( $properties ) ) {
+				$has_more = false;
+				break;
+			}
+
+			// Extract IDs/references based on CRM type.
+			foreach ( $properties as $property ) {
+				$property_info = self::get_property_info( $property, $crm_type );
+				// Use 'id' if available, otherwise use 'reference'.
+				$property_id = ! empty( $property_info['id'] ) ? $property_info['id'] : $property_info['reference'];
+				if ( ! empty( $property_id ) ) {
+					$property_ids[] = $property_id;
+				}
+			}
+
+			// Check if there are more pages.
+			if ( count( $properties ) < $pagination ) {
+				$has_more = false;
+			} else {
+				++$page;
+			}
+
+			// Safety limit to prevent infinite loops.
+			if ( $page > 1000 ) {
+				$has_more = false;
+			}
+		}
+
+		return array(
+			'status' => 'ok',
+			'data'   => $property_ids,
+			'count'  => count( $property_ids ),
+		);
+	}
+
+	/**
 	 * Request to Inmovilla API
 	 *
 	 * Based on official Inmovilla API documentation:
@@ -468,7 +526,7 @@ class API {
 	 * @param string       $crm CRM type (optional).
 	 * @return array
 	 */
-	public static function get_property( $property, $crm = '' ) {
+	public static function get_property( $item, $crm = '' ) {
 		if ( empty( $crm ) ) {
 			$settings = get_option( 'conncrmreal_settings' );
 			$crm      = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
@@ -476,27 +534,42 @@ class API {
 
 		if ( 'anaconda' === $crm ) {
 			// Anaconda returns complete property data in listings.
-			return $property;
+			return $item;
 		} elseif ( 'inmovilla_procesos' === $crm ) {
 			// For Inmovilla Procesos, use GET /propiedades/?cod_ofer={cod_ofer}.
-			$cod_ofer = is_array( $property ) && isset( $property['cod_ofer'] ) ? $property['cod_ofer'] : $property;
+			if ( is_array( $item ) ) {
+				$property_info = self::get_property_info( $item, $crm );
+				$property_id   = $property_info['id'];
+			} else {
+				$property_id = $item;
+			}
 
-			if ( empty( $cod_ofer ) ) {
+			if ( empty( $property_id ) ) {
 				return array();
 			}
 
-			$result = self::request_inmovilla_procesos( 'propiedades/?cod_ofer=' . $cod_ofer );
+			$result = self::request_inmovilla_procesos( 'propiedades/?cod_ofer=' . $property_id );
 
 			if ( 'ok' === $result['status'] && isset( $result['data'] ) ) {
-				$result['data']['fotos'] = self::get_property_photos( $result['data'] );
-				return $result['data'];
+				$property             = $result['data'];
+				$property['fotos']    = self::get_property_photos( $property );
+				$property['cod_ofer'] = $property_id;
+				$property['ref']      = empty( $property['ref'] ) ? $property_info['reference'] : $property['ref'];
+				$property['fechaact'] = empty( $property['fechaact'] ) ? $property_info['last_updated'] : $property['fechaact'];
+
+				return $property;
 			}
 
 			return array();
 		} elseif ( 'inmovilla' === $crm ) {
 			// For Inmovilla, use 'ficha' type to get complete property details.
-			$property_id = is_array( $property ) ? $property['cod_ofer'] : $property;
-			$where       = "cod_ofer='{$property_id}'";
+			if ( is_array( $property ) ) {
+				$property_info = self::get_property_info( $property, $crm );
+				$property_id   = $property_info['reference'];
+			} else {
+				$property_id = $property;
+			}
+			$where = "cod_ofer='{$property_id}'";
 
 			$result = self::request_inmovilla( 'ficha', 1, 1, $where );
 
@@ -611,10 +684,11 @@ class API {
 
 			// Get the first property and fetch its complete details.
 			$first_property = $result['data'][0];
-			$cod_ofer       = isset( $first_property['cod_ofer'] ) ? $first_property['cod_ofer'] : '';
+			$property_info  = self::get_property_info( $first_property, 'inmovilla_procesos' );
+			$property_id    = $property_info['id'];
 
-			if ( ! empty( $cod_ofer ) ) {
-				$property_result = self::request_inmovilla_procesos( 'propiedades/?cod_ofer=' . $cod_ofer );
+			if ( ! empty( $property_id ) ) {
+				$property_result = self::request_inmovilla_procesos( 'propiedades/?cod_ofer=' . $property_id );
 
 				if ( 'ok' === $property_result['status'] && isset( $property_result['data'] ) ) {
 					$sample_property = $property_result['data'];
@@ -697,6 +771,59 @@ class API {
 
 		return $inmovilla_fields;
 	}
+
+	/**
+	 * Get property ID/reference from property data
+	 *
+	 * @param array  $property Property data.
+	 * @param string $crm_type CRM type.
+	 * @return string|null Property ID/reference or null if not found
+	 */
+	public static function get_property_info( $property, $crm_type ) {
+		$match = array(
+			'anaconda'           => array(
+				'id'           => 'id',
+				'reference'    => 'referencia',
+				'last_updated' => 'updated_at',
+			),
+			'inmovilla'          => array(
+				'id'           => 'cod_ofer',
+				'reference'    => 'referencia',
+				'last_updated' => 'fechaact',
+			),
+			'inmovilla_procesos' => array(
+				'id'           => 'cod_ofer',
+				'last_updated' => 'fechaact',
+			),
+		);
+
+		$property_info = array(
+			'id'           => null,
+			'reference'    => null,
+			'last_updated' => null,
+		);
+		if ( isset( $match[ $crm_type ] ) ) {
+			$fields = $match[ $crm_type ];
+
+			// Get ID if available.
+			if ( isset( $fields['id'] ) && isset( $property[ $fields['id'] ] ) ) {
+				$property_info['id'] = $property[ $fields['id'] ];
+			}
+
+			// Get reference if available.
+			if ( isset( $fields['reference'] ) && isset( $property[ $fields['reference'] ] ) ) {
+				$property_info['reference'] = $property[ $fields['reference'] ];
+			}
+
+			// Get last_updated if available.
+			if ( isset( $fields['last_updated'] ) && isset( $property[ $fields['last_updated'] ] ) ) {
+				$property_info['last_updated'] = $property[ $fields['last_updated'] ];
+			}
+		}
+
+		return $property_info;
+	}
+
 	/**
 	 * Get property photos from Inmovilla Procesos
 	 *
