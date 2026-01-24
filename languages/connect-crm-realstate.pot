@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-01-24T15:04:05+00:00\n"
+"POT-Creation-Date: 2026-01-24T15:29:23+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: connect-crm-realstate\n"
@@ -138,45 +138,45 @@ msgid "Inmovilla Procesos API token is not configured"
 msgstr ""
 
 #. translators: %d: HTTP error code
-#: includes/class-helper-api.php:500
+#: includes/class-helper-api.php:505
 msgid "Inmovilla Procesos API returned error code: %d"
 msgstr ""
 
-#: includes/class-helper-api.php:513
+#: includes/class-helper-api.php:519
 msgid "Invalid JSON response from Inmovilla Procesos API"
 msgstr ""
 
-#: includes/class-helper-api.php:520
+#: includes/class-helper-api.php:526
 msgid "Properties fetched successfully"
 msgstr ""
 
-#: includes/class-helper-api.php:617
-#: includes/class-helper-api.php:662
+#: includes/class-helper-api.php:626
+#: includes/class-helper-api.php:671
 #: includes/class-iip-import.php:267
 msgid "CRM type not configured"
 msgstr ""
 
-#: includes/class-helper-api.php:696
+#: includes/class-helper-api.php:705
 msgid "Property ID is required"
 msgstr ""
 
-#: includes/class-helper-api.php:780
+#: includes/class-helper-api.php:789
 msgid "Error getting Anaconda fields. Please check your API connection."
 msgstr ""
 
-#: includes/class-helper-api.php:824
+#: includes/class-helper-api.php:833
 msgid "Error getting Inmovilla Procesos fields. Please check your API connection."
 msgstr ""
 
-#: includes/class-helper-api.php:859
+#: includes/class-helper-api.php:868
 msgid "Error getting Inmovilla Procesos property details."
 msgstr ""
 
-#: includes/class-helper-api.php:866
+#: includes/class-helper-api.php:875
 msgid "No properties found in Inmovilla Procesos."
 msgstr ""
 
-#: includes/class-helper-api.php:888
+#: includes/class-helper-api.php:897
 msgid "Error getting Inmovilla fields. Please check your API connection."
 msgstr ""
 
@@ -192,32 +192,32 @@ msgstr ""
 msgid "NOT Imported"
 msgstr ""
 
-#: includes/class-helper-sync.php:104
+#: includes/class-helper-sync.php:108
 msgid "Created"
 msgstr ""
 
-#: includes/class-helper-sync.php:106
+#: includes/class-helper-sync.php:110
 msgid "Updated"
 msgstr ""
 
-#: includes/class-helper-sync.php:195
+#: includes/class-helper-sync.php:199
 #: includes/class-iip-import.php:194
 msgid "Property ID:"
 msgstr ""
 
-#: includes/class-helper-sync.php:323
+#: includes/class-helper-sync.php:327
 msgid "Skipped (Not Available in CRM)"
 msgstr ""
 
-#: includes/class-helper-sync.php:338
+#: includes/class-helper-sync.php:342
 msgid "Unpublished (Set to Draft)"
 msgstr ""
 
-#: includes/class-helper-sync.php:343
+#: includes/class-helper-sync.php:347
 msgid "Moved to Trash"
 msgstr ""
 
-#: includes/class-helper-sync.php:348
+#: includes/class-helper-sync.php:352
 msgid "Kept Published (Not Available)"
 msgstr ""
 

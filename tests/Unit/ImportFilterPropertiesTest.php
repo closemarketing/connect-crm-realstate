@@ -59,13 +59,13 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 				'id'         => '1',
 				'name'       => 'Property 1',
 				'updated_at' => '2024-01-01 10:00:00',
-				'status'     => '0',
+				'status'     => '1',
 			),
 			array(
 				'id'         => '2',
 				'name'       => 'Property 2',
 				'updated_at' => '2024-01-01 10:00:00',
-				'status'     => '0',
+				'status'     => '1',
 			),
 		);
 
@@ -85,7 +85,7 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 				array(
 					'id'           => 'TEST1',
 					'last_updated' => '2024-01-01 10:00:00',
-					'status'       => '0',
+					'status'       => '1', // Available
 				),
 			)
 		);
@@ -96,7 +96,7 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 				'id'         => 'TEST1',
 				'name'       => 'Property 1',
 				'updated_at' => '2024-01-15 12:00:00', // NEWER date
-				'status'     => '0',
+				'status'     => '1', // Available
 			),
 		);
 
@@ -110,24 +110,24 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 	 * Test filtering single property with changed status
 	 */
 	public function test_filter_single_property_with_changed_status() {
-		// Setup: Create ONE WordPress property
+		// Setup: Create ONE WordPress property with status unavailable
 		$this->create_wp_properties(
 			array(
 				array(
 					'id'           => 'TEST2',
 					'last_updated' => '2024-01-01 10:00:00',
-					'status'       => '0', // Available
+					'status'       => false, // Was unavailable
 				),
 			)
 		);
 
-		// API property with CHANGED status
+		// API property with CHANGED status to available
 		$api_properties = array(
 			array(
 				'id'         => 'TEST2',
 				'name'       => 'Property 2',
 				'updated_at' => '2024-01-01 10:00:00', // Same date
-				'status'     => '1', // CHANGED to unavailable
+				'status'     => '1', // CHANGED to available
 			),
 		);
 
@@ -147,7 +147,7 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 				array(
 					'id'           => '1',
 					'last_updated' => '2024-01-01 10:00:00',
-					'status'       => '0',
+					'status'       => '1',
 				),
 			)
 		);
@@ -178,7 +178,7 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 				array(
 					'id'           => 'TEST3',
 					'last_updated' => '2024-01-01 10:00:00',
-					'status'       => '0',
+					'status'       => '1',
 				),
 			)
 		);
@@ -189,7 +189,7 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 				'id'         => 'TEST3',
 				'name'       => 'Property 3',
 				'updated_at' => '2024-01-01 10:00:00', // Same date
-				'status'     => '0', // Same status
+				'status'     => '1', // Same status
 			),
 		);
 
@@ -220,7 +220,7 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 				'id'         => '1',
 				'name'       => 'Property 1',
 				'updated_at' => '2024-01-01 10:00:00',
-				'status'     => '0', // Has status (null !== '0')
+				'status'     => '1', // Has status (null !== '0')
 			),
 		);
 
@@ -251,7 +251,7 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 				'id'         => '1',
 				'name'       => 'Property 1',
 				'updated_at' => null, // Missing date
-				'status'     => '0', // Has status (null !== '0')
+				'status'     => '1', // Has status (null !== '0')
 			),
 		);
 
@@ -288,7 +288,7 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 				array(
 					'id'           => 'INM001',
 					'last_updated' => '2024-01-01 10:00:00',
-					'status'       => '0',
+					'status'       => '1',
 				),
 			),
 			'inmovilla'
@@ -331,7 +331,7 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 			array(
 				'name'       => 'Property without ID',
 				'updated_at' => '2024-01-01 10:00:00',
-				'status'     => '0',
+				'status'     => '1',
 			),
 		);
 
@@ -344,13 +344,13 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 	 * Test filtering returns properties to update
 	 */
 	public function test_filter_returns_properties_to_update() {
-		// Simple test: Verify the function returns an array
+		// Simple test: Verify the function returns an array with available property
 		$api_properties = array(
 			array(
 				'id'         => 'NEW1',
 				'name'       => 'New Property',
 				'updated_at' => '2024-01-01 10:00:00',
-				'status'     => '0',
+				'status'     => '1', // Available property
 			),
 		);
 
@@ -358,6 +358,39 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 
 		$this->assertIsArray( $filtered, 'Should return an array' );
 		$this->assertGreaterThan( 0, count( $filtered ), 'Should return at least 1 new property' );
+	}
+
+	/**
+	 * Test filtering skips new properties with status false (unavailable)
+	 */
+	public function test_filter_skips_new_unavailable_properties() {
+		// No WordPress properties (all API properties would be new).
+		$api_properties = array(
+			array(
+				'id'         => 'NEW_UNAVAIL_1',
+				'name'       => 'Unavailable Property 1',
+				'updated_at' => '2024-01-01 10:00:00',
+				'status'     => '0', // Unavailable.
+			),
+			array(
+				'id'         => 'NEW_AVAIL_1',
+				'name'       => 'Available Property 1',
+				'updated_at' => '2024-01-01 10:00:00',
+				'status'     => '1', // Available.
+			),
+			array(
+				'id'         => 'NEW_UNAVAIL_2',
+				'name'       => 'Unavailable Property 2',
+				'updated_at' => '2024-01-01 10:00:00',
+				'status'     => false, // Unavailable.
+			),
+		);
+
+		$filtered = $this->call_filter_method( $api_properties, 'anaconda' );
+
+		// Should only include the available property (NEW_AVAIL_1).
+		$this->assertCount( 1, $filtered, 'Should only return 1 available property' );
+		$this->assertEquals( 'NEW_AVAIL_1', $filtered[0]['id'], 'Should only return the available property' );
 	}
 
 	/**

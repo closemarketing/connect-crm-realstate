@@ -286,6 +286,10 @@ class SYNC {
 	 * @return bool
 	 */
 	public static function is_property_available( $property, $crm ) {
+		if ( isset( $property['status'] ) ) {
+			return (bool) $property['status'];
+		}
+
 		if ( 'inmovilla_procesos' === $crm ) {
 			// Check nodisponible field (1 = not available, 0 = available).
 			return ! isset( $property['nodisponible'] ) || 1 !== (int) $property['nodisponible'];
@@ -488,7 +492,11 @@ class SYNC {
 
 			// Check if property is new.
 			if ( ! in_array( $property_id, $wp_ids, true ) ) {
-				$filtered[] = $property;
+				// Only import new properties if they are available (status = true).
+				$api_status = (bool) $property_info['status'];
+				if ( $api_status ) {
+					$filtered[] = $property;
+				}
 				continue;
 			}
 
@@ -500,7 +508,7 @@ class SYNC {
 				// Get dates and status.
 				$api_date   = $property_info['last_updated'];
 				$wp_date    = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
-				$api_status = $property_info['status'];
+				$api_status = (bool) $property_info['status']; // Convert to bool for comparison.
 				$wp_status  = isset( $wp_data['status'] ) ? $wp_data['status'] : null;
 
 				// Check if date is newer in API.

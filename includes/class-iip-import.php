@@ -286,24 +286,34 @@ class Import {
 			set_transient( $transient_key, $api_result, 10 * MINUTE_IN_SECONDS );
 		}
 
-		$api_properties = isset( $api_result['data'] ) ? $api_result['data'] : array();
-		$api_count      = count( $api_properties );
-		$api_ids        = array_keys( $api_properties );
+		$api_properties     = isset( $api_result['data'] ) ? $api_result['data'] : array();
+		$api_count          = count( $api_properties );
+		$api_ids            = array_keys( $api_properties );
+
+		// Filter out unavailable properties (those that won't be imported).
+		$available_properties = array();
+		foreach ( $api_properties as $prop_id => $prop_data ) {
+			if ( SYNC::is_property_available( $prop_data, $crm_type ) ) {
+				$available_properties[ $prop_id ] = $prop_data;
+			}
+		}
+		$available_ids = array_keys( $available_properties );
 
 		// Get properties from WordPress with dates (with 10-minute cache).
 		$wp_properties = SYNC::get_wordpress_property_data( $crm_type );
 		$wp_count      = count( $wp_properties );
 		$wp_ids        = array_keys( $wp_properties );
 
-		// Calculate NEW properties (in API but not in WP).
-		$new_properties = array_diff( $api_ids, $wp_ids );
+		// Calculate NEW properties (in API, available, but not in WP).
+		$new_properties = array_diff( $available_ids, $wp_ids );
 		$new_count      = count( $new_properties );
 
-		// Calculate OUTDATED properties (in both, but with changes in date OR status).
+		// Calculate OUTDATED properties (in both, available in API, but with changes in date OR status).
 		$outdated_count = 0;
 		foreach ( $wp_properties as $wp_id => $wp_data ) {
-			if ( isset( $api_properties[ $wp_id ] ) ) {
-				$api_data     = $api_properties[ $wp_id ];
+			// Only check properties that are available in API.
+			if ( isset( $available_properties[ $wp_id ] ) ) {
+				$api_data     = $available_properties[ $wp_id ];
 				$needs_update = false;
 
 				// Get dates and status.

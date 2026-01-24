@@ -38,6 +38,7 @@ PHP/WordPress
 - Use Yoda conditions ALWAYS.
 - PHP inline comments must start with capital letter and end with period character.
 - PHP inline comments should be concise.
+- All styles and javascript should be enqueued and saved in assets folder.
 
 JavaScript
 - Don't use jQuery. Better Vanilla JavaScript.

@@ -118,6 +118,16 @@ class Admin {
 
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
 
+		// Enqueue import styles on manual import tab.
+		if ( 'iip-import' === $active_tab ) {
+			wp_enqueue_style(
+				'ccrmre-admin-import',
+				CCRMRE_PLUGIN_URL . 'assets/css/admin-import.css',
+				array(),
+				CCRMRE_VERSION
+			);
+		}
+
 		// Enqueue settings scripts on settings tab.
 		if ( 'iip-settings' === $active_tab && ccrmre_is_license_active() ) {
 			wp_enqueue_script(
@@ -707,173 +717,96 @@ class Admin {
 				</button>
 				<span class="spinner"></span>
 			</div>
+
+			<?php
+			// Show API limitations info.
+			$crm_type   = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
+			$api_config = API::get_api_config( $crm_type );
+
+			if ( ! empty( $api_config ) ) {
+				// Format values for display.
+				$timeout_minutes          = $api_config['timeout'] / 60;
+				$timeout_display          = $timeout_minutes > 1
+					? $timeout_minutes . ' ' . __( 'minutes', 'connect-crm-realstate' )
+					: $timeout_minutes . ' ' . __( 'minute', 'connect-crm-realstate' );
+
+				$pagination_display       = -1 === $api_config['pagination']
+					? __( 'All at once', 'connect-crm-realstate' )
+					: $api_config['pagination'];
+
+				$retry_timeout_display    = $api_config['retry_timeout'] . ' ' . __( 'seconds', 'connect-crm-realstate' );
+				$retry_rate_limit_minutes = $api_config['retry_rate_limit'] / 60;
+				$retry_rate_limit_display = $retry_rate_limit_minutes . ' ' . __( 'minutes', 'connect-crm-realstate' );
+
+				$info                     = array(
+					'name'             => $api_config['name'],
+					'timeout'          => $timeout_display,
+					'pagination'       => $pagination_display,
+					'retry_timeout'    => $retry_timeout_display,
+					'retry_rate_limit' => $retry_rate_limit_display,
+					'max_retries'      => $api_config['max_retries'],
+				);
+				?>
+				<div class="api-limitations-info" style="margin-top: 15px; padding: 12px; background: #f0f6fc; border-left: 4px solid #2271b1; border-radius: 4px;">
+					<h4 style="margin: 0 0 10px 0; color: #2271b1;">
+						<span class="dashicons dashicons-info" style="vertical-align: middle;"></span>
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %s: API name */
+								__( 'API Limitations - %s', 'connect-crm-realstate' ),
+								$info['name']
+							)
+						);
+						?>
+					</h4>
+					<ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+						<li>
+							<strong><?php esc_html_e( 'Request Timeout:', 'connect-crm-realstate' ); ?></strong>
+							<?php echo esc_html( $info['timeout'] ); ?>
+						</li>
+						<li>
+							<strong><?php esc_html_e( 'Properties per Request:', 'connect-crm-realstate' ); ?></strong>
+							<?php echo esc_html( $info['pagination'] ); ?>
+						</li>
+						<li>
+							<strong><?php esc_html_e( 'Automatic Retries:', 'connect-crm-realstate' ); ?></strong>
+							<?php
+							echo esc_html(
+								sprintf(
+									/* translators: %d: max retries */
+									__( 'Up to %d attempts', 'connect-crm-realstate' ),
+									$info['max_retries']
+								)
+							);
+							?>
+						</li>
+						<li>
+							<strong><?php esc_html_e( 'Retry Wait Time:', 'connect-crm-realstate' ); ?></strong>
+							<?php
+							echo esc_html(
+								sprintf(
+									/* translators: 1: timeout retry, 2: rate limit retry */
+									__( '%1$s (timeout) / %2$s (rate limit)', 'connect-crm-realstate' ),
+									$info['retry_timeout'],
+									$info['retry_rate_limit']
+								)
+							);
+							?>
+						</li>
+					</ul>
+					<p style="margin: 10px 0 0 0; font-size: 0.9em; color: #646970;">
+						<em><?php esc_html_e( 'The system will automatically retry failed requests with intelligent wait times based on the error type.', 'connect-crm-realstate' ); ?></em>
+					</p>
+				</div>
+				<?php
+			}
+			?>
+
 			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
 		</div>
-		<style>
-			.ccrmre-import-stats {
-				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-				gap: 20px;
-				margin: 20px 0 30px;
-			}
-			.ccrmre-stat-card {
-				background: white;
-				border: 1px solid #c3c4c7;
-				border-radius: 8px;
-				padding: 20px;
-				display: flex;
-				align-items: center;
-				gap: 15px;
-				box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-				transition: transform 0.2s, box-shadow 0.2s;
-			}
-			.ccrmre-stat-card:hover {
-				transform: translateY(-2px);
-				box-shadow: 0 4px 8px rgba(0,0,0,0.12);
-			}
-			.ccrmre-stat-icon {
-				width: 50px;
-				height: 50px;
-				border-radius: 8px;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				flex-shrink: 0;
-			}
-			.ccrmre-icon-api {
-				background: #e8f4fd;
-				color: #0073aa;
-			}
-			.ccrmre-icon-wp {
-				background: #f0f0f1;
-				color: #2c3338;
-			}
-			.ccrmre-icon-import {
-				background: #ecf7ed;
-				color: #00a32a;
-			}
-			.ccrmre-icon-delete {
-				background: #fcf0f1;
-				color: #d63638;
-			}
-			.ccrmre-stat-icon .dashicons {
-				font-size: 28px;
-				width: 28px;
-				height: 28px;
-			}
-			.ccrmre-stat-content {
-				flex: 1;
-			}
-			.ccrmre-stat-value {
-				font-size: 32px;
-				font-weight: 700;
-				line-height: 1.2;
-				color: #1d2327;
-			}
-			.ccrmre-stat-label {
-				font-size: 13px;
-				font-weight: 600;
-				color: #50575e;
-				margin-top: 5px;
-			}
-			.ccrmre-stat-sublabel {
-				font-size: 12px;
-				color: #787c82;
-				margin-top: 2px;
-			}
-			.ccrmre-stat-card.loading .ccrmre-stat-value {
-				opacity: 0.5;
-			}
 
-			.connect-realstate-manual-action .import-button-wrapper {
-				display: flex;
-				align-items: center;
-				gap: 10px;
-				margin-bottom: 15px;
-			}
-			
-			#import-mode {
-				height: 40px;
-				padding: 0 12px;
-				font-size: 14px;
-				border: 1px solid #2271b1;
-				border-radius: 3px;
-				background: white;
-				color: #2271b1;
-				cursor: pointer;
-				min-width: 180px;
-				line-height: 38px;
-			}
-			
-			#import-mode:focus {
-				outline: none;
-				border-color: #135e96;
-				box-shadow: 0 0 0 1px #135e96;
-			}
-			
-			#import-mode:disabled {
-				opacity: 0.6;
-				cursor: not-allowed;
-			}
-			
-			.connect-realstate-manual-action #manual_import,
-			.connect-realstate-manual-action #refresh_stats {
-				height: 40px;
-				padding: 0 16px;
-				font-size: 14px;
-				line-height: 38px;
-				display: inline-flex;
-				align-items: center;
-				gap: 6px;
-			}
-			.connect-realstate-manual-action .spinner {
-				float: none;
-				margin: 0;
-				display: none;
-			}
-			.connect-realstate-manual-action .spinner.is-active {
-				display: block;
-				visibility: visible;
-			}
-			.connect-realstate-manual-action #manual_import:disabled,
-			.connect-realstate-manual-action #refresh_stats:disabled {
-				opacity: 0.6;
-				cursor: not-allowed;
-			}
-			.connect-realstate-manual-action #refresh_stats .dashicons {
-				margin-right: 5px;
-			}
-			.connect-realstate-manual-action #logwrapper {
-				margin-top: 20px;
-				padding: 15px;
-				background: #f0f0f1;
-				border: 1px solid #c3c4c7;
-				border-radius: 4px;
-			}
-			.connect-realstate-manual-action #loglist {
-				max-height: 400px;
-				overflow-y: auto;
-				background: white;
-				padding: 10px;
-				border-radius: 3px;
-			}
-			.connect-realstate-manual-action #loglist p {
-				margin: 5px 0;
-				padding: 5px 10px;
-				border-left: 3px solid #0073aa;
-			}
-			.connect-realstate-manual-action #loglist p.odd {
-				background: #f9f9f9;
-			}
-			.connect-realstate-manual-action #loglist p.even {
-				background: white;
-			}
-			.connect-realstate-manual-action #loglist p.error {
-				border-left-color: #d63638;
-				background: #fcf0f1;
-			}
-		</style>
-		<script>
+		<script type="text/javascript">
 		function loadImportStats() {
 			const btn = document.getElementById('refresh_stats');
 			const cards = document.querySelectorAll('.ccrmre-stat-card');

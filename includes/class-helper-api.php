@@ -34,23 +34,69 @@ class API {
 	 * @var array
 	 */
 	const RETRY_CONFIG = array(
-		'timeout'     => array(
-			'wait'    => 30,  // 30 seconds
+		'timeout'      => array(
+			'wait'    => 30,  // 30 seconds.
 			'message' => 'Connection timeout, retrying in %d seconds...',
 		),
-		'rate_limit'  => array(
-			'wait'    => 300, // 5 minutes
+		'rate_limit'   => array(
+			'wait'    => 300, // 5 minutes.
 			'message' => 'Rate limit reached, waiting %d seconds before retry...',
 		),
 		'server_error' => array(
-			'wait'    => 120, // 2 minutes
+			'wait'    => 120, // 2 minutes.
 			'message' => 'Server error, retrying in %d seconds...',
 		),
-		'default'     => array(
-			'wait'    => 60,  // 1 minute
+		'default'      => array(
+			'wait'    => 60,  // 1 minute.
 			'message' => 'API error, retrying in %d seconds...',
 		),
 	);
+
+	/**
+	 * Get API configuration information
+	 *
+	 * Returns technical specifications and limitations for each API type.
+	 *
+	 * @param string $crm_type CRM type (anaconda, inmovilla, inmovilla_procesos). If empty, returns all.
+	 * @return array API configuration array
+	 */
+	public static function get_api_config( $crm_type = '' ) {
+		$config = array(
+			'anaconda'           => array(
+				'name'             => 'Anaconda',
+				'timeout'          => 300,  // 5 minutes in seconds.
+				'pagination'       => 200,
+				'retry_timeout'    => self::RETRY_CONFIG['timeout']['wait'],
+				'retry_rate_limit' => self::RETRY_CONFIG['rate_limit']['wait'],
+				'retry_server'     => self::RETRY_CONFIG['server_error']['wait'],
+				'max_retries'      => self::MAX_RETRIES,
+			),
+			'inmovilla'          => array(
+				'name'             => 'Inmovilla',
+				'timeout'          => 60,   // 1 minute in seconds.
+				'pagination'       => 50,
+				'retry_timeout'    => self::RETRY_CONFIG['timeout']['wait'],
+				'retry_rate_limit' => self::RETRY_CONFIG['rate_limit']['wait'],
+				'retry_server'     => self::RETRY_CONFIG['server_error']['wait'],
+				'max_retries'      => self::MAX_RETRIES,
+			),
+			'inmovilla_procesos' => array(
+				'name'             => 'Inmovilla Procesos',
+				'timeout'          => 300,  // 5 minutes in seconds.
+				'pagination'       => -1,   // All at once.
+				'retry_timeout'    => self::RETRY_CONFIG['timeout']['wait'],
+				'retry_rate_limit' => self::RETRY_CONFIG['rate_limit']['wait'],
+				'retry_server'     => self::RETRY_CONFIG['server_error']['wait'],
+				'max_retries'      => self::MAX_RETRIES,
+			),
+		);
+
+		if ( ! empty( $crm_type ) && isset( $config[ $crm_type ] ) ) {
+			return $config[ $crm_type ];
+		}
+
+		return $config;
+	}
 
 	/**
 	 * Detect error type from response
@@ -152,12 +198,13 @@ class API {
 			);
 		}
 		// API connection.
-		$args = array(
+		$api_config = self::get_api_config( 'anaconda' );
+		$args       = array(
 			'method'  => $method,
 			'headers' => array(
 				'Authorization' => 'Bearer ' . $apipassword,
 			),
-			'timeout' => 300,
+			'timeout' => $api_config['timeout'],
 		);
 		if ( ! empty( $query ) ) {
 			$args['body'] = $query;
@@ -308,7 +355,8 @@ class API {
 		$body .= '&ib=' . self::get_forwarded_ip();
 
 		// Prepare request arguments.
-		$args = array(
+		$api_config = self::get_api_config( 'inmovilla' );
+		$args       = array(
 			'method'     => 'POST',
 			'headers'    => array(
 				'Accept'          => 'text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
@@ -322,7 +370,7 @@ class API {
 			'body'       => $body,
 			'user-agent' => 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3',
 			'sslverify'  => false,
-			'timeout'    => 60,
+			'timeout'    => $api_config['timeout'],
 		);
 
 		// Make API request.
@@ -464,13 +512,14 @@ class API {
 		}
 
 		// Build request arguments.
-		$args = array(
+		$api_config = self::get_api_config( 'inmovilla_procesos' );
+		$args       = array(
 			'method'  => $method,
 			'headers' => array(
 				'Content-Type' => 'application/json',
 				'Token'        => $apipassword,
 			),
-			'timeout' => 300,
+			'timeout' => $api_config['timeout'],
 		);
 
 		if ( ! empty( $body ) && in_array( $method, array( 'POST', 'PUT' ), true ) ) {
@@ -986,7 +1035,16 @@ class API {
 
 			// Get status if available.
 			if ( isset( $fields['status'] ) && isset( $property[ $fields['status'] ] ) ) {
-				$property_info[ $prefix . 'status' ] = $property[ $fields['status'] ];
+				$status_value = $property[ $fields['status'] ];
+
+				// For inmovilla and inmovilla_procesos, nodisponible has inverse logic.
+				// nodisponible = 1 means NOT available, so status = false.
+				// nodisponible = 0 means available, so status = true.
+				if ( in_array( $crm_type, array( 'inmovilla', 'inmovilla_procesos' ), true ) && 'nodisponible' === $fields['status'] ) {
+					$status_value = ! (bool) $status_value; // Invert the logic.
+				}
+
+				$property_info[ $prefix . 'status' ] = $status_value;
 			}
 
 			// Get last_updated if available.

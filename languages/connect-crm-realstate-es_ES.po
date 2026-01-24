@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Connect CRM Real State\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/connect-crm-"
 "realstate\n"
-"POT-Creation-Date: 2026-01-24T15:04:05+00:00\n"
+"POT-Creation-Date: 2026-01-24T15:29:07+00:00\n"
 "PO-Revision-Date: 2024-04-16 13:52+0200\n"
 "Last-Translator: David Pérez <david@close.marketing>\n"
 "Language-Team: David Pérez <david@close.marketing>\n"
@@ -118,7 +118,8 @@ msgstr "%s: Se alcanzó el número máximo de reintentos. Último error: "
 #. translators: 1: Attempt number, 2: Max retries, 3: Wait seconds
 #: includes/class-helper-api.php:120
 msgid "Attempt %1$d/%2$d failed. Waiting %3$d seconds before retry..."
-msgstr "Intento %1$d/%2$d falló. Esperando %3$d segundos antes de reintentar..."
+msgstr ""
+"Intento %1$d/%2$d falló. Esperando %3$d segundos antes de reintentar..."
 
 #: includes/class-helper-api.php:150
 msgid "API password is empty"
@@ -150,50 +151,50 @@ msgid "Inmovilla Procesos API token is not configured"
 msgstr "El token de la API de Inmovilla Procesos no está configurado"
 
 #. translators: %d: HTTP error code
-#: includes/class-helper-api.php:500
+#: includes/class-helper-api.php:505
 msgid "Inmovilla Procesos API returned error code: %d"
 msgstr "La API de Inmovilla Procesos devolvió el código de error: %d"
 
-#: includes/class-helper-api.php:513
+#: includes/class-helper-api.php:519
 msgid "Invalid JSON response from Inmovilla Procesos API"
 msgstr "Respuesta JSON inválida de la API de Inmovilla Procesos"
 
-#: includes/class-helper-api.php:520
+#: includes/class-helper-api.php:526
 #, fuzzy
 msgid "Properties fetched successfully"
 msgstr "¡Campos de fusión guardados exitosamente!"
 
-#: includes/class-helper-api.php:617 includes/class-helper-api.php:662
+#: includes/class-helper-api.php:626 includes/class-helper-api.php:671
 #: includes/class-iip-import.php:267
 msgid "CRM type not configured"
 msgstr "Tipo de CRM no configurado"
 
-#: includes/class-helper-api.php:696
+#: includes/class-helper-api.php:705
 #, fuzzy
 msgid "Property ID is required"
 msgstr "ID de Propiedad"
 
-#: includes/class-helper-api.php:780
+#: includes/class-helper-api.php:789
 msgid "Error getting Anaconda fields. Please check your API connection."
 msgstr ""
 "Error al obtener los campos de Anaconda. Por favor verifica tu conexión API."
 
-#: includes/class-helper-api.php:824
+#: includes/class-helper-api.php:833
 msgid ""
 "Error getting Inmovilla Procesos fields. Please check your API connection."
 msgstr ""
 "Error al obtener los campos de Inmovilla Procesos. Por favor verifica tu "
 "conexión API."
 
-#: includes/class-helper-api.php:859
+#: includes/class-helper-api.php:868
 msgid "Error getting Inmovilla Procesos property details."
 msgstr "Error al obtener los detalles de la propiedad de Inmovilla Procesos."
 
-#: includes/class-helper-api.php:866
+#: includes/class-helper-api.php:875
 msgid "No properties found in Inmovilla Procesos."
 msgstr "No se encontraron propiedades en Inmovilla Procesos."
 
-#: includes/class-helper-api.php:888
+#: includes/class-helper-api.php:897
 msgid "Error getting Inmovilla fields. Please check your API connection."
 msgstr ""
 "Error al obtener los campos de Inmovilla. Por favor verifica tu conexión API."
@@ -208,31 +209,31 @@ msgstr "Propiedad"
 msgid "NOT Imported"
 msgstr "NO Importado"
 
-#: includes/class-helper-sync.php:104
+#: includes/class-helper-sync.php:108
 msgid "Created"
 msgstr "Creado"
 
-#: includes/class-helper-sync.php:106
+#: includes/class-helper-sync.php:110
 msgid "Updated"
 msgstr "Actualizado"
 
-#: includes/class-helper-sync.php:195 includes/class-iip-import.php:194
+#: includes/class-helper-sync.php:199 includes/class-iip-import.php:194
 msgid "Property ID:"
 msgstr "ID de Propiedad:"
 
-#: includes/class-helper-sync.php:323
+#: includes/class-helper-sync.php:327
 msgid "Skipped (Not Available in CRM)"
 msgstr ""
 
-#: includes/class-helper-sync.php:338
+#: includes/class-helper-sync.php:342
 msgid "Unpublished (Set to Draft)"
 msgstr ""
 
-#: includes/class-helper-sync.php:343
+#: includes/class-helper-sync.php:347
 msgid "Moved to Trash"
 msgstr ""
 
-#: includes/class-helper-sync.php:348
+#: includes/class-helper-sync.php:352
 msgid "Kept Published (Not Available)"
 msgstr ""
 
