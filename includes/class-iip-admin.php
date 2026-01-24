@@ -117,6 +117,7 @@ class Admin {
 		}
 
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
+		$active_tab = ! ccrmre_is_license_active() ? 'iip-license' : $active_tab;
 
 		// Enqueue import styles on manual import tab.
 		if ( 'iip-import' === $active_tab ) {
@@ -216,6 +217,7 @@ class Admin {
 
 		// Set active class for navigation tabs.
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
+		$active_tab = ! ccrmre_is_license_active() ? 'iip-license' : $active_tab;
 
 		echo '<div class="wrap bialty-containter">';
 		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ) . '</h2>';
@@ -660,9 +662,11 @@ class Admin {
 						<span class="dashicons dashicons-cloud"></span>
 					</div>
 					<div class="ccrmre-stat-content">
-						<div class="ccrmre-stat-value" id="stat-api-count">--</div>
-						<div class="ccrmre-stat-label"><?php esc_html_e( 'Properties in API', 'connect-crm-realstate' ); ?></div>
-						<div class="ccrmre-stat-sublabel"><?php echo esc_html( ucfirst( str_replace( '_', ' ', $crm_type ) ) ); ?></div>
+						<div class="ccrmre-stat-value" id="stat-available-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'Available in API', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel">
+							<?php esc_html_e( 'Total:', 'connect-crm-realstate' ); ?> <span id="stat-api-count">--</span>
+						</div>
 					</div>
 				</div>
 
@@ -718,8 +722,10 @@ class Admin {
 				<span class="spinner"></span>
 			</div>
 
+			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
+
 			<?php
-			// Show API limitations info.
+			// Show API limitations info after log.
 			$crm_type   = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
 			$api_config = API::get_api_config( $crm_type );
 
@@ -802,8 +808,6 @@ class Admin {
 				<?php
 			}
 			?>
-
-			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
 		</div>
 
 		<script type="text/javascript">
@@ -823,6 +827,7 @@ class Admin {
 				},
 				success: function(response) {
 					if (response.success) {
+						document.getElementById('stat-available-count').textContent = response.data.available_count.toLocaleString();
 						document.getElementById('stat-api-count').textContent = response.data.api_count.toLocaleString();
 						document.getElementById('stat-wp-count').textContent = response.data.wp_count.toLocaleString();
 						document.getElementById('stat-import-count').textContent = response.data.import_count.toLocaleString();

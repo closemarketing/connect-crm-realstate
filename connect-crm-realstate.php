@@ -71,6 +71,11 @@ add_action(
 		// Load autoloader.
 		require_once CCRMRE_PLUGIN_PATH . 'vendor/autoload.php';
 
+		// Load Action Scheduler.
+		if ( file_exists( CCRMRE_PLUGIN_PATH . 'vendor/woocommerce/action-scheduler/action-scheduler.php' ) ) {
+			require_once CCRMRE_PLUGIN_PATH . 'vendor/woocommerce/action-scheduler/action-scheduler.php';
+		}
+
 		if ( ! class_exists( '\Closemarketing\WPLicenseManager\License' ) ) {
 			add_action(
 				'admin_notices',

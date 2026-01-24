@@ -116,8 +116,25 @@ class Import {
 		$loop_page = $loop % $pagination;
 		$page      = floor( $loop / $pagination ) + 1;
 
+		// First step: remove properties not in API before syncing.
 		if ( 0 === $loop ) {
 			SYNC::clear_property_meta();
+
+			// Remove properties that are no longer in API.
+			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Checking properties to remove...', 'connect-crm-realstate' ) . '<br/>';
+			$remove_result = SYNC::remove_properties_not_in_api( $crm );
+
+			if ( 'error' === $remove_result['status'] ) {
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'Error checking API:', 'connect-crm-realstate' ) . '</strong> ' . esc_html( $remove_result['message'] ) . '<br/>';
+			} elseif ( $remove_result['count'] > 0 ) {
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'Properties removed (not in API):', 'connect-crm-realstate' ) . '</strong> ' . $remove_result['count'] . '<br/>';
+
+				foreach ( $remove_result['details'] as $removed ) {
+					$progress_msg .= '&nbsp;&nbsp;&nbsp;- ' . esc_html__( 'ID:', 'connect-crm-realstate' ) . ' ' . esc_html( $removed['property_id'] ) . ' - ' . esc_html( $removed['title'] ) . '<br/>';
+				}
+			} else {
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'No properties to remove.', 'connect-crm-realstate' ) . '<br/>';
+			}
 		}
 
 		// When starting a new page (loop_page = 0), always fetch from API.
@@ -230,8 +247,18 @@ class Import {
 		}
 
 		if ( $finish ) {
-			$count         = SYNC::trash_not_synced();
-			$progress_msg .= esc_html__( 'Properties not synced and sent to trash: ', 'connect-crm-realstate' ) . $count;
+			// Check for any properties that failed to sync during the process.
+			$trash_result = SYNC::trash_not_synced();
+
+			if ( $trash_result['count'] > 0 ) {
+				$progress_msg .= '<br/>[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . esc_html__( 'Properties that failed sync (sent to trash):', 'connect-crm-realstate' ) . '</strong> ' . $trash_result['count'] . '<br/>';
+
+				foreach ( $trash_result['details'] as $trashed ) {
+					$progress_msg .= '&nbsp;&nbsp;&nbsp;- ' . esc_html__( 'ID:', 'connect-crm-realstate' ) . ' ' . esc_html( $trashed['property_id'] ) . ' - ' . esc_html( $trashed['title'] ) . '<br/>';
+				}
+			}
+
+			$progress_msg .= '<br/>[' . date_i18n( 'H:i:s' ) . '] <strong style="color:green;">' . esc_html__( 'Import completed successfully!', 'connect-crm-realstate' ) . '</strong><br/>';
 
 			// Clear transients.
 			$size_clean = -1 === $pagination ? $totalprop : $pagination;
@@ -352,12 +379,13 @@ class Import {
 
 		wp_send_json_success(
 			array(
-				'api_count'      => $api_count,
-				'wp_count'       => $wp_count,
-				'import_count'   => $import_count,
-				'new_count'      => $new_count,
-				'outdated_count' => $outdated_count,
-				'delete_count'   => $delete_count,
+				'api_count'       => $api_count,
+				'available_count' => count( $available_properties ),
+				'wp_count'        => $wp_count,
+				'import_count'    => $import_count,
+				'new_count'       => $new_count,
+				'outdated_count'  => $outdated_count,
+				'delete_count'    => $delete_count,
 			)
 		);
 	}

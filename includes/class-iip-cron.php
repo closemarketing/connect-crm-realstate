@@ -33,8 +33,8 @@ class Cron {
 		$settings = get_option( 'conncrmreal_settings' );
 
 		if ( isset( $settings['cron'] ) && 'yes' === $settings['cron'] ) {
-			// Add action Schedule.
-			add_action( 'init', array( $this, 'action_scheduler' ) );
+			// Add action Schedule after Action Scheduler is ready.
+			add_action( 'action_scheduler_init', array( $this, 'action_scheduler' ) );
 			add_action( 'ccrmre_cron_sync_properties', array( $this, 'cron_sync_properties' ) );
 		}
 	}
@@ -45,6 +45,11 @@ class Cron {
 	 * @return void
 	 */
 	public function action_scheduler() {
+		// Check if Action Scheduler is available.
+		if ( ! function_exists( 'as_has_scheduled_action' ) ) {
+			return;
+		}
+
 		if ( false === as_has_scheduled_action( 'ccrmre_cron_sync_properties' ) ) {
 			as_schedule_recurring_action( time(), CCRMRE_SYNC_PERIOD, 'ccrmre_cron_sync_properties' );
 		}
