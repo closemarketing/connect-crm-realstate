@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Connect CRM Real State\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/connect-crm-"
 "realstate\n"
-"POT-Creation-Date: 2026-01-24T11:41:49+00:00\n"
+"POT-Creation-Date: 2026-01-24T15:04:05+00:00\n"
 "PO-Revision-Date: 2024-04-16 13:52+0200\n"
 "Last-Translator: David Pérez <david@close.marketing>\n"
 "Language-Team: David Pérez <david@close.marketing>\n"
@@ -110,62 +110,90 @@ msgstr ""
 msgid "Next photo"
 msgstr ""
 
-#: includes/class-helper-api.php:39
+#. translators: %s: API name
+#: includes/class-helper-api.php:106
+msgid "%s: Maximum retry attempts reached. Last error: "
+msgstr "%s: Se alcanzó el número máximo de reintentos. Último error: "
+
+#. translators: 1: Attempt number, 2: Max retries, 3: Wait seconds
+#: includes/class-helper-api.php:120
+msgid "Attempt %1$d/%2$d failed. Waiting %3$d seconds before retry..."
+msgstr "Intento %1$d/%2$d falló. Esperando %3$d segundos antes de reintentar..."
+
+#: includes/class-helper-api.php:150
 msgid "API password is empty"
 msgstr "La contraseña de la API está vacía"
 
-#: includes/class-helper-api.php:162
+#: includes/class-helper-api.php:178 includes/class-iip-cron.php:71
+msgid "Unknown API error"
+msgstr "Error desconocido de API"
+
+#: includes/class-helper-api.php:186
+msgid "Request successful"
+msgstr "Solicitud exitosa"
+
+#: includes/class-helper-api.php:284
 msgid "Inmovilla API credentials are not configured"
 msgstr "Las credenciales de la API de Inmovilla no están configuradas"
 
 #. translators: %d: HTTP response code
-#: includes/class-helper-api.php:227
+#: includes/class-helper-api.php:351
 msgid "Inmovilla API returned error code: %d"
 msgstr "La API de Inmovilla devolvió el código de error: %d"
 
-#: includes/class-helper-api.php:237
+#: includes/class-helper-api.php:362
 msgid "Invalid JSON response from Inmovilla API"
 msgstr "Respuesta JSON inválida de la API de Inmovilla"
 
-#: includes/class-helper-api.php:335
+#: includes/class-helper-api.php:461
 msgid "Inmovilla Procesos API token is not configured"
 msgstr "El token de la API de Inmovilla Procesos no está configurado"
 
-#. translators: %d: HTTP error code.
-#: includes/class-helper-api.php:371
+#. translators: %d: HTTP error code
+#: includes/class-helper-api.php:500
 msgid "Inmovilla Procesos API returned error code: %d"
 msgstr "La API de Inmovilla Procesos devolvió el código de error: %d"
 
-#: includes/class-helper-api.php:381
+#: includes/class-helper-api.php:513
 msgid "Invalid JSON response from Inmovilla Procesos API"
 msgstr "Respuesta JSON inválida de la API de Inmovilla Procesos"
 
-#: includes/class-helper-api.php:483 includes/class-helper-api.php:527
-#: includes/class-iip-import.php:253
+#: includes/class-helper-api.php:520
+#, fuzzy
+msgid "Properties fetched successfully"
+msgstr "¡Campos de fusión guardados exitosamente!"
+
+#: includes/class-helper-api.php:617 includes/class-helper-api.php:662
+#: includes/class-iip-import.php:267
 msgid "CRM type not configured"
 msgstr "Tipo de CRM no configurado"
 
-#: includes/class-helper-api.php:653
+#: includes/class-helper-api.php:696
+#, fuzzy
+msgid "Property ID is required"
+msgstr "ID de Propiedad"
+
+#: includes/class-helper-api.php:780
 msgid "Error getting Anaconda fields. Please check your API connection."
 msgstr ""
 "Error al obtener los campos de Anaconda. Por favor verifica tu conexión API."
 
-#: includes/class-helper-api.php:696
+#: includes/class-helper-api.php:824
 msgid ""
 "Error getting Inmovilla Procesos fields. Please check your API connection."
 msgstr ""
 "Error al obtener los campos de Inmovilla Procesos. Por favor verifica tu "
 "conexión API."
 
-#: includes/class-helper-api.php:730
+#: includes/class-helper-api.php:859
 msgid "Error getting Inmovilla Procesos property details."
 msgstr "Error al obtener los detalles de la propiedad de Inmovilla Procesos."
 
-#: includes/class-helper-api.php:736
+#: includes/class-helper-api.php:866
 msgid "No properties found in Inmovilla Procesos."
 msgstr "No se encontraron propiedades en Inmovilla Procesos."
 
-#: includes/class-helper-api.php:757
+#: includes/class-helper-api.php:888
 msgid "Error getting Inmovilla fields. Please check your API connection."
 msgstr ""
 "Error al obtener los campos de Inmovilla. Por favor verifica tu conexión API."
@@ -188,7 +216,7 @@ msgstr "Creado"
 msgid "Updated"
 msgstr "Actualizado"
 
-#: includes/class-helper-sync.php:195
+#: includes/class-helper-sync.php:195 includes/class-iip-import.php:194
 msgid "Property ID:"
 msgstr "ID de Propiedad:"
 
@@ -569,8 +597,12 @@ msgid_plural "%d fields auto-mapped successfully!"
 msgstr[0] "¡%d campo auto-mapeado exitosamente!"
 msgstr[1] "¡%d campos auto-mapeados exitosamente!"
 
+#: includes/class-iip-cron.php:90
+msgid "Unknown property error"
+msgstr "Error desconocido de propiedad"
+
 #. translators: %1$s: number of properties, %2$s: time
-#: includes/class-iip-cron.php:103
+#: includes/class-iip-cron.php:132
 msgid "## %1$s - Synced %2$s properties in %3$s"
 msgstr "## %1$s - Propiedades sincronizadas %2$s en %3$s"
 
@@ -609,9 +641,10 @@ msgstr ""
 
 #: includes/class-iip-import.php:143
 msgid "If your credentials are correct, wait a few minutes and try again."
-msgstr "Si tus credenciales son correctas, espera unos minutos e inténtalo de nuevo."
+msgstr ""
+"Si tus credenciales son correctas, espera unos minutos e inténtalo de nuevo."
 
-#: includes/class-iip-import.php:145
+#: includes/class-iip-import.php:145 includes/class-iip-import.php:198
 msgid "API ERROR:"
 msgstr "ERROR DE API:"
 
@@ -623,14 +656,22 @@ msgstr "No se encontraron propiedades para importar."
 msgid "No more properties from API. Import complete."
 msgstr "No hay más propiedades de la API. Importación completa."
 
-#: includes/class-iip-import.php:199
+#: includes/class-iip-import.php:196
+msgid "Error:"
+msgstr ""
+
+#: includes/class-iip-import.php:213
 #, fuzzy
 msgid "View Post"
 msgstr "Ver propiedades"
 
-#: includes/class-iip-import.php:220
+#: includes/class-iip-import.php:234
 msgid "Properties not synced and sent to trash: "
 msgstr "Propiedades no sincronizadas y enviadas a la papelera: "
+
+#: includes/class-iip-import.php:281
+msgid "Error fetching property IDs from API"
+msgstr ""
 
 #: includes/class-iip-post-type.php:66
 msgid "properties"

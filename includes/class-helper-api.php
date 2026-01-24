@@ -22,6 +22,117 @@ defined( 'ABSPATH' ) || exit;
  */
 class API {
 	/**
+	 * Maximum number of retry attempts
+	 *
+	 * @var int
+	 */
+	const MAX_RETRIES = 3;
+
+	/**
+	 * Retry configuration by error type
+	 *
+	 * @var array
+	 */
+	const RETRY_CONFIG = array(
+		'timeout'     => array(
+			'wait'    => 30,  // 30 seconds
+			'message' => 'Connection timeout, retrying in %d seconds...',
+		),
+		'rate_limit'  => array(
+			'wait'    => 300, // 5 minutes
+			'message' => 'Rate limit reached, waiting %d seconds before retry...',
+		),
+		'server_error' => array(
+			'wait'    => 120, // 2 minutes
+			'message' => 'Server error, retrying in %d seconds...',
+		),
+		'default'     => array(
+			'wait'    => 60,  // 1 minute
+			'message' => 'API error, retrying in %d seconds...',
+		),
+	);
+
+	/**
+	 * Detect error type from response
+	 *
+	 * @param mixed $response WP_Error or response array.
+	 * @param int   $code HTTP response code.
+	 * @return string Error type (timeout, rate_limit, server_error, default).
+	 */
+	private static function detect_error_type( $response, $code = 0 ) {
+		if ( is_wp_error( $response ) ) {
+			$error_code = $response->get_error_code();
+			if ( in_array( $error_code, array( 'http_request_timeout', 'http_request_failed' ), true ) ) {
+				return 'timeout';
+			}
+		}
+
+		if ( 429 === $code ) {
+			return 'rate_limit';
+		}
+
+		if ( $code >= 500 ) {
+			return 'server_error';
+		}
+
+		return 'default';
+	}
+
+	/**
+	 * Execute request with retry logic
+	 *
+	 * @param callable $request_callback Function that makes the actual API request.
+	 * @param string   $api_name Name of the API (for logging).
+	 * @return array Response with status, message, and data.
+	 */
+	private static function execute_with_retry( $request_callback, $api_name = 'API' ) {
+		$attempt = 0;
+
+		while ( $attempt <= self::MAX_RETRIES ) {
+			$attempt++;
+
+			// Execute the request.
+			$result = call_user_func( $request_callback );
+
+			// If successful, return immediately.
+			if ( 'ok' === $result['status'] ) {
+				return $result;
+			}
+
+			// If last attempt, return the error.
+			if ( $attempt > self::MAX_RETRIES ) {
+				$result['message'] = sprintf(
+					/* translators: %s: API name */
+					__( '%s: Maximum retry attempts reached. Last error: ', 'connect-crm-realstate' ),
+					$api_name
+				) . $result['message'];
+				return $result;
+			}
+
+			// Detect error type and get wait time.
+			$error_type   = isset( $result['error_type'] ) ? $result['error_type'] : 'default';
+			$retry_config = isset( self::RETRY_CONFIG[ $error_type ] ) ? self::RETRY_CONFIG[ $error_type ] : self::RETRY_CONFIG['default'];
+			$wait_seconds = $retry_config['wait'];
+
+			// Log retry attempt.
+			$retry_message = sprintf(
+				/* translators: 1: Attempt number, 2: Max retries, 3: Wait seconds */
+				__( 'Attempt %1$d/%2$d failed. Waiting %3$d seconds before retry...', 'connect-crm-realstate' ),
+				$attempt,
+				self::MAX_RETRIES,
+				$wait_seconds
+			);
+
+			error_log( sprintf( '%s - %s: %s', $api_name, $retry_message, $result['message'] ) );
+
+			// Wait before retry.
+			sleep( $wait_seconds );
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Request to API from Anaconda CRM
 	 *
 	 * @param string $endpoint Endpoint of API request.
@@ -35,8 +146,9 @@ class API {
 
 		if ( empty( $apipassword ) ) {
 			return array(
-				'status' => 'error',
-				'data'   => __( 'API password is empty', 'connect-crm-realstate' ),
+				'status'  => 'error',
+				'message' => __( 'API password is empty', 'connect-crm-realstate' ),
+				'data'    => array(),
 			);
 		}
 		// API connection.
@@ -51,22 +163,32 @@ class API {
 			$args['body'] = $query;
 		}
 
-		$response    = wp_remote_request( 'https://api.anaconda.guru/api/v1/' . $endpoint, $args );
-		$result_body = wp_remote_retrieve_body( $response );
-		$code        = (int) substr( wp_remote_retrieve_response_code( $response ), 0, 1 );
-		$data        = json_decode( $result_body, true );
+		return self::execute_with_retry(
+			function () use ( $args, $endpoint ) {
+				$response    = wp_remote_request( 'https://api.anaconda.guru/api/v1/' . $endpoint, $args );
+				$result_body = wp_remote_retrieve_body( $response );
+				$code        = wp_remote_retrieve_response_code( $response );
+				$code_first  = (int) substr( $code, 0, 1 );
+				$data        = json_decode( $result_body, true );
 
-		if ( is_wp_error( $response ) || empty( $response['body'] ) || 2 !== $code ) {
-			return array(
-				'status' => 'error',
-				'data'   => isset( $data['message'] ) ? $data['message'] : '',
-			);
-		} else {
-			return array(
-				'status' => 'ok',
-				'data'   => $data,
-			);
-		}
+				if ( is_wp_error( $response ) || empty( $response['body'] ) || 2 !== $code_first ) {
+					$error_type = self::detect_error_type( $response, $code );
+					return array(
+						'status'     => 'error',
+						'message'    => isset( $data['message'] ) ? $data['message'] : __( 'Unknown API error', 'connect-crm-realstate' ),
+						'data'       => array(),
+						'error_type' => $error_type,
+					);
+				}
+
+				return array(
+					'status'  => 'ok',
+					'message' => __( 'Request successful', 'connect-crm-realstate' ),
+					'data'    => $data,
+				);
+			},
+			'Anaconda API'
+		);
 	}
 
 	/**
@@ -158,8 +280,9 @@ class API {
 		// Validate required settings.
 		if ( empty( $numagencia ) || empty( $apipassword ) ) {
 			return array(
-				'status' => 'error',
-				'data'   => __( 'Inmovilla API credentials are not configured', 'connect-crm-realstate' ),
+				'status'  => 'error',
+				'message' => __( 'Inmovilla API credentials are not configured', 'connect-crm-realstate' ),
+				'data'    => array(),
 			);
 		}
 
@@ -209,8 +332,9 @@ class API {
 		// Check for errors.
 		if ( is_wp_error( $response ) ) {
 			return array(
-				'status' => 'error',
-				'data'   => $response->get_error_message(),
+				'status'  => 'error',
+				'message' => $response->get_error_message(),
+				'data'    => array(),
 			);
 		}
 
@@ -221,12 +345,13 @@ class API {
 		// Check response code.
 		if ( 200 !== $code ) {
 			return array(
-				'status' => 'error',
-				'data'   => sprintf(
+				'status'  => 'error',
+				'message' => sprintf(
 					/* translators: %d: HTTP response code */
 					__( 'Inmovilla API returned error code: %d', 'connect-crm-realstate' ),
 					$code
 				),
+				'data'    => array(),
 			);
 		}
 
@@ -237,8 +362,9 @@ class API {
 			$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' );
 			$message .= is_string( $body ) ? ' - ' . $body : '';
 			return array(
-				'status' => 'error',
-				'data'   => $message,
+				'status'  => 'error',
+				'message' => $message,
+				'data'    => array(),
 			);
 		}
 
@@ -331,8 +457,9 @@ class API {
 		// Validate required settings.
 		if ( empty( $apipassword ) ) {
 			return array(
-				'status' => 'error',
-				'data'   => __( 'Inmovilla Procesos API token is not configured', 'connect-crm-realstate' ),
+				'status'  => 'error',
+				'message' => __( 'Inmovilla Procesos API token is not configured', 'connect-crm-realstate' ),
+				'data'    => array(),
 			);
 		}
 
@@ -350,41 +477,57 @@ class API {
 			$args['body'] = wp_json_encode( $body );
 		}
 
-		// Make API request.
-		$api_url     = 'https://procesos.inmovilla.com/api/v1/' . $endpoint;
-		$response    = wp_remote_request( $api_url, $args );
-		$result_body = wp_remote_retrieve_body( $response );
-		$code        = wp_remote_retrieve_response_code( $response );
+		// Execute request with retry logic.
+		return self::execute_with_retry(
+			function () use ( $args, $endpoint ) {
+				$api_url     = 'https://procesos.inmovilla.com/api/v1/' . $endpoint;
+				$response    = wp_remote_request( $api_url, $args );
+				$result_body = wp_remote_retrieve_body( $response );
+				$code        = wp_remote_retrieve_response_code( $response );
 
-		if ( is_wp_error( $response ) ) {
-			return array(
-				'status' => 'error',
-				'data'   => $response->get_error_message(),
-			);
-		}
+				if ( is_wp_error( $response ) ) {
+					$error_type = self::detect_error_type( $response, $code );
+					return array(
+						'status'     => 'error',
+						'message'    => $response->get_error_message(),
+						'data'       => array(),
+						'error_type' => $error_type,
+					);
+				}
 
-		// Check for HTTP errors.
-		if ( $code < 200 || $code >= 300 ) {
-			return array(
-				'status' => 'error',
-				// translators: %d: HTTP error code.
-				'data'   => sprintf( __( 'Inmovilla Procesos API returned error code: %d', 'connect-crm-realstate' ), $code ),
-			);
-		}
+				// Check for HTTP errors.
+				if ( $code < 200 || $code >= 300 ) {
+					$error_type = self::detect_error_type( $response, $code );
+					return array(
+						'status'     => 'error',
+						'message'    => sprintf(
+							/* translators: %d: HTTP error code */
+							__( 'Inmovilla Procesos API returned error code: %d', 'connect-crm-realstate' ),
+							$code
+						),
+						'data'       => array(),
+						'error_type' => $error_type,
+					);
+				}
 
-		// Validate JSON response.
-		$data = json_decode( $result_body, true );
+				// Validate JSON response.
+				$data = json_decode( $result_body, true );
 
-		if ( null === $data ) {
-			return array(
-				'status' => 'error',
-				'data'   => __( 'Invalid JSON response from Inmovilla Procesos API', 'connect-crm-realstate' ),
-			);
-		}
+				if ( null === $data ) {
+					return array(
+						'status'  => 'error',
+						'message' => __( 'Invalid JSON response from Inmovilla Procesos API', 'connect-crm-realstate' ),
+						'data'    => array(),
+					);
+				}
 
-		return array(
-			'status' => 'ok',
-			'data'   => $data,
+				return array(
+					'status'  => 'ok',
+					'message' => __( 'Properties fetched successfully', 'connect-crm-realstate' ),
+					'data'    => $data,
+				);
+			},
+			'Inmovilla Procesos API'
 		);
 	}
 
@@ -479,8 +622,9 @@ class API {
 		}
 
 		return array(
-			'status' => 'error',
-			'data'   => __( 'CRM type not configured', 'connect-crm-realstate' ),
+			'status'  => 'error',
+			'message' => __( 'CRM type not configured', 'connect-crm-realstate' ),
+			'data'    => array(),
 		);
 	}
 
@@ -523,8 +667,9 @@ class API {
 		}
 
 		return array(
-			'status' => 'error',
-			'data'   => __( 'CRM type not configured', 'connect-crm-realstate' ),
+			'status'  => 'error',
+			'message' => __( 'CRM type not configured', 'connect-crm-realstate' ),
+			'data'    => array(),
 		);
 	}
 
@@ -555,27 +700,19 @@ class API {
 			}
 
 			if ( empty( $property_id ) ) {
-				return array();
+				return array(
+					'status'  => 'error',
+					'message' => __( 'Property ID is required', 'connect-crm-realstate' ),
+				);
 			}
 
 			$result = self::request_inmovilla_procesos( 'propiedades/?cod_ofer=' . $property_id );
 
 			if ( 'ok' === $result['status'] && isset( $result['data'] ) ) {
-				$property             = $result['data'];
-				$property['fotos']    = self::get_property_photos( $property );
-				$property['cod_ofer'] = $property_id;
+				$result['data']['fotos'] = self::get_property_photos( $result['data'] );
 
-				// Only set ref and fechaact if we have property_info.
-				if ( $property_info ) {
-					$property['ref']      = empty( $property['ref'] ) ? $property_info['reference'] : $property['ref'];
-					$property['fechaact'] = empty( $property['fechaact'] ) ? $property_info['last_updated'] : $property['fechaact'];
-				}
-				$property['cod_ofer'] = $property_id;
-
-				return $property;
+				return $result;
 			}
-
-			return array();
 		} elseif ( 'inmovilla' === $crm ) {
 			// For Inmovilla, use 'ficha' type to get complete property details.
 			if ( is_array( $item ) ) {
@@ -609,12 +746,11 @@ class API {
 
 				return $property_data;
 			}
-
-			// Return original property if request fails.
-			return $item;
 		}
 
-		return $item;
+		$result['data'] = $item;
+
+		return $result;
 	}
 
 	/**
@@ -649,8 +785,9 @@ class API {
 
 			if ( 'ok' !== $result['status'] || empty( $result['data']['data'] ) ) {
 				return array(
-					'status' => 'error',
-					'data'   => __( 'Error getting Anaconda fields. Please check your API connection.', 'connect-crm-realstate' ),
+					'status'  => 'error',
+					'message' => __( 'Error getting Anaconda fields. Please check your API connection.', 'connect-crm-realstate' ),
+					'data'    => array(),
 				);
 			}
 
@@ -692,8 +829,9 @@ class API {
 
 			if ( 'ok' !== $result['status'] || empty( $result['data'] ) || ! is_array( $result['data'] ) ) {
 				return array(
-					'status' => 'error',
-					'data'   => __( 'Error getting Inmovilla Procesos fields. Please check your API connection.', 'connect-crm-realstate' ),
+					'status'  => 'error',
+					'message' => __( 'Error getting Inmovilla Procesos fields. Please check your API connection.', 'connect-crm-realstate' ),
+					'data'    => array(),
 				);
 			}
 
@@ -726,14 +864,16 @@ class API {
 					set_transient( 'ccrmre_query_inmovilla_procesos_fields', $inmovilla_fields, DAY_IN_SECONDS );
 				} else {
 					return array(
-						'status' => 'error',
-						'data'   => __( 'Error getting Inmovilla Procesos property details.', 'connect-crm-realstate' ),
+						'status'  => 'error',
+						'message' => __( 'Error getting Inmovilla Procesos property details.', 'connect-crm-realstate' ),
+						'data'    => array(),
 					);
 				}
 			} else {
 				return array(
-					'status' => 'error',
-					'data'   => __( 'No properties found in Inmovilla Procesos.', 'connect-crm-realstate' ),
+					'status'  => 'error',
+					'message' => __( 'No properties found in Inmovilla Procesos.', 'connect-crm-realstate' ),
+					'data'    => array(),
 				);
 			}
 		}
@@ -758,8 +898,9 @@ class API {
 				$message .= is_string( $result_properties['data'] ) ? ' - ' . $result_properties['data'] : '';
 
 				return array(
-					'status' => 'error',
-					'data'   => $message,
+					'status'  => 'error',
+					'message' => $message,
+					'data'    => array(),
 				);
 			}
 
@@ -792,9 +933,17 @@ class API {
 	 *
 	 * @param array  $property Property data.
 	 * @param string $crm_type CRM type.
+	 * @param bool   $prefix Prefix for transient key.
+	 *
 	 * @return array Property info with id, reference, status, last_updated
 	 */
-	public static function get_property_info( $property, $crm_type ) {
+	public static function get_property_info( $property, $crm_type, $prefix = false ) {
+		if ( $prefix ) {
+			$prefix = 'ccrmre_';
+		} else {
+			$prefix = '';
+		}
+
 		$match = array(
 			'anaconda'           => array(
 				'id'           => 'id',
@@ -817,32 +966,32 @@ class API {
 		);
 
 		$property_info = array(
-			'id'           => null,
-			'reference'    => null,
-			'status'       => null,
-			'last_updated' => null,
+			$prefix . 'id'           => null,
+			$prefix . 'reference'    => null,
+			$prefix . 'status'       => null,
+			$prefix . 'last_updated' => null,
 		);
 		if ( isset( $match[ $crm_type ] ) ) {
 			$fields = $match[ $crm_type ];
 
 			// Get ID if available.
 			if ( isset( $fields['id'] ) && isset( $property[ $fields['id'] ] ) ) {
-				$property_info['id'] = $property[ $fields['id'] ];
+				$property_info[ $prefix . 'id' ] = $property[ $fields['id'] ];
 			}
 
 			// Get reference if available.
 			if ( isset( $fields['reference'] ) && isset( $property[ $fields['reference'] ] ) ) {
-				$property_info['reference'] = $property[ $fields['reference'] ];
+				$property_info[ $prefix . 'reference' ] = $property[ $fields['reference'] ];
 			}
 
 			// Get status if available.
 			if ( isset( $fields['status'] ) && isset( $property[ $fields['status'] ] ) ) {
-				$property_info['status'] = $property[ $fields['status'] ];
+				$property_info[ $prefix . 'status' ] = $property[ $fields['status'] ];
 			}
 
 			// Get last_updated if available.
 			if ( isset( $fields['last_updated'] ) && isset( $property[ $fields['last_updated'] ] ) ) {
-				$property_info['last_updated'] = $property[ $fields['last_updated'] ];
+				$property_info[ $prefix . 'last_updated' ] = $property[ $fields['last_updated'] ];
 			}
 		}
 

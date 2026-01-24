@@ -66,18 +66,47 @@ class Cron {
 		}
 		$result_api = API::get_properties( 0, $last_sync );
 
-		if ( 'error' === $result_api['status'] || empty( $result_api['data'] ) ) {
+		if ( 'error' === $result_api['status'] ) {
+			// Log error if needed.
+			$error_message = isset( $result_api['message'] ) ? $result_api['message'] : __( 'Unknown API error', 'connect-crm-realstate' );
+			error_log( 'Connect CRM Real State - Cron sync error: ' . $error_message );
 			return;
 		}
-		$result_log = array();
-		foreach ( $result_api['data'] as $property ) {
-			$result_log[] = SYNC::sync_property( $property );
+
+		$properties = isset( $result_api['data'] ) ? $result_api['data'] : array();
+
+		if ( empty( $properties ) ) {
+			return;
 		}
+
+		$settings     = get_option( 'conncrmreal_settings' );
+		$merge_fields = get_option( 'conncrmreal_merge_fields' );
+		$result_log   = array();
+
+		foreach ( $properties as $property ) {
+			$property_result = API::get_property( $property, $settings['type'] );
+
+			if ( 'error' === $property_result['status'] ) {
+				$error_message = isset( $property_result['message'] ) ? $property_result['message'] : __( 'Unknown property error', 'connect-crm-realstate' );
+				error_log( 'Connect CRM Real State - Error getting property: ' . $error_message );
+				continue;
+			}
+
+			$property_complete = isset( $property_result['data'] ) ? $property_result['data'] : array();
+
+			if ( empty( $property_complete ) ) {
+				continue;
+			}
+
+			$result_sync  = SYNC::sync_property( $property_complete, $settings, $merge_fields );
+			$result_log[] = $result_sync['message'];
+		}
+
 		$this->save_log( $time_start, $result_log );
 
 		update_option( 'ccrmre_cron_sync_last_time', gmdate( 'Y/m/d H:i:s' ) );
 		return array(
-			'synced' => count( $result_api['data'] ),
+			'synced' => count( $properties ),
 		);
 	}
 

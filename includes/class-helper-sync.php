@@ -77,6 +77,10 @@ class SYNC {
 		// Meta Info.
 		$property_info['meta_input'] = array();
 
+		// Base fields.
+		$property_info_meta          = API::get_property_info( $item, $crm, true );
+		$property_info['meta_input'] = $property_info_meta;
+
 		// Merge fields.
 		if ( empty( $settings_fields ) ) {
 			// Method without merge fields.
@@ -383,5 +387,143 @@ class SYNC {
 		}
 
 		return count( $posts_to_delete );
+	}
+
+	/**
+	 * Get WordPress property data with dates and status
+	 *
+	 * @param string $crm_type CRM type.
+	 * @return array Associative array of property_id => array(last_updated, status)
+	 */
+	public static function get_wordpress_property_data( $crm_type ) {
+		global $wpdb;
+
+		$settings  = get_option( 'conncrmreal_settings' );
+		$meta_key  = self::get_reference_meta_key( $crm_type );
+		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT 
+					pm1.meta_value as property_ref, 
+					pm2.meta_value as last_updated,
+					pm3.meta_value as status
+				FROM {$wpdb->postmeta} pm1
+				INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
+				LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = 'ccrmre_last_updated'
+				LEFT JOIN {$wpdb->postmeta} pm3 ON p.ID = pm3.post_id AND pm3.meta_key = 'ccrmre_status'
+				WHERE p.post_type = %s
+				AND p.post_status != 'trash'
+				AND pm1.meta_key = %s",
+				$post_type,
+				$meta_key
+			),
+			ARRAY_A
+		);
+		// phpcs:enable
+
+		$property_data = array();
+		foreach ( $results as $row ) {
+			if ( ! empty( $row['property_ref'] ) ) {
+				$property_data[ $row['property_ref'] ] = array(
+					'last_updated' => $row['last_updated'],
+					'status'       => (bool) $row['status'],
+				);
+			}
+		}
+
+		return $property_data;
+	}
+
+	/**
+	 * Get reference meta key based on CRM type
+	 *
+	 * @param string $crm_type CRM type.
+	 * @return string Meta key for property reference
+	 */
+	public static function get_reference_meta_key( $crm_type ) {
+		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
+
+		// Try to find the reference field in merge fields.
+		if ( 'anaconda' === $crm_type ) {
+			if ( isset( $merge_fields['id'] ) ) {
+				return $merge_fields['id'];
+			}
+		} elseif ( 'inmovilla' === $crm_type ) {
+			if ( isset( $merge_fields['referencia'] ) ) {
+				return $merge_fields['referencia'];
+			}
+		} elseif ( 'inmovilla_procesos' === $crm_type ) {
+			if ( isset( $merge_fields['cod_ofer'] ) ) {
+				return $merge_fields['cod_ofer'];
+			}
+		}
+
+		// Fallback to default property_id.
+		return 'property_id';
+	}
+
+	/**
+	 * Filter properties to only include those that need updating
+	 *
+	 * @param array  $properties List of properties from API.
+	 * @param string $crm_type CRM type.
+	 * @return array Filtered list of properties
+	 */
+	public static function filter_properties_to_update( $properties, $crm_type ) {
+		// Get WordPress properties data with cache.
+		$wp_properties = self::get_wordpress_property_data( $crm_type );
+		$wp_ids        = array_keys( $wp_properties );
+
+		// Filter properties.
+		$filtered = array();
+		foreach ( $properties as $property ) {
+			$property_info = API::get_property_info( $property, $crm_type );
+			$property_id   = ! empty( $property_info['id'] ) ? $property_info['id'] : $property_info['reference'];
+
+			if ( empty( $property_id ) ) {
+				continue;
+			}
+
+			// Check if property is new.
+			if ( ! in_array( $property_id, $wp_ids, true ) ) {
+				$filtered[] = $property;
+				continue;
+			}
+
+			// Check if property is outdated (date or status changed).
+			if ( isset( $wp_properties[ $property_id ] ) ) {
+				$wp_data      = $wp_properties[ $property_id ];
+				$needs_update = false;
+
+				// Get dates and status.
+				$api_date   = $property_info['last_updated'];
+				$wp_date    = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
+				$api_status = $property_info['status'];
+				$wp_status  = isset( $wp_data['status'] ) ? $wp_data['status'] : null;
+
+				// Check if date is newer in API.
+				if ( ! empty( $api_date ) && ! empty( $wp_date ) ) {
+					$api_timestamp = strtotime( $api_date );
+					$wp_timestamp  = strtotime( $wp_date );
+
+					if ( $api_timestamp > $wp_timestamp ) {
+						$needs_update = true;
+					}
+				}
+
+				// Check if status has changed.
+				if ( $api_status !== $wp_status ) {
+					$needs_update = true;
+				}
+
+				if ( $needs_update ) {
+					$filtered[] = $property;
+				}
+			}
+		}
+
+		return $filtered;
 	}
 }

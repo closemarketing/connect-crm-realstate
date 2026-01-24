@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-01-24T11:41:49+00:00\n"
+"POT-Creation-Date: 2026-01-24T15:04:05+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: connect-crm-realstate\n"
@@ -97,59 +97,86 @@ msgstr ""
 msgid "Next photo"
 msgstr ""
 
-#: includes/class-helper-api.php:39
+#. translators: %s: API name
+#: includes/class-helper-api.php:106
+msgid "%s: Maximum retry attempts reached. Last error: "
+msgstr ""
+
+#. translators: 1: Attempt number, 2: Max retries, 3: Wait seconds
+#: includes/class-helper-api.php:120
+msgid "Attempt %1$d/%2$d failed. Waiting %3$d seconds before retry..."
+msgstr ""
+
+#: includes/class-helper-api.php:150
 msgid "API password is empty"
 msgstr ""
 
-#: includes/class-helper-api.php:162
+#: includes/class-helper-api.php:178
+#: includes/class-iip-cron.php:71
+msgid "Unknown API error"
+msgstr ""
+
+#: includes/class-helper-api.php:186
+msgid "Request successful"
+msgstr ""
+
+#: includes/class-helper-api.php:284
 msgid "Inmovilla API credentials are not configured"
 msgstr ""
 
 #. translators: %d: HTTP response code
-#: includes/class-helper-api.php:227
+#: includes/class-helper-api.php:351
 msgid "Inmovilla API returned error code: %d"
 msgstr ""
 
-#: includes/class-helper-api.php:237
+#: includes/class-helper-api.php:362
 msgid "Invalid JSON response from Inmovilla API"
 msgstr ""
 
-#: includes/class-helper-api.php:335
+#: includes/class-helper-api.php:461
 msgid "Inmovilla Procesos API token is not configured"
 msgstr ""
 
-#. translators: %d: HTTP error code.
-#: includes/class-helper-api.php:371
+#. translators: %d: HTTP error code
+#: includes/class-helper-api.php:500
 msgid "Inmovilla Procesos API returned error code: %d"
 msgstr ""
 
-#: includes/class-helper-api.php:381
+#: includes/class-helper-api.php:513
 msgid "Invalid JSON response from Inmovilla Procesos API"
 msgstr ""
 
-#: includes/class-helper-api.php:483
-#: includes/class-helper-api.php:527
-#: includes/class-iip-import.php:253
+#: includes/class-helper-api.php:520
+msgid "Properties fetched successfully"
+msgstr ""
+
+#: includes/class-helper-api.php:617
+#: includes/class-helper-api.php:662
+#: includes/class-iip-import.php:267
 msgid "CRM type not configured"
 msgstr ""
 
-#: includes/class-helper-api.php:653
+#: includes/class-helper-api.php:696
+msgid "Property ID is required"
+msgstr ""
+
+#: includes/class-helper-api.php:780
 msgid "Error getting Anaconda fields. Please check your API connection."
 msgstr ""
 
-#: includes/class-helper-api.php:696
+#: includes/class-helper-api.php:824
 msgid "Error getting Inmovilla Procesos fields. Please check your API connection."
 msgstr ""
 
-#: includes/class-helper-api.php:730
+#: includes/class-helper-api.php:859
 msgid "Error getting Inmovilla Procesos property details."
 msgstr ""
 
-#: includes/class-helper-api.php:736
+#: includes/class-helper-api.php:866
 msgid "No properties found in Inmovilla Procesos."
 msgstr ""
 
-#: includes/class-helper-api.php:757
+#: includes/class-helper-api.php:888
 msgid "Error getting Inmovilla fields. Please check your API connection."
 msgstr ""
 
@@ -174,6 +201,7 @@ msgid "Updated"
 msgstr ""
 
 #: includes/class-helper-sync.php:195
+#: includes/class-iip-import.php:194
 msgid "Property ID:"
 msgstr ""
 
@@ -512,8 +540,12 @@ msgid_plural "%d fields auto-mapped successfully!"
 msgstr[0] ""
 msgstr[1] ""
 
+#: includes/class-iip-cron.php:90
+msgid "Unknown property error"
+msgstr ""
+
 #. translators: %1$s: number of properties, %2$s: time
-#: includes/class-iip-cron.php:103
+#: includes/class-iip-cron.php:132
 msgid "## %1$s - Synced %2$s properties in %3$s"
 msgstr ""
 
@@ -551,6 +583,7 @@ msgid "If your credentials are correct, wait a few minutes and try again."
 msgstr ""
 
 #: includes/class-iip-import.php:145
+#: includes/class-iip-import.php:198
 msgid "API ERROR:"
 msgstr ""
 
@@ -562,12 +595,20 @@ msgstr ""
 msgid "No more properties from API. Import complete."
 msgstr ""
 
-#: includes/class-iip-import.php:199
+#: includes/class-iip-import.php:196
+msgid "Error:"
+msgstr ""
+
+#: includes/class-iip-import.php:213
 msgid "View Post"
 msgstr ""
 
-#: includes/class-iip-import.php:220
+#: includes/class-iip-import.php:234
 msgid "Properties not synced and sent to trash: "
+msgstr ""
+
+#: includes/class-iip-import.php:281
+msgid "Error fetching property IDs from API"
 msgstr ""
 
 #: includes/class-iip-post-type.php:66

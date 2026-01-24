@@ -128,7 +128,7 @@ class Import {
 
 			// Filter properties if mode is 'updated'.
 			if ( 'updated' === $mode && ! empty( $properties ) ) {
-				$properties    = $this->filter_properties_to_update( $properties, $crm );
+				$properties    = SYNC::filter_properties_to_update( $properties, $crm );
 				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . sprintf(
 					/* translators: %d: number of properties to update */
 					__( 'Filtering properties to update... Found %d properties.', 'connect-crm-realstate' ),
@@ -189,7 +189,21 @@ class Import {
 				$progress_msg .= $result_sync['message'];
 			} else {
 				// Property is available, sync full details.
-				$property_complete = API::get_property( $property, $crm );
+				$result_get_property = API::get_property( $property, $crm );
+				if ( 'ok' !== $result_get_property['status'] ) {
+					$progress_msg .= ' ' . __( 'Property ID:', 'connect-crm-realstate' ) . ' ';
+					$progress_msg .= $property['id'];
+					$progress_msg .= ' ' . __( 'Error:', 'connect-crm-realstate' ) . ' ';
+
+					$progress_msg .= '<strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $result_get_property['message'] . '<br/>';
+					wp_send_json_error(
+						array(
+							'message' => $progress_msg,
+							'loop'    => $loop,
+						)
+					);
+				}
+				$property_complete = $result_get_property['data'];
 				$result_sync       = SYNC::sync_property( $property_complete, $this->settings, $this->settings_fields );
 				$progress_msg     .= $result_sync['message'];
 
@@ -262,7 +276,10 @@ class Import {
 			$api_result = API::get_all_property_ids( $crm_type, true );
 
 			if ( 'error' === $api_result['status'] ) {
-				wp_send_json_error( array( 'message' => $api_result['data'] ) );
+				$error_message = isset( $api_result['message'] ) && ! empty( $api_result['message'] )
+					? $api_result['message']
+					: __( 'Error fetching property IDs from API', 'connect-crm-realstate' );
+				wp_send_json_error( array( 'message' => $error_message ) );
 			}
 
 			// Cache for 10 minutes.
@@ -274,19 +291,9 @@ class Import {
 		$api_ids        = array_keys( $api_properties );
 
 		// Get properties from WordPress with dates (with 10-minute cache).
-		$wp_transient_key = 'ccrmre_wp_properties_' . $crm_type;
-		$wp_properties    = get_transient( $wp_transient_key );
-
-		if ( false === $wp_properties ) {
-			// No cache, fetch from database.
-			$wp_properties = $this->get_wordpress_property_data( $crm_type );
-
-			// Cache for 10 minutes.
-			set_transient( $wp_transient_key, $wp_properties, 10 * MINUTE_IN_SECONDS );
-		}
-
-		$wp_count = count( $wp_properties );
-		$wp_ids   = array_keys( $wp_properties );
+		$wp_properties = SYNC::get_wordpress_property_data( $crm_type );
+		$wp_count      = count( $wp_properties );
+		$wp_ids        = array_keys( $wp_properties );
 
 		// Calculate NEW properties (in API but not in WP).
 		$new_properties = array_diff( $api_ids, $wp_ids );
@@ -343,174 +350,5 @@ class Import {
 				'delete_count'   => $delete_count,
 			)
 		);
-	}
-
-	/**
-	 * Get WordPress property references
-	 *
-	 * @param string $crm_type CRM type.
-	 * @return array Array of property references
-	 */
-	private function get_wordpress_property_refs( $crm_type ) {
-		global $wpdb;
-
-		$meta_key = $this->get_reference_meta_key( $crm_type );
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$results = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT meta_value FROM {$wpdb->postmeta} pm
-				INNER JOIN {$wpdb->posts} p ON pm.post_id = p.ID
-				WHERE p.post_type = 'property'
-				AND p.post_status != 'trash'
-				AND pm.meta_key = %s",
-				$meta_key
-			)
-		);
-		// phpcs:enable
-
-		return array_filter( $results );
-	}
-
-	/**
-	 * Get WordPress property data with dates and status
-	 *
-	 * @param string $crm_type CRM type.
-	 * @return array Associative array of property_id => array(last_updated, status)
-	 */
-	private function get_wordpress_property_data( $crm_type ) {
-		global $wpdb;
-
-		$meta_key = $this->get_reference_meta_key( $crm_type );
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$results = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT 
-					pm1.meta_value as property_ref, 
-					pm2.meta_value as last_updated,
-					pm3.meta_value as status
-				FROM {$wpdb->postmeta} pm1
-				INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
-				LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = 'ccrmre_last_updated'
-				LEFT JOIN {$wpdb->postmeta} pm3 ON p.ID = pm3.post_id AND pm3.meta_key = 'ccrmre_status'
-				WHERE p.post_type = 'property'
-				AND p.post_status != 'trash'
-				AND pm1.meta_key = %s",
-				$meta_key
-			),
-			ARRAY_A
-		);
-		// phpcs:enable
-
-		$property_data = array();
-		foreach ( $results as $row ) {
-			if ( ! empty( $row['property_ref'] ) ) {
-				$property_data[ $row['property_ref'] ] = array(
-					'last_updated' => $row['last_updated'],
-					'status'       => $row['status'],
-				);
-			}
-		}
-
-		return $property_data;
-	}
-
-	/**
-	 * Get reference meta key based on CRM type
-	 *
-	 * @param string $crm_type CRM type.
-	 * @return string Meta key for property reference
-	 */
-	private function get_reference_meta_key( $crm_type ) {
-		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
-
-		// Try to find the reference field in merge fields.
-		if ( 'anaconda' === $crm_type ) {
-			if ( isset( $merge_fields['id'] ) ) {
-				return $merge_fields['id'];
-			}
-		} elseif ( 'inmovilla' === $crm_type ) {
-			if ( isset( $merge_fields['referencia'] ) ) {
-				return $merge_fields['referencia'];
-			}
-		} elseif ( 'inmovilla_procesos' === $crm_type ) {
-			if ( isset( $merge_fields['cod_ofer'] ) ) {
-				return $merge_fields['cod_ofer'];
-			}
-		}
-
-		// Fallback to default property_id.
-		return 'property_id';
-	}
-
-	/**
-	 * Filter properties to only include those that need updating
-	 *
-	 * @param array  $properties List of properties from API.
-	 * @param string $crm_type CRM type.
-	 * @return array Filtered list of properties
-	 */
-	private function filter_properties_to_update( $properties, $crm_type ) {
-		// Get WordPress properties data with cache.
-		$wp_transient_key = 'ccrmre_wp_properties_' . $crm_type;
-		$wp_properties    = get_transient( $wp_transient_key );
-
-		if ( false === $wp_properties ) {
-			$wp_properties = $this->get_wordpress_property_data( $crm_type );
-			set_transient( $wp_transient_key, $wp_properties, 10 * MINUTE_IN_SECONDS );
-		}
-
-		$wp_ids = array_keys( $wp_properties );
-
-		// Filter properties.
-		$filtered = array();
-		foreach ( $properties as $property ) {
-			$property_info = API::get_property_info( $property, $crm_type );
-			$property_id   = ! empty( $property_info['id'] ) ? $property_info['id'] : $property_info['reference'];
-
-			if ( empty( $property_id ) ) {
-				continue;
-			}
-
-			// Check if property is new.
-			if ( ! in_array( $property_id, $wp_ids, true ) ) {
-				$filtered[] = $property;
-				continue;
-			}
-
-			// Check if property is outdated (date or status changed).
-			if ( isset( $wp_properties[ $property_id ] ) ) {
-				$wp_data      = $wp_properties[ $property_id ];
-				$needs_update = false;
-
-				// Get dates and status.
-				$api_date   = $property_info['last_updated'];
-				$wp_date    = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
-				$api_status = $property_info['status'];
-				$wp_status  = isset( $wp_data['status'] ) ? $wp_data['status'] : null;
-
-				// Check if date is newer in API.
-				if ( ! empty( $api_date ) && ! empty( $wp_date ) ) {
-					$api_timestamp = strtotime( $api_date );
-					$wp_timestamp  = strtotime( $wp_date );
-
-					if ( $api_timestamp > $wp_timestamp ) {
-						$needs_update = true;
-					}
-				}
-
-				// Check if status has changed.
-				if ( $api_status !== $wp_status ) {
-					$needs_update = true;
-				}
-
-				if ( $needs_update ) {
-					$filtered[] = $property;
-				}
-			}
-		}
-
-		return $filtered;
 	}
 }

@@ -345,10 +345,11 @@ class HelperApiTest extends WP_UnitTestCase {
 		$result = API::get_property_info( $property, 'anaconda' );
 
 		$this->assertIsArray( $result );
-		$this->assertCount( 3, $result ); // Should only have id, reference, last_updated.
+		$this->assertCount( 4, $result ); // Should have id, reference, last_updated, status.
 		$this->assertArrayHasKey( 'id', $result );
 		$this->assertArrayHasKey( 'reference', $result );
 		$this->assertArrayHasKey( 'last_updated', $result );
+		$this->assertArrayHasKey( 'status', $result );
 		$this->assertArrayNotHasKey( 'titulo', $result );
 		$this->assertArrayNotHasKey( 'descripcion', $result );
 		$this->assertArrayNotHasKey( 'precio', $result );
