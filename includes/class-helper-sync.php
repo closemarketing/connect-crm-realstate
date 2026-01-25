@@ -365,18 +365,83 @@ class SYNC {
 	}
 
 	/**
+	 * Removes properties that are not in API before sync starts.
+	 *
+	 * @param string $crm_type CRM type.
+	 * @return array Array with count and detailed info of removed properties.
+	 */
+	public static function remove_properties_not_in_api( $crm_type ) {
+		$settings       = get_option( 'conncrmreal_settings' );
+		$settings_merge = get_option( 'conncrmreal_merge_fields' );
+		$post_type      = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$key_id         = ( 'inmovilla' === $crm_type || 'inmovilla_procesos' === $crm_type ) ? 'cod_ofer' : 'id';
+		$meta_name      = isset( $settings_merge[ $key_id ] ) ? $settings_merge[ $key_id ] : $key_id;
+
+		// Get all property IDs from API.
+		$api_result = API::get_all_property_ids( $crm_type, false );
+		if ( 'error' === $api_result['status'] ) {
+			return array(
+				'status'  => 'error',
+				'message' => $api_result['message'],
+				'count'   => 0,
+				'details' => array(),
+			);
+		}
+
+		$api_properties = isset( $api_result['data'] ) ? $api_result['data'] : array();
+		$api_ids        = array_keys( $api_properties );
+
+		// Get all property IDs from WordPress.
+		$wp_properties = self::get_wordpress_property_data( $crm_type );
+		$wp_ids        = array_keys( $wp_properties );
+
+		// Find properties in WordPress that are NOT in API.
+		$to_remove       = array_diff( $wp_ids, $api_ids );
+		$removed_details = array();
+
+		foreach ( $to_remove as $property_ref ) {
+			// Find the WordPress post by property reference.
+			$post_id = self::find_property( $property_ref, $post_type, $meta_name );
+
+			if ( ! empty( $post_id ) ) {
+				$post_title        = get_the_title( $post_id );
+				$removed_details[] = array(
+					'post_id'     => $post_id,
+					'title'       => $post_title,
+					'property_id' => $property_ref,
+				);
+
+				wp_trash_post( $post_id );
+			}
+		}
+
+		// Clear statistics cache.
+		delete_transient( 'ccrmre_wp_properties_' . $crm_type );
+		delete_transient( 'ccrmre_api_properties_' . $crm_type );
+
+		return array(
+			'status'  => 'ok',
+			'count'   => count( $removed_details ),
+			'details' => $removed_details,
+		);
+	}
+
+	/**
 	 * Sends to trash not synced products.
 	 *
-	 * @return int
+	 * @return array Array with count and detailed info of trashed properties.
 	 */
 	public static function trash_not_synced() {
-		$settings  = get_option( 'conncrmreal_settings' );
-		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$settings       = get_option( 'conncrmreal_settings' );
+		$settings_merge = get_option( 'conncrmreal_merge_fields' );
+		$post_type      = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$crm            = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+		$key_id         = ( 'inmovilla' === $crm || 'inmovilla_procesos' === $crm ) ? 'cod_ofer' : 'id';
+		$meta_name      = isset( $settings_merge[ $key_id ] ) ? $settings_merge[ $key_id ] : $key_id;
 
 		$args            = array(
 			'posts_per_page' => -1,
 			'post_type'      => $post_type,
-			'fields'         => 'ids',
 			'meta_query'     => array(
 				array(
 					'key'     => 'property_synced',
@@ -385,12 +450,26 @@ class SYNC {
 			),
 		);
 		$posts_to_delete = get_posts( $args );
+		$trashed_details = array();
 
-		foreach ( $posts_to_delete as $post_id ) {
+		foreach ( $posts_to_delete as $post ) {
+			$post_id     = is_object( $post ) ? $post->ID : $post;
+			$post_title  = get_the_title( $post_id );
+			$property_id = get_post_meta( $post_id, $meta_name, true );
+
+			$trashed_details[] = array(
+				'post_id'     => $post_id,
+				'title'       => $post_title,
+				'property_id' => $property_id,
+			);
+
 			wp_trash_post( $post_id );
 		}
 
-		return count( $posts_to_delete );
+		return array(
+			'count'   => count( $posts_to_delete ),
+			'details' => $trashed_details,
+		);
 	}
 
 	/**
