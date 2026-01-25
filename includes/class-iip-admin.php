@@ -239,11 +239,6 @@ class Admin {
 			echo '<a href="' . esc_url( '?page=iip-options&tab=iip-merge' ) . '" class="nav-tab ';
 			echo ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
 			echo '">' . esc_html__( 'Merge variables', 'connect-crm-realstate' ) . '</a>';
-
-			// Log.
-			echo '<a href="' . esc_url( '?page=iip-options&tab=iip-log' ) . '" class="nav-tab ';
-			echo ( 'iip-log' === $active_tab ? 'nav-tab-active' : '' );
-			echo '">' . esc_html__( 'Log', 'connect-crm-realstate' ) . '</a>';
 		}
 
 		// License.
