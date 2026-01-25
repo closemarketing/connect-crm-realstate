@@ -1,9 +1,45 @@
+// Tab switching functionality.
+document.addEventListener('DOMContentLoaded', function() {
+	const tabButtons = document.querySelectorAll('.ccrmre-tab-button');
+	
+	tabButtons.forEach(button => {
+		button.addEventListener('click', function() {
+			const targetTab = this.getAttribute('data-tab');
+			
+			// Remove active class from all buttons and panes.
+			document.querySelectorAll('.ccrmre-tab-button').forEach(btn => {
+				btn.classList.remove('active');
+			});
+			document.querySelectorAll('.ccrmre-tab-pane').forEach(pane => {
+				pane.classList.remove('active');
+			});
+			
+			// Add active class to clicked button and corresponding pane.
+			this.classList.add('active');
+			document.getElementById('tab-' + targetTab).classList.add('active');
+		});
+	});
+});
+
 function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
 	// Get the spinner element and mode select.
 	const spinner = element.parentElement.querySelector('.spinner');
 	const importMode = document.getElementById('import-mode');
 	const refreshButton = document.getElementById('refresh_stats');
 	const mode = importMode ? importMode.value : 'updated';
+
+	// Switch to manual tab when starting import.
+	if ( loop === 0 ) {
+		const manualTabButton = document.querySelector('.ccrmre-tab-button[data-tab="manual"]');
+		if ( manualTabButton ) {
+			manualTabButton.click();
+		}
+		// Clear previous log.
+		const loglist = document.querySelector('#logwrapper #loglist');
+		if ( loglist ) {
+			loglist.innerHTML = '';
+		}
+	}
 
 	// Add disabled state and show spinner.
 	element.disabled = true;

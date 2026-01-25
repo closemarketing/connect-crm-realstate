@@ -379,13 +379,12 @@ class Import {
 
 		wp_send_json_success(
 			array(
-				'api_count'       => $api_count,
-				'available_count' => count( $available_properties ),
-				'wp_count'        => $wp_count,
-				'import_count'    => $import_count,
-				'new_count'       => $new_count,
-				'outdated_count'  => $outdated_count,
-				'delete_count'    => $delete_count,
+				'api_count'      => $api_count,
+				'wp_count'       => $wp_count,
+				'import_count'   => $import_count,
+				'new_count'      => $new_count,
+				'outdated_count' => $outdated_count,
+				'delete_count'   => $delete_count,
 			)
 		);
 	}

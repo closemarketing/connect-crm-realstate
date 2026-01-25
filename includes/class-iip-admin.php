@@ -662,11 +662,9 @@ class Admin {
 						<span class="dashicons dashicons-cloud"></span>
 					</div>
 					<div class="ccrmre-stat-content">
-						<div class="ccrmre-stat-value" id="stat-available-count">--</div>
-						<div class="ccrmre-stat-label"><?php esc_html_e( 'Available in API', 'connect-crm-realstate' ); ?></div>
-						<div class="ccrmre-stat-sublabel">
-							<?php esc_html_e( 'Total:', 'connect-crm-realstate' ); ?> <span id="stat-api-count">--</span>
-						</div>
+						<div class="ccrmre-stat-value" id="stat-api-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'Properties in API', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel"><?php echo esc_html( ucfirst( str_replace( '_', ' ', $crm_type ) ) ); ?></div>
 					</div>
 				</div>
 
@@ -707,22 +705,119 @@ class Admin {
 				</div>
 			</div>
 
-			<div class="import-button-wrapper">
-				<select id="import-mode" class="import-mode-select">
-					<option value="updated"><?php esc_html_e( 'Properties to update', 'connect-crm-realstate' ); ?></option>
-					<option value="all"><?php esc_html_e( 'All properties', 'connect-crm-realstate' ); ?></option>
-				</select>
-				<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
-					<?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?>
-				</button>
-				<button type="button" id="refresh_stats" name="refresh_stats" class="button button-large" onclick="loadImportStats();">
-					<span class="dashicons dashicons-update"></span>
-					<?php esc_html_e( 'Refresh Statistics', 'connect-crm-realstate' ); ?>
-				</button>
-				<span class="spinner"></span>
+			<!-- Two Column Layout: Automatic Sync + Manual Import -->
+			<div class="ccrmre-two-columns">
+				<?php
+				// Column 1: Automatic Sync status.
+				$cron_enabled = isset( $settings['cron'] ) && 'yes' === $settings['cron'];
+				?>
+				<div class="ccrmre-cron-logs">
+					<h3>
+						<span class="dashicons dashicons-clock" style="vertical-align: middle;"></span>
+						<?php esc_html_e( 'Automatic Sync (Cron)', 'connect-crm-realstate' ); ?>
+						<?php if ( $cron_enabled ) : ?>
+							<span style="color: green; font-size: 0.8em; font-weight: normal;">● <?php esc_html_e( 'Enabled', 'connect-crm-realstate' ); ?></span>
+						<?php else : ?>
+							<span style="color: #999; font-size: 0.8em; font-weight: normal;">○ <?php esc_html_e( 'Disabled', 'connect-crm-realstate' ); ?></span>
+						<?php endif; ?>
+					</h3>
+					<p style="color: #646970; font-size: 14px; margin-top: 10px;">
+						<?php esc_html_e( 'Check the logs in the tab below to see automatic sync history.', 'connect-crm-realstate' ); ?>
+					</p>
+				</div>
+
+				<!-- Column 2: Manual Import Section -->
+				<div class="ccrmre-manual-import">
+					<h3>
+						<span class="dashicons dashicons-upload" style="vertical-align: middle;"></span>
+						<?php esc_html_e( 'Manual Import', 'connect-crm-realstate' ); ?>
+					</h3>
+
+					<div class="import-button-wrapper">
+						<select id="import-mode" class="import-mode-select">
+							<option value="updated"><?php esc_html_e( 'Properties to update', 'connect-crm-realstate' ); ?></option>
+							<option value="all"><?php esc_html_e( 'All properties', 'connect-crm-realstate' ); ?></option>
+						</select>
+						<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
+							<?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?>
+						</button>
+						<button type="button" id="refresh_stats" name="refresh_stats" class="button button-large" onclick="loadImportStats();">
+							<span class="dashicons dashicons-update"></span>
+							<?php esc_html_e( 'Refresh Statistics', 'connect-crm-realstate' ); ?>
+						</button>
+						<span class="spinner"></span>
+					</div>
+				</div>
 			</div>
 
-			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
+			<!-- Unified Log Section with Tabs -->
+			<div class="ccrmre-log-container">
+				<div class="ccrmre-log-tabs">
+					<button class="ccrmre-tab-button active" data-tab="automatic">
+						<span class="dashicons dashicons-clock"></span>
+						<?php esc_html_e( 'Automatic Sync', 'connect-crm-realstate' ); ?>
+					</button>
+					<button class="ccrmre-tab-button" data-tab="manual">
+						<span class="dashicons dashicons-upload"></span>
+						<?php esc_html_e( 'Manual Import', 'connect-crm-realstate' ); ?>
+					</button>
+				</div>
+
+				<div class="ccrmre-tab-content">
+					<!-- Automatic Sync Tab -->
+					<div class="ccrmre-tab-pane active" id="tab-automatic">
+						<?php
+						$uploads_dir = wp_upload_dir();
+						$folder      = $uploads_dir['basedir'] . '/ccrmre_logs/';
+						$files       = file_exists( $folder ) ? list_files( $folder, 1 ) : array();
+
+						// Sort by modification time (newest first).
+						usort(
+							$files,
+							function ( $a, $b ) {
+								return filemtime( $b ) - filemtime( $a );
+							}
+						);
+
+						// Get only the last 10 logs.
+						$files = array_slice( $files, 0, 10 );
+
+						if ( empty( $files ) ) :
+							?>
+							<p style="color: #666; font-style: italic; padding: 20px;">
+								<?php esc_html_e( 'No automatic sync logs yet.', 'connect-crm-realstate' ); ?>
+							</p>
+						<?php else : ?>
+							<div class="ccrmre-log-list">
+								<?php
+								foreach ( $files as $file ) {
+									if ( is_file( $file ) ) {
+										$filename  = basename( $file );
+										$file_open = fopen( $file, 'r' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+										$line      = $file_open ? fgets( $file_open ) : '';
+										if ( $file_open ) {
+											fclose( $file_open ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+										}
+										echo '<p style="margin: 5px 0; padding: 8px; background: #fff; border-left: 3px solid #2271b1; border-radius: 3px;">';
+										echo '<a href="' . esc_url( $uploads_dir['baseurl'] . '/ccrmre_logs/' . $filename ) . '" target="_blank" style="text-decoration: none;">';
+										echo ! empty( $line ) ? esc_html( $line ) : esc_html( $filename );
+										echo '</a>';
+										echo '</p>';
+									}
+								}
+								?>
+							</div>
+						<?php endif; ?>
+					</div>
+
+					<!-- Manual Import Tab -->
+					<div class="ccrmre-tab-pane" id="tab-manual">
+						<fieldset id="logwrapper" style="border: none; padding: 0; margin: 0;">
+							<div id="loglist"></div>
+						</fieldset>
+					</div>
+				</div>
+			</div>
 
 			<?php
 			// Show API limitations info after log.
@@ -827,7 +922,6 @@ class Admin {
 				},
 				success: function(response) {
 					if (response.success) {
-						document.getElementById('stat-available-count').textContent = response.data.available_count.toLocaleString();
 						document.getElementById('stat-api-count').textContent = response.data.api_count.toLocaleString();
 						document.getElementById('stat-wp-count').textContent = response.data.wp_count.toLocaleString();
 						document.getElementById('stat-import-count').textContent = response.data.import_count.toLocaleString();
