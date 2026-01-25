@@ -67,24 +67,7 @@ class Cron {
 		$crm_type     = isset( $settings['type'] ) ? $settings['type'] : '';
 		$result_log   = array();
 
-		// Step 1: Remove properties not in API.
-		$remove_result = SYNC::remove_properties_not_in_api( $crm_type );
-		if ( 'ok' === $remove_result['status'] && $remove_result['count'] > 0 ) {
-			$result_log[] = array(
-				'message' => sprintf(
-					/* translators: %d: number of removed properties */
-					__( 'Removed %d properties not in API', 'connect-crm-realstate' ),
-					$remove_result['count']
-				),
-			);
-			foreach ( $remove_result['details'] as $removed ) {
-				$result_log[] = array(
-					'message' => '  - ' . $removed['property_id'] . ' - ' . $removed['title'],
-				);
-			}
-		}
-
-		// Step 2: Get properties to sync.
+		// Get properties to sync.
 		$last_sync = get_option( 'ccrmre_cron_sync_last_time' );
 		if ( empty( $last_sync ) ) {
 			$date_since = strtotime( 'now - ' . CCRMRE_SYNC_PERIOD . ' seconds' );
@@ -95,7 +78,7 @@ class Cron {
 		if ( 'error' === $result_api['status'] ) {
 			$error_message = isset( $result_api['message'] ) ? $result_api['message'] : __( 'Unknown API error', 'connect-crm-realstate' );
 			$result_log[]  = array( 'message' => 'API Error: ' . $error_message );
-			$this->save_log( $time_start, $result_log, 0, $remove_result['count'] );
+			$this->save_log( $time_start, $result_log, 0 );
 			return;
 		}
 
@@ -107,11 +90,11 @@ class Cron {
 		}
 
 		if ( empty( $properties ) ) {
-			$this->save_log( $time_start, $result_log, 0, $remove_result['count'] );
+			$this->save_log( $time_start, $result_log, 0 );
 			update_option( 'ccrmre_cron_sync_last_time', gmdate( 'Y/m/d H:i:s' ) );
 			return array(
 				'synced'  => 0,
-				'removed' => $remove_result['count'],
+				'removed' => 0,
 			);
 		}
 
@@ -144,12 +127,12 @@ class Cron {
 			++$synced_count;
 		}
 
-		$this->save_log( $time_start, $result_log, $synced_count, $remove_result['count'] );
+		$this->save_log( $time_start, $result_log, $synced_count );
 
 		update_option( 'ccrmre_cron_sync_last_time', gmdate( 'Y/m/d H:i:s' ) );
 		return array(
 			'synced'  => $synced_count,
-			'removed' => $remove_result['count'],
+			'removed' => 0,
 		);
 	}
 
@@ -159,10 +142,9 @@ class Cron {
 	 * @param float $time_start   Time start.
 	 * @param array $result_log   Result.
 	 * @param int   $synced_count Number of synced properties.
-	 * @param int   $removed_count Number of removed properties.
 	 * @return void
 	 */
-	private function save_log( $time_start, $result_log, $synced_count = 0, $removed_count = 0 ) {
+	private function save_log( $time_start, $result_log, $synced_count = 0 ) {
 		// Create folder for logs.
 		$uploads_dir = wp_upload_dir();
 		$log_dir     = $uploads_dir['basedir'] . '/ccrmre_logs/';
@@ -172,11 +154,10 @@ class Cron {
 
 		$log_file = $log_dir . 'cron-' . gmdate( 'Y-m-d-H-i-s' ) . '.log';
 		$log_item = sprintf(
-			/* translators: %1$s: date, %2$d: synced count, %3$d: removed count, %4$s: time */
-			'## %1$s - Synced: %2$d, Removed: %3$d (%4$s)',
+			/* translators: %1$s: date, %2$d: synced count, %3$s: time */
+			'## %1$s - Synced: %2$d (%3$s)',
 			gmdate( 'Y-m-d H:i:s' ),
 			$synced_count,
-			$removed_count,
 			$this->get_time( $time_start )
 		);
 		$log_item .= PHP_EOL;

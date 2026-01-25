@@ -44,6 +44,7 @@ class Admin {
 		add_action( 'admin_menu', array( $this, 'plugin_settings' ) );
 		add_action( 'admin_notices', array( $this, 'show_admin_notices' ) );
 		add_action( 'wp_ajax_ccrmre_auto_map_fields', array( $this, 'ajax_auto_map_fields' ) );
+		add_action( 'wp_ajax_ccrmre_load_log_content', array( $this, 'ajax_load_log_content' ) );
 	}
 
 	/**
@@ -220,7 +221,7 @@ class Admin {
 		$active_tab = ! ccrmre_is_license_active() ? 'iip-license' : $active_tab;
 
 		echo '<div class="wrap bialty-containter">';
-		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ) . '</h2>';
+		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State', 'connect-crm-realstate' ) . '</h2>';
 		echo '<h2 class="nav-tab-wrapper">';
 
 		if ( ccrmre_is_license_active() ) {
@@ -255,10 +256,6 @@ class Admin {
 		if ( ccrmre_is_license_active() ) {
 			if ( 'iip-import' === $active_tab ) {
 				$this->plugin_import_page();
-			}
-
-			if ( 'iip-log' === $active_tab ) {
-				$this->plugin_log_page();
 			}
 
 			if ( 'iip-settings' === $active_tab ) {
@@ -662,9 +659,11 @@ class Admin {
 						<span class="dashicons dashicons-cloud"></span>
 					</div>
 					<div class="ccrmre-stat-content">
-						<div class="ccrmre-stat-value" id="stat-api-count">--</div>
-						<div class="ccrmre-stat-label"><?php esc_html_e( 'Properties in API', 'connect-crm-realstate' ); ?></div>
-						<div class="ccrmre-stat-sublabel"><?php echo esc_html( ucfirst( str_replace( '_', ' ', $crm_type ) ) ); ?></div>
+						<div class="ccrmre-stat-value" id="stat-available-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'Available in API', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel">
+							<?php esc_html_e( 'Total:', 'connect-crm-realstate' ); ?> <span id="stat-api-count">--</span>
+						</div>
 					</div>
 				</div>
 
@@ -708,7 +707,7 @@ class Admin {
 			<!-- Two Column Layout: Automatic Sync + Manual Import -->
 			<div class="ccrmre-two-columns">
 				<?php
-				// Column 1: Automatic Sync status.
+				// Column 1: Show latest cron logs section.
 				$cron_enabled = isset( $settings['cron'] ) && 'yes' === $settings['cron'];
 				?>
 				<div class="ccrmre-cron-logs">
@@ -764,32 +763,29 @@ class Admin {
 				</div>
 
 				<div class="ccrmre-tab-content">
-					<!-- Automatic Sync Tab -->
+					<!-- Automatic Sync Tab (Accordion Logs) -->
 					<div class="ccrmre-tab-pane active" id="tab-automatic">
-						<?php
-						$uploads_dir = wp_upload_dir();
-						$folder      = $uploads_dir['basedir'] . '/ccrmre_logs/';
-						$files       = file_exists( $folder ) ? list_files( $folder, 1 ) : array();
+						<div class="ccrmre-log-list">
+							<?php
+							$uploads_dir = wp_upload_dir();
+							$folder      = $uploads_dir['basedir'] . '/ccrmre_logs/';
+							$files       = file_exists( $folder ) ? list_files( $folder, 1 ) : array();
 
-						// Sort by modification time (newest first).
-						usort(
-							$files,
-							function ( $a, $b ) {
-								return filemtime( $b ) - filemtime( $a );
-							}
-						);
+							// Sort by modification time (newest first).
+							usort(
+								$files,
+								function ( $a, $b ) {
+									return filemtime( $b ) - filemtime( $a );
+								}
+							);
 
-						// Get only the last 10 logs.
-						$files = array_slice( $files, 0, 10 );
-
-						if ( empty( $files ) ) :
-							?>
-							<p style="color: #666; font-style: italic; padding: 20px;">
-								<?php esc_html_e( 'No automatic sync logs yet.', 'connect-crm-realstate' ); ?>
-							</p>
-						<?php else : ?>
-							<div class="ccrmre-log-list">
+							if ( empty( $files ) ) :
+								?>
+								<p style="color: #666; font-style: italic; padding: 20px; text-align: center;">
+									<?php esc_html_e( 'No automatic sync logs yet.', 'connect-crm-realstate' ); ?>
+								</p>
 								<?php
+							else :
 								foreach ( $files as $file ) {
 									if ( is_file( $file ) ) {
 										$filename  = basename( $file );
@@ -798,16 +794,25 @@ class Admin {
 										if ( $file_open ) {
 											fclose( $file_open ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 										}
-										echo '<p style="margin: 5px 0; padding: 8px; background: #fff; border-left: 3px solid #2271b1; border-radius: 3px;">';
-										echo '<a href="' . esc_url( $uploads_dir['baseurl'] . '/ccrmre_logs/' . $filename ) . '" target="_blank" style="text-decoration: none;">';
-										echo ! empty( $line ) ? esc_html( $line ) : esc_html( $filename );
-										echo '</a>';
-										echo '</p>';
+										?>
+										<div class="ccrmre-log-item" data-filename="<?php echo esc_attr( $filename ); ?>">
+											<div class="ccrmre-log-header">
+												<span class="ccrmre-log-toggle dashicons dashicons-arrow-right"></span>
+												<span class="ccrmre-log-title"><?php echo ! empty( $line ) ? esc_html( $line ) : esc_html( $filename ); ?></span>
+											</div>
+											<div class="ccrmre-log-content" style="display: none;">
+												<div class="ccrmre-log-loading">
+													<span class="spinner is-active"></span>
+													<?php esc_html_e( 'Loading...', 'connect-crm-realstate' ); ?>
+												</div>
+											</div>
+										</div>
+										<?php
 									}
 								}
-								?>
-							</div>
-						<?php endif; ?>
+							endif;
+							?>
+						</div>
 					</div>
 
 					<!-- Manual Import Tab -->
@@ -820,7 +825,7 @@ class Admin {
 			</div>
 
 			<?php
-			// Show API limitations info after log.
+			// Show API limitations info.
 			$crm_type   = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
 			$api_config = API::get_api_config( $crm_type );
 
@@ -922,6 +927,7 @@ class Admin {
 				},
 				success: function(response) {
 					if (response.success) {
+						document.getElementById('stat-available-count').textContent = response.data.available_count.toLocaleString();
 						document.getElementById('stat-api-count').textContent = response.data.api_count.toLocaleString();
 						document.getElementById('stat-wp-count').textContent = response.data.wp_count.toLocaleString();
 						document.getElementById('stat-import-count').textContent = response.data.import_count.toLocaleString();
@@ -947,52 +953,6 @@ class Admin {
 			loadImportStats();
 		});
 		</script>
-		<?php
-	}
-
-	/**
-	 * Log Page
-	 *
-	 * @return void
-	 */
-	public function plugin_log_page() {
-		?>
-		<div class="connect-realstate-log">
-			<h2><?php esc_html_e( 'Latest cron logs', 'connect-crm-realstate' ); ?></h2>
-			<p><?php esc_html_e( 'After you fillup the API settings, use the button below to import the products. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?>
-			</p>
-
-			<fieldset id="logwrapper">
-				<legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend>
-				<div id="loglist">
-					<?php
-					$uploads_dir = wp_upload_dir();
-					$folder      = $uploads_dir['basedir'] . '/ccrmre_logs/';
-					$files       = list_files( $folder, 2 );
-					$index       = 0;
-					foreach ( $files as $file ) {
-						if ( is_file( $file ) ) {
-							$filename = basename( $file );
-							$class    = ( 0 === $index % 2 ) ? 'even' : 'odd';
-							echo '<p class="' . esc_html( $class ) . '">';
-							$file_open = fopen( $file, 'r' );
-							if ( $file_open ) {
-								$line = fgets( $file_open );
-								fclose( $file_open );
-							} else {
-								$line = '';
-							}
-							echo '<a href="' . esc_url( $uploads_dir['baseurl'] . '/ccrmre_logs/' . $filename ) . '" target="_blank">';
-							echo ! empty( esc_html( $line ) ) ? esc_html( $line ) : esc_html( $filename );
-							echo '</a>';
-							echo '</p>';
-							++$index;
-						}
-					}
-					?>
-				</div>
-			</fieldset>
-		</div>
 		<?php
 	}
 
@@ -1240,6 +1200,52 @@ class Admin {
 		$wp_field_name = 'crm_' . $wp_field_name;
 
 		return $wp_field_name;
+	}
+
+	/**
+	 * AJAX handler to load log file content
+	 *
+	 * @return void
+	 */
+	public function ajax_load_log_content() {
+		check_ajax_referer( 'ccrmre_import_nonce', 'security' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized', 'connect-crm-realstate' ) ) );
+		}
+
+		$filename = isset( $_POST['filename'] ) ? sanitize_file_name( wp_unslash( $_POST['filename'] ) ) : '';
+
+		if ( empty( $filename ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid filename', 'connect-crm-realstate' ) ) );
+		}
+
+		$uploads_dir = wp_upload_dir();
+		$file_path   = $uploads_dir['basedir'] . '/ccrmre_logs/' . $filename;
+
+		// Security check: Ensure the file is within the logs directory.
+		$real_path = realpath( $file_path );
+		$logs_dir  = realpath( $uploads_dir['basedir'] . '/ccrmre_logs/' );
+
+		if ( false === $real_path || false === $logs_dir || 0 !== strpos( $real_path, $logs_dir ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid file path', 'connect-crm-realstate' ) ) );
+		}
+
+		if ( ! file_exists( $file_path ) ) {
+			wp_send_json_error( array( 'message' => __( 'Log file not found', 'connect-crm-realstate' ) ) );
+		}
+
+		$content = file_get_contents( $file_path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+		if ( false === $content ) {
+			wp_send_json_error( array( 'message' => __( 'Error reading log file', 'connect-crm-realstate' ) ) );
+		}
+
+		// Escape and format the content.
+		$content = esc_html( $content );
+		$content = nl2br( $content );
+
+		wp_send_json_success( array( 'content' => $content ) );
 	}
 }
 

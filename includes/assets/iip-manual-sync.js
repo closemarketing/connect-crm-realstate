@@ -1,22 +1,73 @@
-// Tab switching functionality.
 document.addEventListener('DOMContentLoaded', function() {
+	// Tab switching functionality.
 	const tabButtons = document.querySelectorAll('.ccrmre-tab-button');
+	const tabPanes = document.querySelectorAll('.ccrmre-tab-pane');
 	
 	tabButtons.forEach(button => {
 		button.addEventListener('click', function() {
 			const targetTab = this.getAttribute('data-tab');
 			
 			// Remove active class from all buttons and panes.
-			document.querySelectorAll('.ccrmre-tab-button').forEach(btn => {
-				btn.classList.remove('active');
-			});
-			document.querySelectorAll('.ccrmre-tab-pane').forEach(pane => {
-				pane.classList.remove('active');
-			});
+			tabButtons.forEach(btn => btn.classList.remove('active'));
+			tabPanes.forEach(pane => pane.classList.remove('active'));
 			
 			// Add active class to clicked button and corresponding pane.
 			this.classList.add('active');
 			document.getElementById('tab-' + targetTab).classList.add('active');
+		});
+	});
+
+	// Accordion functionality for automatic sync logs.
+	const logItems = document.querySelectorAll('.ccrmre-log-item');
+	
+	logItems.forEach(item => {
+		const header = item.querySelector('.ccrmre-log-header');
+		const content = item.querySelector('.ccrmre-log-content');
+		const toggle = item.querySelector('.ccrmre-log-toggle');
+		
+		header.addEventListener('click', function() {
+			const isOpen = content.style.display === 'block';
+			
+			if (isOpen) {
+				// Close accordion.
+				content.style.display = 'none';
+				toggle.classList.remove('dashicons-arrow-down');
+				toggle.classList.add('dashicons-arrow-right');
+				item.classList.remove('active');
+			} else {
+				// Open accordion and load content if not already loaded.
+				content.style.display = 'block';
+				toggle.classList.remove('dashicons-arrow-right');
+				toggle.classList.add('dashicons-arrow-down');
+				item.classList.add('active');
+				
+				// Load content via AJAX if not already loaded.
+				if (!content.classList.contains('loaded')) {
+					const filename = item.getAttribute('data-filename');
+					
+					fetch(ajaxAction.url, {
+						method: 'POST',
+						credentials: 'same-origin',
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded',
+						},
+						body: 'action=ccrmre_load_log_content&security=' + ajaxAction.nonce + '&filename=' + encodeURIComponent(filename),
+					})
+					.then(resp => resp.json())
+					.then(function(response) {
+						if (response.success) {
+							content.innerHTML = '<div class="ccrmre-log-data">' + response.data.content + '</div>';
+							content.classList.add('loaded');
+						} else {
+							content.innerHTML = '<div class="error" style="padding: 10px; color: red;">' + (response.data.message || 'Error loading log') + '</div>';
+						}
+					})
+					.catch(err => {
+						console.error('Error loading log:', err);
+						content.innerHTML = '<div class="error" style="padding: 10px; color: red;">Error: ' + err.message + '</div>';
+					});
+				}
+			}
 		});
 	});
 });
@@ -28,13 +79,15 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
 	const refreshButton = document.getElementById('refresh_stats');
 	const mode = importMode ? importMode.value : 'updated';
 
-	// Switch to manual tab when starting import.
+	// Switch to manual tab and clear log when starting a new import (loop 0).
 	if ( loop === 0 ) {
+		// Activate manual tab.
 		const manualTabButton = document.querySelector('.ccrmre-tab-button[data-tab="manual"]');
 		if ( manualTabButton ) {
 			manualTabButton.click();
 		}
-		// Clear previous log.
+
+		// Clear manual log.
 		const loglist = document.querySelector('#logwrapper #loglist');
 		if ( loglist ) {
 			loglist.innerHTML = '';
