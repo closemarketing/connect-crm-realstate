@@ -1208,7 +1208,7 @@ class Admin {
 	 * @return void
 	 */
 	public function ajax_load_log_content() {
-		check_ajax_referer( 'ccrmre_import_nonce', 'security' );
+		check_ajax_referer( 'ccrmre_manual_import_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Unauthorized', 'connect-crm-realstate' ) ) );

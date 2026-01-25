@@ -51,15 +51,16 @@ document.addEventListener('DOMContentLoaded', function() {
 						headers: {
 							'Content-Type': 'application/x-www-form-urlencoded',
 						},
-						body: 'action=ccrmre_load_log_content&security=' + ajaxAction.nonce + '&filename=' + encodeURIComponent(filename),
+						body: 'action=ccrmre_load_log_content&nonce=' + ajaxAction.nonce + '&filename=' + encodeURIComponent(filename),
 					})
 					.then(resp => resp.json())
 					.then(function(response) {
-						if (response.success) {
+						if (response && response.success) {
 							content.innerHTML = '<div class="ccrmre-log-data">' + response.data.content + '</div>';
 							content.classList.add('loaded');
 						} else {
-							content.innerHTML = '<div class="error" style="padding: 10px; color: red;">' + (response.data.message || 'Error loading log') + '</div>';
+							const errorMsg = (response && response.data && response.data.message) ? response.data.message : 'Error loading log';
+							content.innerHTML = '<div class="error" style="padding: 10px; color: red;">' + errorMsg + '</div>';
 						}
 					})
 					.catch(err => {
