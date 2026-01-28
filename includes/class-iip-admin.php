@@ -39,10 +39,39 @@ class Admin {
 
 	/**
 	 * Construct and intialize
-	 *
 	 */
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'plugin_settings' ) );
+		add_action( 'admin_notices', array( $this, 'show_admin_notices' ) );
+		add_action( 'wp_ajax_ccrmre_auto_map_fields', array( $this, 'ajax_auto_map_fields' ) );
+		add_action( 'wp_ajax_ccrmre_load_log_content', array( $this, 'ajax_load_log_content' ) );
+	}
+
+	/**
+	 * Show admin notices
+	 *
+	 * @return void
+	 */
+	public function show_admin_notices() {
+		// Check if we just saved merge fields.
+		if ( isset( $_GET['settings-updated'] ) && isset( $_GET['page'] ) && 'iip-options' === $_GET['page'] ) {
+			$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
+
+			if ( 'iip-merge' === $active_tab ) {
+				$merge_fields = get_option( 'conncrmreal_merge_fields' );
+				$count        = is_array( $merge_fields ) ? count( $merge_fields ) : 0;
+
+				echo '<div class="notice notice-success is-dismissible">';
+				echo '<p><strong>' . esc_html__( 'Merge fields saved successfully!', 'connect-crm-realstate' ) . '</strong> ';
+				printf(
+					/* translators: %d: number of mappings */
+					esc_html( _n( '%d field mapping saved.', '%d field mappings saved.', $count, 'connect-crm-realstate' ) ),
+					(int) $count
+				);
+				echo '</p>';
+				echo '</div>';
+			}
+		}
 	}
 
 	/**
@@ -71,6 +100,111 @@ class Admin {
 
 		// Call register settings function.
 		add_action( 'admin_init', array( $this, 'register_plugin_settings' ) );
+
+		// Enqueue scripts for specific tabs.
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+	}
+
+	/**
+	 * Enqueue admin scripts and styles
+	 *
+	 * @param string $hook Current admin page hook.
+	 * @return void
+	 */
+	public function enqueue_admin_scripts( $hook ) {
+		// Only load on our plugin page.
+		if ( 'toplevel_page_iip-options' !== $hook ) {
+			return;
+		}
+
+		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
+		$active_tab = ! ccrmre_is_license_active() ? 'iip-license' : $active_tab;
+
+		// Enqueue import styles on manual import tab.
+		if ( 'iip-import' === $active_tab ) {
+			wp_enqueue_style(
+				'ccrmre-admin-import',
+				CCRMRE_PLUGIN_URL . 'assets/css/admin-import.css',
+				array(),
+				CCRMRE_VERSION
+			);
+		}
+
+		// Enqueue settings scripts on settings tab.
+		if ( 'iip-settings' === $active_tab && ccrmre_is_license_active() ) {
+			wp_enqueue_script(
+				'ccrmre-settings',
+				plugin_dir_url( __FILE__ ) . 'assets/iip-settings.js',
+				array( 'jquery' ),
+				CCRMRE_VERSION,
+				true
+			);
+		}
+
+		// Enqueue select2 and merge fields scripts only on merge tab.
+		if ( 'iip-merge' === $active_tab && ccrmre_is_license_active() ) {
+			// Enqueue Select2 from local vendor.
+			wp_enqueue_style(
+				'ccrmre-select2',
+				CCRMRE_PLUGIN_URL . 'vendor/select2/select2/dist/css/select2.min.css',
+				array(),
+				'4.0.13'
+			);
+			wp_enqueue_script(
+				'ccrmre-select2',
+				CCRMRE_PLUGIN_URL . 'vendor/select2/select2/dist/js/select2.min.js',
+				array( 'jquery' ),
+				CCRMRE_VERSION,
+				true
+			);
+
+			// Enqueue Select2 Spanish translation.
+			$locale = get_locale();
+			if ( strpos( $locale, 'es_' ) === 0 ) {
+				wp_enqueue_script(
+					'ccrmre-select2-i18n',
+					CCRMRE_PLUGIN_URL . 'vendor/select2/select2/dist/js/i18n/es.js',
+					array( 'ccrmre-select2' ),
+					CCRMRE_VERSION,
+					true
+				);
+			}
+
+			// Enqueue merge fields styles.
+			wp_enqueue_style(
+				'ccrmre-merge-fields',
+				plugin_dir_url( __FILE__ ) . 'assets/iip-merge-fields.css',
+				array(),
+				CCRMRE_VERSION
+			);
+
+			// Enqueue merge fields script.
+			wp_enqueue_script(
+				'ccrmre-merge-fields',
+				plugin_dir_url( __FILE__ ) . 'assets/iip-merge-fields.js',
+				array( 'jquery', 'ccrmre-select2' ),
+				CCRMRE_VERSION,
+				true
+			);
+
+			// Localize script for translations.
+			wp_localize_script(
+				'ccrmre-merge-fields',
+				'ccrmreMergeFields',
+				array(
+					'searchPlaceholder' => __( 'Search or create WordPress field...', 'connect-crm-realstate' ),
+					'newFieldLabel'     => __( '(New field)', 'connect-crm-realstate' ),
+					'infoTitle'         => __( 'Creating New Fields:', 'connect-crm-realstate' ),
+					'infoMessage'       => __( 'You can create new WordPress custom fields by typing a name that doesn\'t exist in the list. The field name will be automatically sanitized (lowercase, numbers, and underscores only).', 'connect-crm-realstate' ),
+					'ajaxUrl'           => admin_url( 'admin-ajax.php' ),
+					'nonce'             => wp_create_nonce( 'ccrmre_auto_map_nonce' ),
+					'autoMapping'       => __( 'Auto-mapping fields...', 'connect-crm-realstate' ),
+					'autoMapSuccess'    => __( 'All fields have been auto-mapped successfully!', 'connect-crm-realstate' ),
+					'autoMapError'      => __( 'Error auto-mapping fields. Please try again.', 'connect-crm-realstate' ),
+					'confirmAutoMap'    => __( 'This will auto-generate WordPress field names for all CRM fields. Existing mappings will be preserved. Continue?', 'connect-crm-realstate' ),
+				)
+			);
+		}
 	}
 
 	/**
@@ -84,12 +218,13 @@ class Admin {
 
 		// Set active class for navigation tabs.
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
+		$active_tab = ! ccrmre_is_license_active() ? 'iip-license' : $active_tab;
 
 		echo '<div class="wrap bialty-containter">';
-		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State Settings', 'connect-crm-realstate' ) . '</h2>';
+		echo '<h2><span class="dashicons dashicons-media-text" style="margin-top: 6px; font-size: 24px;"></span> ' . esc_html__( 'Connect CRM Real State', 'connect-crm-realstate' ) . '</h2>';
 		echo '<h2 class="nav-tab-wrapper">';
 
-		if ( cccrmre_is_license_active() ) {
+		if ( ccrmre_is_license_active() ) {
 			// Import Properties.
 			echo '<a href="' . esc_url( '?page=iip-options&tab=iip-import' ) . '" class="nav-tab ';
 			echo ( 'iip-import' === $active_tab ? 'nav-tab-active' : '' );
@@ -104,11 +239,6 @@ class Admin {
 			echo '<a href="' . esc_url( '?page=iip-options&tab=iip-merge' ) . '" class="nav-tab ';
 			echo ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
 			echo '">' . esc_html__( 'Merge variables', 'connect-crm-realstate' ) . '</a>';
-
-			// Log.
-			echo '<a href="' . esc_url( '?page=iip-options&tab=iip-log' ) . '" class="nav-tab ';
-			echo ( 'iip-log' === $active_tab ? 'nav-tab-active' : '' );
-			echo '">' . esc_html__( 'Log', 'connect-crm-realstate' ) . '</a>';
 		}
 
 		// License.
@@ -118,13 +248,9 @@ class Admin {
 
 		echo '</h2>';
 
-		if ( cccrmre_is_license_active() ) {
+		if ( ccrmre_is_license_active() ) {
 			if ( 'iip-import' === $active_tab ) {
 				$this->plugin_import_page();
-			}
-
-			if ( 'iip-log' === $active_tab ) {
-				$this->plugin_log_page();
 			}
 
 			if ( 'iip-settings' === $active_tab ) {
@@ -138,7 +264,13 @@ class Admin {
 			if ( 'iip-merge' === $active_tab ) {
 				?>
 				<h1><?php esc_html_e( 'Merge Variables with custom values', 'connect-crm-realstate' ); ?></h1>
-				<form method="post" action="options.php">
+				<div class="notice notice-info inline">
+					<p>
+						<strong><?php esc_html_e( 'Creating New Fields:', 'connect-crm-realstate' ); ?></strong>
+						<?php esc_html_e( 'You can create new WordPress custom fields by typing a name that doesn\'t exist in the list. The field name will be automatically sanitized (lowercase, numbers, and underscores only).', 'connect-crm-realstate' ); ?>
+					</p>
+				</div>
+				<form method="post" action="options.php" id="ccrmre-merge-form">
 					<?php settings_fields( 'iip_plugin_merge_group' ); ?>
 					<?php do_settings_sections( 'conncrmreal_merge_fields' ); ?>
 					<?php submit_button(); ?>
@@ -192,6 +324,17 @@ class Admin {
 			'admin_conncrmreal_settings'
 		);
 
+		// Inmovilla specific fields.
+		if ( isset( $this->settings['type'] ) && 'inmovilla' === $this->settings['type'] ) {
+			add_settings_field(
+				'conncrmreal_numagencia',
+				__( 'Agency Number', 'connect-crm-realstate' ),
+				array( $this, 'numagencia_callback' ),
+				'conncrmreal_settings',
+				'admin_conncrmreal_settings'
+			);
+		}
+
 		$sync_minutes = CCRMRE_SYNC_PERIOD / 60;
 		add_settings_field(
 			'conncrmreal_cron',
@@ -226,6 +369,30 @@ class Admin {
 			'conncrmreal_postal_code',
 			__( 'Include Properties by Postal Code', 'connect-crm-realstate' ),
 			array( $this, 'postal_code_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
+		add_settings_field(
+			'conncrmreal_sold_action',
+			__( 'Action for Sold/Unavailable Properties', 'connect-crm-realstate' ),
+			array( $this, 'sold_action_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
+		add_settings_field(
+			'conncrmreal_show_gallery',
+			__( 'Auto Display Photo Gallery', 'connect-crm-realstate' ),
+			array( $this, 'show_gallery_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
+		add_settings_field(
+			'conncrmreal_show_property_info',
+			__( 'Auto Display Property Info Box', 'connect-crm-realstate' ),
+			array( $this, 'show_property_info_callback' ),
 			'conncrmreal_settings',
 			'admin_conncrmreal_settings'
 		);
@@ -265,10 +432,14 @@ class Admin {
 		$field_values = array(
 			'type',
 			'apipassword',
+			'numagencia',
 			'cron',
 			'post_type',
 			'post_type_slug',
 			'postal_code',
+			'sold_action',
+			'show_gallery',
+			'show_property_info',
 		);
 
 		foreach ( $field_values as $field_value ) {
@@ -292,7 +463,8 @@ class Admin {
 		?>
 		<select name="conncrmreal_settings[type]" id="type">
 			<option value="anaconda" <?php selected( $type_option, 'anaconda' ); ?>><?php esc_html_e( 'Anaconda', 'connect-crm-realstate' ); ?></option>
-			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?>><?php esc_html_e( 'Inmovilla', 'connect-crm-realstate' ); ?></option>
+			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?>><?php esc_html_e( 'Inmovilla APIWEB', 'connect-crm-realstate' ); ?></option>
+			<option value="inmovilla_procesos" <?php selected( $type_option, 'inmovilla_procesos' ); ?>><?php esc_html_e( 'Inmovilla Procesos', 'connect-crm-realstate' ); ?></option>
 		</select>
 		<?php
 	}
@@ -303,9 +475,26 @@ class Admin {
 	 * @return void
 	 */
 	public function apipassword_callback() {
+		$type_option = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
+		$label       = in_array( $type_option, array( 'inmovilla', 'inmovilla_procesos' ), true ) ? __( 'API Password', 'connect-crm-realstate' ) : __( 'API Token', 'connect-crm-realstate' );
+
 		printf(
-			'<input class="regular-text" type="password" name="conncrmreal_settings[apipassword]" id="apipassword" value="%s">',
-			isset( $this->settings['apipassword'] ) ? esc_attr( $this->settings['apipassword'] ) : ''
+			'<input class="regular-text" type="password" name="conncrmreal_settings[apipassword]" id="apipassword" value="%s"><br><small>%s</small>',
+			isset( $this->settings['apipassword'] ) ? esc_attr( $this->settings['apipassword'] ) : '',
+			esc_html( $label )
+		);
+	}
+
+	/**
+	 * Agency Number callback (Inmovilla only)
+	 *
+	 * @return void
+	 */
+	public function numagencia_callback() {
+		printf(
+			'<input class="regular-text" type="text" name="conncrmreal_settings[numagencia]" id="numagencia" value="%s"><br><small>%s</small>',
+			isset( $this->settings['numagencia'] ) ? esc_attr( $this->settings['numagencia'] ) : '',
+			esc_html__( 'Agency number from Inmovilla. Example: 2', 'connect-crm-realstate' )
 		);
 	}
 
@@ -332,8 +521,8 @@ class Admin {
 	public function post_type_callback() {
 		$post_type_option = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'show';
 
-		$args = array(
-			'public'   => true,
+		$args       = array(
+			'public' => true,
 		);
 		$post_types = get_post_types( $args );
 		unset( $post_types['attachment'] );
@@ -361,9 +550,9 @@ class Admin {
 			'<input class="regular-text" type="text" name="conncrmreal_settings[post_type_slug]" id="post_type_slug" value="%s">',
 			isset( $this->settings['post_type_slug'] ) ? esc_attr( $this->settings['post_type_slug'] ) : ''
 		);
-		echo sprintf(
+		printf(
 			'<p class="description">%s</p>',
-			__( 'Slug for the post type. If you change this, you need to save the permalinks again.', 'connect-crm-realstate' )
+			esc_html__( 'Slug for the post type. If you change this, you need to save the permalinks again.', 'connect-crm-realstate' )
 		);
 	}
 
@@ -377,9 +566,71 @@ class Admin {
 			'<input class="regular-text" type="text" name="conncrmreal_settings[postal_code]" id="postal_code" value="%s">',
 			isset( $this->settings['postal_code'] ) ? esc_attr( $this->settings['postal_code'] ) : ''
 		);
-		echo sprintf( 
+		printf(
+			/* translators: %s: description */
 			'<p class="description">%s</p>',
-			__( 'Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma.', 'connect-crm-realstate' )
+			esc_html__( 'Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma.', 'connect-crm-realstate' )
+		);
+	}
+
+	/**
+	 * Sold action callback
+	 *
+	 * @return void
+	 */
+	public function sold_action_callback() {
+		$sold_action = isset( $this->settings['sold_action'] ) ? $this->settings['sold_action'] : 'draft';
+		?>
+		<select name="conncrmreal_settings[sold_action]" id="sold_action">
+			<option value="draft" <?php selected( $sold_action, 'draft' ); ?>><?php esc_html_e( 'Unpublish (Set to Draft)', 'connect-crm-realstate' ); ?></option>
+			<option value="keep" <?php selected( $sold_action, 'keep' ); ?>><?php esc_html_e( 'Keep Published', 'connect-crm-realstate' ); ?></option>
+			<option value="trash" <?php selected( $sold_action, 'trash' ); ?>><?php esc_html_e( 'Move to Trash', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<?php
+		printf(
+			/* translators: %s: description */
+			'<p class="description">%s</p>',
+			esc_html__( 'Choose what to do with properties that are sold or no longer available in the CRM.', 'connect-crm-realstate' )
+		);
+	}
+
+	/**
+	 * Show gallery callback
+	 *
+	 * @return void
+	 */
+	public function show_gallery_callback() {
+		$show_gallery = isset( $this->settings['show_gallery'] ) ? $this->settings['show_gallery'] : 'no';
+		?>
+		<select name="conncrmreal_settings[show_gallery]" id="show_gallery">
+			<option value="no" <?php selected( $show_gallery, 'no' ); ?>><?php esc_html_e( 'No - Use shortcode only', 'connect-crm-realstate' ); ?></option>
+			<option value="yes" <?php selected( $show_gallery, 'yes' ); ?>><?php esc_html_e( 'Yes - Auto display after title', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<?php
+		printf(
+			/* translators: %s: shortcode */
+			'<p class="description">%s <code>[property_gallery]</code></p>',
+			esc_html__( 'Enable automatic display of photo gallery carousel after the property title, or use the shortcode manually:', 'connect-crm-realstate' )
+		);
+	}
+
+	/**
+	 * Show property info callback
+	 *
+	 * @return void
+	 */
+	public function show_property_info_callback() {
+		$show_property_info = isset( $this->settings['show_property_info'] ) ? $this->settings['show_property_info'] : 'no';
+		?>
+		<select name="conncrmreal_settings[show_property_info]" id="show_property_info">
+			<option value="no" <?php selected( $show_property_info, 'no' ); ?>><?php esc_html_e( 'No - Use shortcode only', 'connect-crm-realstate' ); ?></option>
+			<option value="yes" <?php selected( $show_property_info, 'yes' ); ?>><?php esc_html_e( 'Yes - Auto display after content', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<?php
+		printf(
+			/* translators: %s: shortcode */
+			'<p class="description">%s <code>[property_info]</code></p>',
+			esc_html__( 'Enable automatic display of property information box with icons and price, or use the shortcode manually:', 'connect-crm-realstate' )
 		);
 	}
 
@@ -390,56 +641,313 @@ class Admin {
 	 */
 	public function plugin_import_page() {
 		$settings   = get_option( 'conncrmreal_settings' );
-		$pagination = empty( $settings['api_pagination'] ) ? 200 : $settings['api_pagination'];
+		$crm_type   = isset( $settings['type'] ) ? $settings['type'] : '';
+		$pagination = API::get_pagination_size( $crm_type );
 		?>
 		<div class="connect-realstate-manual-action">
 			<h2><?php esc_html_e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
-			<p><?php esc_html_e( 'After you fillup the settings, use the button below to import the properties. The importing process may take a while and you need to keep this page open to complete it.', 'connect-crm-realstate' ); ?><br/></p>
-			<div id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" ><?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?></div>
-			<fieldset id="logwrapper"><legend><?php esc_html_e( 'Log', 'connect-crm-realstate' ); ?></legend><div id="loglist"></div></fieldset>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Log Page
-	 *
-	 * @return void
-	 */
-	public function plugin_log_page() {
-		?>
-		<div class="connect-realstate-log">
-			<h2><?php esc_html_e( 'Latest cron logs', 'connect-crm-realstate' ); ?></h2>
-			<p><?php esc_html_e( 'After you fillup the API settings, use the button below to import the products. The importing process may take a while and you need to keep this page open to complete it.', 'connect-woocommerce' ); ?>
-			</p>
-
-			<fieldset id="logwrapper">
-				<legend><?php esc_html_e( 'Log', 'connect-woocommerce' ); ?></legend>
-				<div id="loglist">
-					<?php
-					$uploads_dir = wp_upload_dir();
-					$folder      = $uploads_dir['basedir'] . '/ccrmre_logs/';
-					$files       = list_files( $folder, 2 );
-					$index       = 0;
-					foreach ( $files as $file ) {
-						if ( is_file( $file ) ) {
-							$filename = basename( $file );
-						}
-						$class = ( 0 === $index % 2 ) ? 'even' : 'odd';
-						echo '<p class="' . esc_html( $class ) . '">';
-						$file_open = fopen( $file, 'r' );
-						$line      = fgets( $file_open );
-						fclose( $file_open );
-						echo '<a href="' . esc_url( $uploads_dir['baseurl'] . '/ccrmre_logs/' . $filename ) . '" target="_blank">';
-						echo ! empty( esc_html( $line ) ) ? esc_html( $line ) : esc_html( $filename );
-						echo '</a>';
-						echo '</p>';
-						$index++;
-					}
-					?>
+			
+			<!-- Import Statistics -->
+			<div class="ccrmre-import-stats">
+				<div class="ccrmre-stat-card">
+					<div class="ccrmre-stat-icon ccrmre-icon-api">
+						<span class="dashicons dashicons-cloud"></span>
+					</div>
+					<div class="ccrmre-stat-content">
+						<div class="ccrmre-stat-value" id="stat-available-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'Available in API', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel">
+							<?php esc_html_e( 'Total:', 'connect-crm-realstate' ); ?> <span id="stat-api-count">--</span>
+						</div>
+					</div>
 				</div>
-			</fieldset>
+
+				<div class="ccrmre-stat-card">
+					<div class="ccrmre-stat-icon ccrmre-icon-wp">
+						<span class="dashicons dashicons-wordpress-alt"></span>
+					</div>
+					<div class="ccrmre-stat-content">
+						<div class="ccrmre-stat-value" id="stat-wp-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'Properties in WordPress', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel"><?php esc_html_e( 'Published properties', 'connect-crm-realstate' ); ?></div>
+					</div>
+				</div>
+
+				<div class="ccrmre-stat-card ccrmre-stat-import">
+					<div class="ccrmre-stat-icon ccrmre-icon-import">
+						<span class="dashicons dashicons-download"></span>
+					</div>
+					<div class="ccrmre-stat-content">
+						<div class="ccrmre-stat-value" id="stat-import-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'To Import/Update', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel">
+							<span id="stat-new-count">--</span> <?php esc_html_e( 'new', 'connect-crm-realstate' ); ?> + 
+							<span id="stat-outdated-count">--</span> <?php esc_html_e( 'outdated', 'connect-crm-realstate' ); ?>
+						</div>
+					</div>
+				</div>
+
+				<div class="ccrmre-stat-card ccrmre-stat-delete">
+					<div class="ccrmre-stat-icon ccrmre-icon-delete">
+						<span class="dashicons dashicons-trash"></span>
+					</div>
+					<div class="ccrmre-stat-content">
+						<div class="ccrmre-stat-value" id="stat-delete-count">--</div>
+						<div class="ccrmre-stat-label"><?php esc_html_e( 'To Remove', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel"><?php esc_html_e( 'Not in API', 'connect-crm-realstate' ); ?></div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Two Column Layout: Automatic Sync + Manual Import -->
+			<div class="ccrmre-two-columns">
+				<?php
+				// Column 1: Show latest cron logs section.
+				$cron_enabled = isset( $settings['cron'] ) && 'yes' === $settings['cron'];
+				?>
+				<div class="ccrmre-cron-logs">
+					<h3>
+						<span class="dashicons dashicons-clock" style="vertical-align: middle;"></span>
+						<?php esc_html_e( 'Automatic Sync (Cron)', 'connect-crm-realstate' ); ?>
+						<?php if ( $cron_enabled ) : ?>
+							<span style="color: green; font-size: 0.8em; font-weight: normal;">● <?php esc_html_e( 'Enabled', 'connect-crm-realstate' ); ?></span>
+						<?php else : ?>
+							<span style="color: #999; font-size: 0.8em; font-weight: normal;">○ <?php esc_html_e( 'Disabled', 'connect-crm-realstate' ); ?></span>
+						<?php endif; ?>
+					</h3>
+					<p style="color: #646970; font-size: 14px; margin-top: 10px;">
+						<?php esc_html_e( 'Check the logs in the tab below to see automatic sync history.', 'connect-crm-realstate' ); ?>
+					</p>
+				</div>
+
+				<!-- Column 2: Manual Import Section -->
+				<div class="ccrmre-manual-import">
+					<h3>
+						<span class="dashicons dashicons-upload" style="vertical-align: middle;"></span>
+						<?php esc_html_e( 'Manual Import', 'connect-crm-realstate' ); ?>
+					</h3>
+
+					<div class="import-button-wrapper">
+						<select id="import-mode" class="import-mode-select">
+							<option value="updated"><?php esc_html_e( 'Properties to update', 'connect-crm-realstate' ); ?></option>
+							<option value="all"><?php esc_html_e( 'All properties', 'connect-crm-realstate' ); ?></option>
+						</select>
+						<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
+							<?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?>
+						</button>
+						<button type="button" id="refresh_stats" name="refresh_stats" class="button button-large" onclick="loadImportStats();">
+							<span class="dashicons dashicons-update"></span>
+							<?php esc_html_e( 'Refresh Statistics', 'connect-crm-realstate' ); ?>
+						</button>
+						<span class="spinner"></span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Unified Log Section with Tabs -->
+			<div class="ccrmre-log-container">
+				<div class="ccrmre-log-tabs">
+					<button class="ccrmre-tab-button active" data-tab="automatic">
+						<span class="dashicons dashicons-clock"></span>
+						<?php esc_html_e( 'Automatic Sync', 'connect-crm-realstate' ); ?>
+					</button>
+					<button class="ccrmre-tab-button" data-tab="manual">
+						<span class="dashicons dashicons-upload"></span>
+						<?php esc_html_e( 'Manual Import', 'connect-crm-realstate' ); ?>
+					</button>
+				</div>
+
+				<div class="ccrmre-tab-content">
+					<!-- Automatic Sync Tab (Accordion Logs) -->
+					<div class="ccrmre-tab-pane active" id="tab-automatic">
+						<div class="ccrmre-log-list">
+							<?php
+							$uploads_dir = wp_upload_dir();
+							$folder      = $uploads_dir['basedir'] . '/ccrmre_logs/';
+							$files       = file_exists( $folder ) ? list_files( $folder, 1 ) : array();
+
+							// Sort by modification time (newest first).
+							usort(
+								$files,
+								function ( $a, $b ) {
+									return filemtime( $b ) - filemtime( $a );
+								}
+							);
+
+							if ( empty( $files ) ) :
+								?>
+								<p style="color: #666; font-style: italic; padding: 20px; text-align: center;">
+									<?php esc_html_e( 'No automatic sync logs yet.', 'connect-crm-realstate' ); ?>
+								</p>
+								<?php
+							else :
+								foreach ( $files as $file ) {
+									if ( is_file( $file ) ) {
+										$filename  = basename( $file );
+										$file_open = fopen( $file, 'r' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+										$line      = $file_open ? fgets( $file_open ) : '';
+										if ( $file_open ) {
+											fclose( $file_open ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+										}
+										?>
+										<div class="ccrmre-log-item" data-filename="<?php echo esc_attr( $filename ); ?>">
+											<div class="ccrmre-log-header">
+												<span class="ccrmre-log-toggle dashicons dashicons-arrow-right"></span>
+												<span class="ccrmre-log-title"><?php echo ! empty( $line ) ? esc_html( $line ) : esc_html( $filename ); ?></span>
+											</div>
+											<div class="ccrmre-log-content" style="display: none;">
+												<div class="ccrmre-log-loading">
+													<span class="spinner is-active"></span>
+													<?php esc_html_e( 'Loading...', 'connect-crm-realstate' ); ?>
+												</div>
+											</div>
+										</div>
+										<?php
+									}
+								}
+							endif;
+							?>
+						</div>
+					</div>
+
+					<!-- Manual Import Tab -->
+					<div class="ccrmre-tab-pane" id="tab-manual">
+						<fieldset id="logwrapper" style="border: none; padding: 0; margin: 0;">
+							<div id="loglist"></div>
+						</fieldset>
+					</div>
+				</div>
+			</div>
+
+			<?php
+			// Show API limitations info.
+			$crm_type   = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
+			$api_config = API::get_api_config( $crm_type );
+
+			if ( ! empty( $api_config ) ) {
+				// Format values for display.
+				$timeout_minutes = $api_config['timeout'] / 60;
+				$timeout_display = $timeout_minutes > 1
+					? $timeout_minutes . ' ' . __( 'minutes', 'connect-crm-realstate' )
+					: $timeout_minutes . ' ' . __( 'minute', 'connect-crm-realstate' );
+
+				$pagination_display = -1 === $api_config['pagination']
+					? __( 'All at once', 'connect-crm-realstate' )
+					: $api_config['pagination'];
+
+				$retry_timeout_display    = $api_config['retry_timeout'] . ' ' . __( 'seconds', 'connect-crm-realstate' );
+				$retry_rate_limit_minutes = $api_config['retry_rate_limit'] / 60;
+				$retry_rate_limit_display = $retry_rate_limit_minutes . ' ' . __( 'minutes', 'connect-crm-realstate' );
+
+				$info = array(
+					'name'             => $api_config['name'],
+					'timeout'          => $timeout_display,
+					'pagination'       => $pagination_display,
+					'retry_timeout'    => $retry_timeout_display,
+					'retry_rate_limit' => $retry_rate_limit_display,
+					'max_retries'      => $api_config['max_retries'],
+				);
+				?>
+				<div class="api-limitations-info" style="margin-top: 15px; padding: 12px; background: #f0f6fc; border-left: 4px solid #2271b1; border-radius: 4px;">
+					<h4 style="margin: 0 0 10px 0; color: #2271b1;">
+						<span class="dashicons dashicons-info" style="vertical-align: middle;"></span>
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %s: API name */
+								__( 'API Limitations - %s', 'connect-crm-realstate' ),
+								$info['name']
+							)
+						);
+						?>
+					</h4>
+					<ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+						<li>
+							<strong><?php esc_html_e( 'Request Timeout:', 'connect-crm-realstate' ); ?></strong>
+							<?php echo esc_html( $info['timeout'] ); ?>
+						</li>
+						<li>
+							<strong><?php esc_html_e( 'Properties per Request:', 'connect-crm-realstate' ); ?></strong>
+							<?php echo esc_html( $info['pagination'] ); ?>
+						</li>
+						<li>
+							<strong><?php esc_html_e( 'Automatic Retries:', 'connect-crm-realstate' ); ?></strong>
+							<?php
+							echo esc_html(
+								sprintf(
+									/* translators: %d: max retries */
+									__( 'Up to %d attempts', 'connect-crm-realstate' ),
+									$info['max_retries']
+								)
+							);
+							?>
+						</li>
+						<li>
+							<strong><?php esc_html_e( 'Retry Wait Time:', 'connect-crm-realstate' ); ?></strong>
+							<?php
+							echo esc_html(
+								sprintf(
+									/* translators: 1: timeout retry, 2: rate limit retry */
+									__( '%1$s (timeout) / %2$s (rate limit)', 'connect-crm-realstate' ),
+									$info['retry_timeout'],
+									$info['retry_rate_limit']
+								)
+							);
+							?>
+						</li>
+					</ul>
+					<p style="margin: 10px 0 0 0; font-size: 0.9em; color: #646970;">
+						<em><?php esc_html_e( 'The system will automatically retry failed requests with intelligent wait times based on the error type.', 'connect-crm-realstate' ); ?></em>
+					</p>
+				</div>
+				<?php
+			}
+			?>
 		</div>
+
+		<script type="text/javascript">
+		function loadImportStats() {
+			const btn = document.getElementById('refresh_stats');
+			const cards = document.querySelectorAll('.ccrmre-stat-card');
+			
+			btn.disabled = true;
+			cards.forEach(card => card.classList.add('loading'));
+
+			jQuery.ajax({
+				url: ajaxurl,
+				type: 'POST',
+				data: {
+					action: 'get_import_stats',
+					security: '<?php echo esc_js( wp_create_nonce( 'ccrmre_import_nonce' ) ); ?>'
+				},
+				success: function(response) {
+					if (response.success) {
+						document.getElementById('stat-available-count').textContent = response.data.available_count.toLocaleString();
+						document.getElementById('stat-api-count').textContent = response.data.api_count.toLocaleString();
+						document.getElementById('stat-wp-count').textContent = response.data.wp_count.toLocaleString();
+						document.getElementById('stat-import-count').textContent = response.data.import_count.toLocaleString();
+						document.getElementById('stat-new-count').textContent = response.data.new_count.toLocaleString();
+						document.getElementById('stat-outdated-count').textContent = response.data.outdated_count.toLocaleString();
+						document.getElementById('stat-delete-count').textContent = response.data.delete_count.toLocaleString();
+					} else {
+						alert('Error: ' + (response.data.message || 'Unknown error'));
+					}
+				},
+				error: function() {
+					alert('<?php echo esc_js( __( 'Error loading statistics', 'connect-crm-realstate' ) ); ?>');
+				},
+				complete: function() {
+					btn.disabled = false;
+					cards.forEach(card => card.classList.remove('loading'));
+				}
+			});
+		}
+
+		// Load stats on page load
+		jQuery(document).ready(function() {
+			loadImportStats();
+		});
+		</script>
 		<?php
 	}
 
@@ -453,14 +961,24 @@ class Admin {
 	}
 
 	/**
-	 * Info for neo automate section.
+	 * Info for merge fields section.
 	 *
 	 * @return void
 	 */
 	public function admin_section_settings_info_merge() {
-		esc_html_e( 'Put the connection API key settings in order to connect external data.', 'connect-crm-realstate' );
+		echo '<p>';
+		esc_html_e( 'Map CRM fields to WordPress custom fields. Select an existing field or type a new field name to create it.', 'connect-crm-realstate' );
+		echo '</p>';
+		echo '<p>';
+		esc_html_e( 'Fields marked with (Custom) are saved values that will be created automatically when properties are imported.', 'connect-crm-realstate' );
+		echo '</p>';
 	}
 
+	/**
+	 * Merge fields callback
+	 *
+	 * @return void
+	 */
 	public function merge_fields_callback() {
 		$crm_type      = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
 		$post_type     = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
@@ -473,46 +991,93 @@ class Admin {
 			return;
 		}
 
+		// Auto-map button.
+		echo '<button type="button" id="ccrmre-auto-map-btn" class="button button-secondary" style="margin-bottom: 15px;">';
+		echo '<span class="dashicons dashicons-admin-generic" style="margin-top: 3px;"></span> ';
+		esc_html_e( 'Auto-Map All Fields', 'connect-crm-realstate' );
+		echo '</button>';
+
+		echo '<div id="ccrmre-merge-container">';
 		echo '<table class="form-table iip-table-merge-variables">';
+		echo '<thead>';
 		echo '<tr valign="top">';
-		echo '<td scope="row"><strong>' . esc_html__( 'CRM Fields', 'connect-crm-realstate' ) . '</strong></td>';
-		echo '<td scope="row"><strong>' . esc_html__( 'WordPress Fields', 'connect-crm-realstate' ) . '</strong></td>';
+		echo '<th scope="col"><strong>' . esc_html__( 'CRM Fields', 'connect-crm-realstate' ) . '</strong></th>';
+		echo '<th scope="col"><strong>' . esc_html__( 'WordPress Fields', 'connect-crm-realstate' ) . '</strong></th>';
 		echo '</tr>';
+		echo '</thead>';
+		echo '<tbody>';
+
 		$value = '';
 		foreach ( $properties_fields['data'] as $property_field ) {
 			$value = isset( $this->settings_fields[ $property_field['name'] ] ) ? $this->settings_fields[ $property_field['name'] ] : '';
-			echo '<tr scope="row"><td class="ccrmre-label">' . esc_html( $property_field['label'] );
-			echo ' (' . esc_attr( $property_field['name'] ) . ')</td>';
-			echo '<td><select name="conncrmreal_merge_fields[' . esc_attr( $property_field['name'] ) . ']">';
+			echo '<tr>';
+			echo '<td class="ccrmre-label">' . esc_html( $property_field['label'] );
+			echo '<br><small class="description">' . esc_attr( $property_field['name'] ) . '</small></td>';
+			echo '<td><select name="conncrmreal_merge_fields[' . esc_attr( $property_field['name'] ) . ']" class="ccrmre-select2-field" style="width: 100%;">';
 			echo '<option value=""';
 			selected( $value, '' );
-			echo '></option>';
+			echo '>' . esc_html__( '-- Select WordPress Field --', 'connect-crm-realstate' ) . '</option>';
+
+			// Add saved value first if it doesn't exist in custom_fields.
+			if ( ! empty( $value ) && ! in_array( $value, $custom_fields, true ) ) {
+				echo '<option value="' . esc_attr( $value ) . '" selected="selected">';
+				echo esc_html( $value ) . ' ' . esc_html__( '(Custom)', 'connect-crm-realstate' );
+				echo '</option>';
+			}
+
+			// Add all existing custom fields.
 			foreach ( $custom_fields as $meta_key ) {
-				echo '<option value="' . esc_html( $meta_key ) . '"';
+				echo '<option value="' . esc_attr( $meta_key ) . '"';
 				selected( $value, $meta_key );
 				echo '>' . esc_html( $meta_key ) . '</option>';
 			}
 			echo '</select></td>';
 			echo '</tr>';
 		}
+		echo '</tbody>';
 		echo '</table>';
+		echo '</div>';
 	}
 
 
 	/**
-	 * Sanitize fiels before saves in DB
+	 * Sanitize fields before saves in DB
 	 *
 	 * @param array $input Input fields.
 	 * @return array
 	 */
 	public function sanitize_fields_settings_merge( $input ) {
-		$sanitary_values = array();
-		$filter_fields   = array_filter( $input );
+		if ( ! is_array( $input ) ) {
+			return array();
+		}
 
-		foreach ( $filter_fields as $key => $value ) {
-			if ( isset( $input[ $key ] ) ) {
-				$sanitary_values[ $key ] = sanitize_text_field( $value );
+		$sanitary_values = array();
+
+		foreach ( $input as $key => $value ) {
+			// Skip empty values.
+			if ( empty( $value ) || ! is_string( $value ) ) {
+				continue;
 			}
+
+			// Sanitize the CRM field key.
+			$sanitized_key = sanitize_text_field( $key );
+
+			// Sanitize the WordPress field name.
+			// Allow lowercase letters, numbers, and underscores only.
+			$sanitized_value = strtolower( trim( $value ) );
+			$sanitized_value = preg_replace( '/[^a-z0-9_]/', '_', $sanitized_value );
+			$sanitized_value = preg_replace( '/_+/', '_', $sanitized_value ); // Remove duplicate underscores.
+			$sanitized_value = trim( $sanitized_value, '_' ); // Remove leading/trailing underscores.
+
+			// Only save if we have a valid value after sanitization.
+			if ( ! empty( $sanitized_value ) && ! empty( $sanitized_key ) ) {
+				$sanitary_values[ $sanitized_key ] = $sanitized_value;
+			}
+		}
+
+		// Log for debugging.
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'CCRMRE Merge Fields Saved: ' . print_r( $sanitary_values, true ) );
 		}
 
 		return $sanitary_values;
@@ -525,15 +1090,157 @@ class Admin {
 	 * @return array Array of metakeys.
 	 */
 	private function get_all_custom_fields( $post_type ) {
-		global $wpdb, $table_prefix;
-		$sql       = "SELECT DISTINCT( {$table_prefix}postmeta.meta_key )
-				FROM {$table_prefix}posts
-				LEFT JOIN {$table_prefix}postmeta
-					ON {$table_prefix}posts.ID = {$table_prefix}postmeta.post_id
-					WHERE {$table_prefix}posts.post_type = '{$post_type}' ORDER BY {$table_prefix}postmeta.meta_key";
-		$meta_keys = $wpdb->get_col( $sql );
+		global $wpdb;
+		$meta_keys = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT( {$wpdb->postmeta}.meta_key )
+				FROM {$wpdb->posts}
+				LEFT JOIN {$wpdb->postmeta}
+					ON {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id
+					WHERE {$wpdb->posts}.post_type = %s ORDER BY {$wpdb->postmeta}.meta_key",
+				$post_type
+			)
+		);
 
 		return $meta_keys;
+	}
+
+	/**
+	 * AJAX handler for auto-mapping fields
+	 *
+	 * @return void
+	 */
+	public function ajax_auto_map_fields() {
+		// Verify nonce.
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'ccrmre_auto_map_nonce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed', 'connect-crm-realstate' ) ) );
+		}
+
+		// Check permissions.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions', 'connect-crm-realstate' ) ) );
+		}
+
+		$settings = get_option( 'conncrmreal_settings' );
+		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+
+		// Get CRM fields.
+		$properties_fields = API::get_properties_fields( $crm_type );
+
+		if ( 'error' === $properties_fields['status'] ) {
+			wp_send_json_error( array( 'message' => $properties_fields['data'] ) );
+		}
+
+		// Get current mappings.
+		$current_mappings = get_option( 'conncrmreal_merge_fields', array() );
+		$new_mappings     = array();
+		$auto_mapped      = 0;
+
+		// Generate WordPress field names for each CRM field.
+		foreach ( $properties_fields['data'] as $property_field ) {
+			$crm_field_name = $property_field['name'];
+
+			// Skip if already mapped.
+			if ( isset( $current_mappings[ $crm_field_name ] ) && ! empty( $current_mappings[ $crm_field_name ] ) ) {
+				$new_mappings[ $crm_field_name ] = $current_mappings[ $crm_field_name ];
+				continue;
+			}
+
+			// Generate WordPress field name from CRM field name.
+			$wp_field_name = $this->generate_wp_field_name( $crm_field_name );
+
+			$new_mappings[ $crm_field_name ] = $wp_field_name;
+			++$auto_mapped;
+		}
+
+		// Save the mappings.
+		update_option( 'conncrmreal_merge_fields', $new_mappings );
+
+		wp_send_json_success(
+			array(
+				'message'     => sprintf(
+					/* translators: %d: number of fields */
+					_n( '%d field auto-mapped successfully!', '%d fields auto-mapped successfully!', $auto_mapped, 'connect-crm-realstate' ),
+					$auto_mapped
+				),
+				'mappings'    => $new_mappings,
+				'auto_mapped' => $auto_mapped,
+			)
+		);
+	}
+
+	/**
+	 * Generate WordPress field name from CRM field name
+	 *
+	 * @param string $crm_field_name CRM field name.
+	 * @return string WordPress field name.
+	 */
+	private function generate_wp_field_name( $crm_field_name ) {
+		// Start with the CRM field name.
+		$wp_field_name = $crm_field_name;
+
+		// Convert to lowercase.
+		$wp_field_name = strtolower( $wp_field_name );
+
+		// Replace special characters with underscores.
+		$wp_field_name = preg_replace( '/[^a-z0-9_]/', '_', $wp_field_name );
+
+		// Remove duplicate underscores.
+		$wp_field_name = preg_replace( '/_+/', '_', $wp_field_name );
+
+		// Remove leading/trailing underscores.
+		$wp_field_name = trim( $wp_field_name, '_' );
+
+		// Add prefix to avoid conflicts.
+		$wp_field_name = 'crm_' . $wp_field_name;
+
+		return $wp_field_name;
+	}
+
+	/**
+	 * AJAX handler to load log file content
+	 *
+	 * @return void
+	 */
+	public function ajax_load_log_content() {
+		check_ajax_referer( 'ccrmre_manual_import_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized', 'connect-crm-realstate' ) ) );
+		}
+
+		$filename = isset( $_POST['filename'] ) ? sanitize_file_name( wp_unslash( $_POST['filename'] ) ) : '';
+
+		if ( empty( $filename ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid filename', 'connect-crm-realstate' ) ) );
+		}
+
+		$uploads_dir = wp_upload_dir();
+		$file_path   = $uploads_dir['basedir'] . '/ccrmre_logs/' . $filename;
+
+		// Security check: Ensure the file is within the logs directory.
+		$real_path = realpath( $file_path );
+		$logs_dir  = realpath( $uploads_dir['basedir'] . '/ccrmre_logs/' );
+
+		if ( false === $real_path || false === $logs_dir || 0 !== strpos( $real_path, $logs_dir ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid file path', 'connect-crm-realstate' ) ) );
+		}
+
+		if ( ! file_exists( $file_path ) ) {
+			wp_send_json_error( array( 'message' => __( 'Log file not found', 'connect-crm-realstate' ) ) );
+		}
+
+		$content = file_get_contents( $file_path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+		if ( false === $content ) {
+			wp_send_json_error( array( 'message' => __( 'Error reading log file', 'connect-crm-realstate' ) ) );
+		}
+
+		// Escape and format the content.
+		$content = esc_html( $content );
+		$content = nl2br( $content );
+
+		wp_send_json_success( array( 'content' => $content ) );
 	}
 }
 

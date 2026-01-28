@@ -6,6 +6,44 @@
 circle.yml
 .DS_Store
 .github
+.cursor
 composer.json
 composer.lock
 .wordpress-org
+
+# PHP Linting and Testing
+.phpcs.xml.dist
+.phpunit.result.cache
+phpunit.xml.dist
+phpcs.xml.dist
+phpstan.neon.dist
+.phplint.yml
+tests/
+bin/
+
+# Vendor files - Select2 (keep only dist folder)
+vendor/select2/select2/docs/
+vendor/select2/select2/tests/
+vendor/select2/select2/src/
+vendor/select2/select2/.github/
+vendor/select2/select2/.jshintrc
+vendor/select2/select2/.jshintignore
+vendor/select2/select2/Gruntfile.js
+vendor/select2/select2/bower.json
+vendor/select2/select2/composer.json
+vendor/select2/select2/package.json
+vendor/select2/select2/README.md
+vendor/select2/select2/LICENSE.md
+vendor/select2/select2/.editorconfig
+vendor/select2/select2/.gitignore
+vendor/select2/select2/.gitattributes
+
+# Keep only minified files from select2
+vendor/select2/select2/dist/css/select2.css
+vendor/select2/select2/dist/js/select2.js
+vendor/select2/select2/dist/js/select2.full.js
+vendor/select2/select2/dist/js/select2.full.min.js
+
+# Vendor - WooCommerce Action Scheduler (keep necessary files only)
+vendor/woocommerce/action-scheduler/tests/
+vendor/woocommerce/action-scheduler/.github/

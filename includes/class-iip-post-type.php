@@ -40,7 +40,7 @@ class PostType {
 	 */
 	public function __construct() {
 		// Check license before initializing.
-		if ( ! function_exists( 'cccrmre_is_license_active' ) || ! cccrmre_is_license_active() ) {
+		if ( ! function_exists( 'ccrmre_is_license_active' ) || ! ccrmre_is_license_active() ) {
 			return;
 		}
 
@@ -54,7 +54,6 @@ class PostType {
 
 			add_filter( 'manage_edit-' . $settings_post_type . '_columns', array( $this, 'add_property_columns' ) );
 			add_action( 'manage_' . $settings_post_type . '_posts_custom_column', array( $this, 'manage_post_type_columns' ), 10, 2 );
-
 		}
 	}
 
@@ -111,6 +110,15 @@ class PostType {
 			'property',
 			'normal'
 		);
+
+		add_meta_box(
+			'property-photos',
+			__( 'Property Photos', 'connect-crm-realstate' ),
+			array( $this, 'metabox_show_photos' ),
+			'property',
+			'side',
+			'high'
+		);
 	}
 	/**
 	 * Metabox inputs for post type.
@@ -119,30 +127,124 @@ class PostType {
 	 * @return void
 	 */
 	public function metabox_show_property( $post ) {
-		$meta = get_post_meta( $post->ID );
-		?>
-		<table>
-			<?php
-			foreach ( $meta as $key => $value ) {
-				if ( false === strpos( $key, 'property_' ) ) {
-					continue;
+		// Get merge fields configuration.
+		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
+
+		if ( empty( $merge_fields ) ) {
+			echo '<p>' . esc_html__( 'No merge fields configured. Please configure merge fields in the plugin settings.', 'connect-crm-realstate' ) . '</p>';
+			return;
+		}
+
+		// Get CRM type to show correct labels.
+		$settings = get_option( 'conncrmreal_settings', array() );
+		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+
+		// Get property fields from API to get labels.
+		$api_fields   = API::get_properties_fields( $crm_type );
+		$field_labels = array();
+
+		if ( isset( $api_fields['data'] ) && is_array( $api_fields['data'] ) ) {
+			foreach ( $api_fields['data'] as $field ) {
+				if ( isset( $field['name'] ) && isset( $field['label'] ) ) {
+					$field_labels[ $field['name'] ] = $field['label'];
 				}
-				echo '<tr>';
-				echo '<td><strong>' . esc_attr( $key ) . '</strong></td>';
-				echo '<td>' . esc_attr( $value[0] ) . '</td>';
-				echo '</tr>';
 			}
-			?>
+		}
+
+		?>
+		<table class="property-meta-table">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'CRM Field', 'connect-crm-realstate' ); ?></th>
+					<th><?php esc_html_e( 'WordPress Field', 'connect-crm-realstate' ); ?></th>
+					<th><?php esc_html_e( 'Value', 'connect-crm-realstate' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				foreach ( $merge_fields as $crm_field => $wp_field ) {
+					if ( empty( $wp_field ) ) {
+						continue;
+					}
+
+					// Get value from post meta.
+					$value = get_post_meta( $post->ID, $wp_field, true );
+
+					// Get label for CRM field.
+					$crm_label = isset( $field_labels[ $crm_field ] ) ? $field_labels[ $crm_field ] : $crm_field;
+
+					echo '<tr>';
+					echo '<td><strong>' . esc_html( $crm_label ) . '</strong><br/><small>' . esc_html( $crm_field ) . '</small></td>';
+					echo '<td><code>' . esc_html( $wp_field ) . '</code></td>';
+					echo '<td>' . esc_html( is_array( $value ) ? wp_json_encode( $value ) : $value ) . '</td>';
+					echo '</tr>';
+				}
+				?>
+			</tbody>
 		</table>
 		<?php
 	}
+
+	/**
+	 * Metabox for property photos in sidebar.
+	 *
+	 * @param object $post Post object.
+	 * @return void
+	 */
+	public function metabox_show_photos( $post ) {
+		$featured_image_url = get_post_meta( $post->ID, 'ccrmre_featured_image_url', true );
+		$gallery_urls       = get_post_meta( $post->ID, 'ccrmre_gallery_urls', true );
+
+		if ( empty( $featured_image_url ) && ( empty( $gallery_urls ) || ! is_array( $gallery_urls ) ) ) {
+			?>
+			<div class="ccrmre-no-photos">
+				<p><?php esc_html_e( 'No photos available from CRM', 'connect-crm-realstate' ); ?></p>
+			</div>
+			<?php
+			return;
+		}
+
+		// Show Featured Image.
+		if ( ! empty( $featured_image_url ) ) {
+			?>
+			<div class="ccrmre-sidebar-featured">
+				<strong><?php esc_html_e( 'Featured Image', 'connect-crm-realstate' ); ?></strong>
+				<img src="<?php echo esc_url( $featured_image_url ); ?>" alt="<?php echo esc_attr( get_the_title( $post->ID ) ); ?>" />
+				<p><?php echo esc_url( $featured_image_url ); ?></p>
+			</div>
+			<?php
+		}
+
+		// Show Gallery.
+		if ( ! empty( $gallery_urls ) && is_array( $gallery_urls ) && count( $gallery_urls ) > 1 ) {
+			?>
+			<div class="ccrmre-sidebar-gallery">
+				<h4>
+					<?php
+					/* translators: %d: number of photos */
+					echo esc_html( sprintf( __( 'Gallery (%d photos)', 'connect-crm-realstate' ), count( $gallery_urls ) ) );
+					?>
+				</h4>
+				<div class="ccrmre-sidebar-gallery-grid">
+					<?php foreach ( $gallery_urls as $photo_url ) : ?>
+						<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( get_the_title( $post->ID ) ); ?>" title="<?php echo esc_attr( $photo_url ); ?>" />
+					<?php endforeach; ?>
+				</div>
+			</div>
+			<?php
+		}
+	}
+
 	/**
 	 * Adds columns to post type post_type
 	 *
 	 * @param array $post_type_columns  Header of admin post type list.
-	 * @return array $post_type_columns New elements for header.
+	 * @return array $new_columns New elements for header.
 	 */
 	public function add_property_columns( $post_type_columns ) {
+		// Build custom columns from scratch instead of modifying existing.
+		unset( $post_type_columns ); // Explicitly clear to show intention.
+
 		$new_columns['cb']            = '<input type="checkbox" />';
 		$new_columns['title']         = __( 'Title', 'connect-crm-realstate' );
 		$new_columns['property_data'] = __( 'Property', 'connect-crm-realstate' );
@@ -158,7 +260,7 @@ class PostType {
 
 		if ( is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
 			// Optional for RankMath SEO.
-			$new_columns['rank_math_seo_details']           = __( 'SEO Details', 'rankmath' );
+			$new_columns['rank_math_seo_details'] = __( 'SEO Details', 'rankmath' );
 		}
 
 		return $new_columns;
@@ -174,31 +276,100 @@ class PostType {
 	public function manage_post_type_columns( $column_name, $id ) {
 		switch ( $column_name ) {
 			case 'property_data':
-				// Code.
-				$property_id = get_post_meta( $id, 'property_id', true );
-				echo '<p><strong>' . esc_html__( 'Property ID', 'connect-crm-realstate' ) . '</strong>: ';
-				echo esc_html( $property_id );
-				echo '</p>';
-				// Code.
-				$property_internal_id = get_post_meta( $id, 'property_internal_property_id', true );
-				echo '<p><strong>' . esc_html__( 'Property Internal ID', 'connect-crm-realstate' ) . '</strong>: ';
-				echo esc_html( $property_internal_id );
-				echo '</p>';
-				// Status.
-				$property_enabled = get_post_meta( $id, 'property_enabled', true );
-				echo '<p><strong>' . esc_html__( 'Status', 'connect-crm-realstate' ) . '</strong>: ';
-				echo ! empty( $property_enabled ) ? esc_html__( 'Available', 'connect-crm-realstate' ) : esc_html__( 'Sold', 'connect-crm-realstate' );
-				echo '</p>';
-				// Agent.
-				$property_agent = get_post_meta( $id, 'property_agent', true );
-				echo '<p><strong>' . esc_html__( 'Agent', 'connect-crm-realstate' ) . '</strong>: ';
-				echo esc_html( $property_agent );
-				echo '</p>';
+				$this->render_property_data_column( $id );
 				break;
 
 			default:
 				break;
 		} // end switch
+	}
+
+	/**
+	 * Render property data column
+	 *
+	 * @param int $post_id Post ID.
+	 * @return void
+	 */
+	private function render_property_data_column( $post_id ) {
+		$settings = get_option( 'conncrmreal_settings' );
+		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+
+		// Property ID.
+		$property_id = $this->get_property_meta_value( $post_id, 'id', $crm_type );
+		if ( ! empty( $property_id ) ) {
+			$this->render_meta_field( __( 'Property ID', 'connect-crm-realstate' ), $property_id );
+		}
+
+		// Internal Property ID (Anaconda only).
+		if ( 'anaconda' === $crm_type ) {
+			$internal_id = $this->get_property_meta_value( $post_id, 'internal_property_id', $crm_type );
+			if ( ! empty( $internal_id ) ) {
+				$this->render_meta_field( __( 'Property Internal ID', 'connect-crm-realstate' ), $internal_id );
+			}
+		}
+
+		// Status.
+		$enabled = $this->get_property_meta_value( $post_id, 'enabled', $crm_type );
+		$status  = ! empty( $enabled ) ? __( 'Available', 'connect-crm-realstate' ) : __( 'Sold', 'connect-crm-realstate' );
+		$this->render_meta_field( __( 'Status', 'connect-crm-realstate' ), $status );
+
+		// Agent.
+		$agent = $this->get_property_meta_value( $post_id, 'agent', $crm_type );
+		if ( ! empty( $agent ) ) {
+			$this->render_meta_field( __( 'Agent', 'connect-crm-realstate' ), $agent );
+		}
+	}
+
+	/**
+	 * Get property meta value using merge fields mapping
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $crm_field CRM field name (e.g., 'id', 'enabled', 'agent').
+	 * @param string $crm_type CRM type (anaconda or inmovilla).
+	 * @return mixed Meta value or empty string.
+	 */
+	private function get_property_meta_value( $post_id, $crm_field, $crm_type = 'anaconda' ) {
+		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
+
+		// Adjust field name for different CRMs.
+		$field_map = array(
+			'anaconda'  => array(
+				'id'                   => 'id',
+				'internal_property_id' => 'internal_property_id',
+				'enabled'              => 'enabled',
+				'agent'                => 'agent',
+			),
+			'inmovilla' => array(
+				'id'      => 'cod_ofer',
+				'enabled' => 'nodisponible',
+				'agent'   => 'captadopor',
+			),
+		);
+
+		$crm_field_name = isset( $field_map[ $crm_type ][ $crm_field ] ) ? $field_map[ $crm_type ][ $crm_field ] : $crm_field;
+
+		// Check if field is mapped in merge fields.
+		if ( isset( $merge_fields[ $crm_field_name ] ) ) {
+			$meta_key = $merge_fields[ $crm_field_name ];
+		} else {
+			// Fallback to default property_ prefix.
+			$meta_key = 'property_' . $crm_field_name;
+		}
+
+		return get_post_meta( $post_id, $meta_key, true );
+	}
+
+	/**
+	 * Render a meta field row
+	 *
+	 * @param string $label Field label.
+	 * @param string $value Field value.
+	 * @return void
+	 */
+	private function render_meta_field( $label, $value ) {
+		echo '<p><strong>' . esc_html( $label ) . '</strong>: ';
+		echo esc_html( $value );
+		echo '</p>';
 	}
 }
 

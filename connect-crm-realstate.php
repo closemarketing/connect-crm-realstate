@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Connect CRM Real State
- * Plugin URI: https://www.closemarketing.es
+ * Plugin URI: https://close.technology/wordpress-plugins/conecta-crm-realstate/
  * Description: Connect Properties from Inmovilla/Anaconda to a Custom Post Type.
  * Author: closemarketing
  * Author URI: https://close.technology/
- * Version: 1.0.0-beta.11
+ * Version: 1.0.0
  *
  * @package WordPress
  * Text Domain: connect-crm-realstate
@@ -14,14 +14,11 @@
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-define( 'CCRMRE_VERSION', '1.0.0-beta.11' );
+define( 'CCRMRE_VERSION', '1.0.0' );
 define( 'CCRMRE_PLUGIN', __FILE__ );
 define( 'CCRMRE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'CCRMRE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
-define( 'CCRMRE_SYNC_PERIOD', 3600 );
-
-// Loads translation.
-load_plugin_textdomain( 'connect-crm-realstate', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+define( 'CCRMRE_SYNC_PERIOD', 1800 );
 
 /**
  * License Manager instance.
@@ -39,7 +36,7 @@ define( 'CCRMRE_LICENSE_PRODUCT_UUID', 'CONINMO-5F3A954F-0717-4B13-8305-8AE2AAC0
  *
  * @return bool
  */
-function cccrmre_is_license_active() {
+function ccrmre_is_license_active() {
 	global $ccrmre_license;
 
 	if ( ! $ccrmre_license ) {
@@ -55,6 +52,9 @@ function cccrmre_is_license_active() {
 add_action(
 	'plugins_loaded',
 	function () {
+		// Load translations.
+		load_plugin_textdomain( 'connect-crm-realstate', false, dirname( plugin_basename( CCRMRE_PLUGIN ) ) . '/languages/' );
+
 		global $ccrmre_license;
 
 		// Check if autoloader is loaded.
@@ -135,7 +135,7 @@ add_action(
 			new Close\ConnectCRM\RealState\Admin();
 
 			// Only load plugin functionality if license is active.
-			if ( ! cccrmre_is_license_active() ) {
+			if ( ! ccrmre_is_license_active() ) {
 				add_action(
 					'admin_notices',
 					function () {
@@ -152,6 +152,9 @@ add_action(
 			require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-import.php';
 			require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-post-type.php';
 			require_once CCRMRE_PLUGIN_PATH . 'includes/class-iip-cron.php';
+			require_once CCRMRE_PLUGIN_PATH . 'includes/class-featured-image-url.php';
+			require_once CCRMRE_PLUGIN_PATH . 'includes/class-gallery.php';
+			require_once CCRMRE_PLUGIN_PATH . 'includes/class-property-info.php';
 
 			// Initialize plugin classes only if license is active.
 			new Close\ConnectCRM\RealState\Import();
