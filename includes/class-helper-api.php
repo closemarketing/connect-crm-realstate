@@ -135,7 +135,7 @@ class API {
 		$attempt = 0;
 
 		while ( $attempt <= self::MAX_RETRIES ) {
-			$attempt++;
+			++$attempt;
 
 			// Execute the request.
 			$result = call_user_func( $request_callback );
@@ -168,8 +168,6 @@ class API {
 				self::MAX_RETRIES,
 				$wait_seconds
 			);
-
-			error_log( sprintf( '%s - %s: %s', $api_name, $retry_message, $result['message'] ) );
 
 			// Wait before retry.
 			sleep( $wait_seconds );

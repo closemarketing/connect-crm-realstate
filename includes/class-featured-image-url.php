@@ -123,7 +123,7 @@ class Featured_Image_URL {
 
 		// Get post ID from thumbnail meta.
 		global $wpdb;
-		$post_id = $wpdb->get_var(
+		$post_id = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
 				"SELECT post_id FROM $wpdb->postmeta 
 				WHERE meta_key = %s AND meta_value = %d 
@@ -162,7 +162,7 @@ class Featured_Image_URL {
 
 		// Get post ID from thumbnail meta.
 		global $wpdb;
-		$post_id = $wpdb->get_var(
+		$post_id = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
 				"SELECT post_id FROM $wpdb->postmeta 
 				WHERE meta_key = %s AND meta_value = %d 

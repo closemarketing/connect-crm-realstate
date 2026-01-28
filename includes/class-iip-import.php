@@ -313,9 +313,9 @@ class Import {
 			set_transient( $transient_key, $api_result, 10 * MINUTE_IN_SECONDS );
 		}
 
-		$api_properties     = isset( $api_result['data'] ) ? $api_result['data'] : array();
-		$api_count          = count( $api_properties );
-		$api_ids            = array_keys( $api_properties );
+		$api_properties = isset( $api_result['data'] ) ? $api_result['data'] : array();
+		$api_count      = count( $api_properties );
+		$api_ids        = array_keys( $api_properties );
 
 		// Filter out unavailable properties (those that won't be imported).
 		$available_properties = array();

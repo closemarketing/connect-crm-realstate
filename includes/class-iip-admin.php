@@ -826,12 +826,12 @@ class Admin {
 
 			if ( ! empty( $api_config ) ) {
 				// Format values for display.
-				$timeout_minutes          = $api_config['timeout'] / 60;
-				$timeout_display          = $timeout_minutes > 1
+				$timeout_minutes = $api_config['timeout'] / 60;
+				$timeout_display = $timeout_minutes > 1
 					? $timeout_minutes . ' ' . __( 'minutes', 'connect-crm-realstate' )
 					: $timeout_minutes . ' ' . __( 'minute', 'connect-crm-realstate' );
 
-				$pagination_display       = -1 === $api_config['pagination']
+				$pagination_display = -1 === $api_config['pagination']
 					? __( 'All at once', 'connect-crm-realstate' )
 					: $api_config['pagination'];
 
@@ -839,7 +839,7 @@ class Admin {
 				$retry_rate_limit_minutes = $api_config['retry_rate_limit'] / 60;
 				$retry_rate_limit_display = $retry_rate_limit_minutes . ' ' . __( 'minutes', 'connect-crm-realstate' );
 
-				$info                     = array(
+				$info = array(
 					'name'             => $api_config['name'],
 					'timeout'          => $timeout_display,
 					'pagination'       => $pagination_display,
