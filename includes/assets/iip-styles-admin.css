@@ -316,6 +316,12 @@
 	min-width: 180px;
 }
 
+.import-button-wrapper button:disabled,
+.import-button-wrapper select:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
 /**
  * ## Unified Log Container with Tabs
  * --------------------------- */
