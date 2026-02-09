@@ -983,11 +983,22 @@ class Admin {
 		$crm_type      = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
 		$post_type     = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
 		$custom_fields = $this->get_all_custom_fields( $post_type );
-		// Get Options .
+
+		// Validate API credentials before making request.
+		$credentials_valid = $this->validate_api_credentials( $crm_type );
+		if ( ! $credentials_valid['valid'] ) {
+			echo '<div class="error notice"><p>' . esc_html( $credentials_valid['message'] ) . '</p></div>';
+			return;
+		}
+
+		// Get Options API.
 		$properties_fields = API::get_properties_fields( $crm_type );
 
-		if ( 'error' === $properties_fields['status'] ) {
-			echo '<div class="error notice"><p>' . esc_html( $properties_fields['data'] ) . '</p></div>';
+		if ( 'error' === strtolower( $properties_fields['status'] ) ) {
+			$message = ! empty( $properties_fields['message'] )
+				? $properties_fields['message']
+				: __( 'Unknown error', 'connect-crm-realstate' );
+			echo '<div class="error notice"><p>' . esc_html( $message ) . '</p></div>';
 			return;
 		}
 
@@ -1084,6 +1095,46 @@ class Admin {
 	}
 
 	/**
+	 * Validate API credentials are configured
+	 *
+	 * @param string $crm_type CRM type (anaconda, inmovilla, inmovilla_procesos).
+	 * @return array Array with 'valid' boolean and 'message' string.
+	 */
+	private function validate_api_credentials( $crm_type ) {
+		$settings = get_option( 'conncrmreal_settings', array() );
+
+		// Validate Anaconda credentials.
+		if ( 'anaconda' === $crm_type ) {
+			$apipassword = isset( $settings['apipassword'] ) ? trim( $settings['apipassword'] ) : '';
+
+			if ( empty( $apipassword ) ) {
+				return array(
+					'valid'   => false,
+					'message' => __( 'API password is not configured. Please configure your Anaconda API credentials in the Connection tab.', 'connect-crm-realstate' ),
+				);
+			}
+		}
+
+		// Validate Inmovilla credentials.
+		if ( 'inmovilla' === $crm_type || 'inmovilla_procesos' === $crm_type ) {
+			$apiuser     = isset( $settings['apiuser'] ) ? trim( $settings['apiuser'] ) : '';
+			$apipassword = isset( $settings['apipassword'] ) ? trim( $settings['apipassword'] ) : '';
+
+			if ( empty( $apiuser ) || empty( $apipassword ) ) {
+				return array(
+					'valid'   => false,
+					'message' => __( 'API credentials are not configured. Please configure your Inmovilla API user and password in the Connection tab.', 'connect-crm-realstate' ),
+				);
+			}
+		}
+
+		return array(
+			'valid'   => true,
+			'message' => '',
+		);
+	}
+
+	/**
 	 * Return all meta keys from WordPress database in post type
 	 *
 	 * @param string $post_type Post type.
@@ -1123,6 +1174,12 @@ class Admin {
 
 		$settings = get_option( 'conncrmreal_settings' );
 		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+
+		// Validate API credentials before making request.
+		$credentials_valid = $this->validate_api_credentials( $crm_type );
+		if ( ! $credentials_valid['valid'] ) {
+			wp_send_json_error( array( 'message' => $credentials_valid['message'] ) );
+		}
 
 		// Get CRM fields.
 		$properties_fields = API::get_properties_fields( $crm_type );

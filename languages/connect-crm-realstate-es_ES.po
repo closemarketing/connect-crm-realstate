@@ -125,6 +125,22 @@ msgstr ""
 msgid "API password is empty"
 msgstr "La contraseña de la API está vacía"
 
+#: includes/class-iip-admin.php:1113
+msgid ""
+"API password is not configured. Please configure your Anaconda API "
+"credentials in the Connection tab."
+msgstr ""
+"La contraseña de la API no está configurada. Por favor, configura tus "
+"credenciales de la API de Anaconda en la pestaña de Conexión."
+
+#: includes/class-iip-admin.php:1126
+msgid ""
+"API credentials are not configured. Please configure your Inmovilla API user "
+"and password in the Connection tab."
+msgstr ""
+"Las credenciales de la API no están configuradas. Por favor, configura tu "
+"usuario y contraseña de la API de Inmovilla en la pestaña de Conexión."
+
 #: includes/class-helper-api.php:225 includes/class-iip-cron.php:79
 msgid "Unknown API error"
 msgstr "Error desconocido de API"

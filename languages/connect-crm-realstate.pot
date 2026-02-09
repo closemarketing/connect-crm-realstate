@@ -112,6 +112,14 @@ msgstr ""
 msgid "API password is empty"
 msgstr ""
 
+#: includes/class-iip-admin.php:1113
+msgid "API password is not configured. Please configure your Anaconda API credentials in the Connection tab."
+msgstr ""
+
+#: includes/class-iip-admin.php:1126
+msgid "API credentials are not configured. Please configure your Inmovilla API user and password in the Connection tab."
+msgstr ""
+
 #: includes/class-helper-api.php:225
 #: includes/class-iip-cron.php:79
 msgid "Unknown API error"
