@@ -909,6 +909,46 @@ msgstr "Posición"
 msgid "Reference"
 msgstr "Referencia"
 
+#: includes/class-iip-import.php:88
+msgid "Waiting"
+msgstr "Esperando"
+
+#. translators: %s: number of seconds to wait
+#: includes/class-iip-import.php:89
+msgid "API rate limit reached. Waiting %s seconds before retrying..."
+msgstr "Límite de la API alcanzado. Esperando %s segundos antes de reintentar..."
+
+#: includes/class-iip-import.php:90
+msgid "Resuming import..."
+msgstr "Reanudando importación..."
+
+#: includes/class-iip-import.php:169
+#: includes/class-iip-import.php:245
+msgid "API rate limit reached. The API has requested a wait."
+msgstr "Límite de la API alcanzado. La API ha solicitado una espera."
+
+#. translators: %s: property ID from the CRM
+#: includes/class-iip-import.php:232
+msgid "Property ID: %s"
+msgstr "ID de Propiedad: %s"
+
+#. translators: %s: status field value from the API
+#: includes/class-helper-sync.php:381
+msgid "Reason: status = %s"
+msgstr "Motivo: status = %s"
+
+#: includes/class-helper-sync.php:385
+msgid "Reason: nodisponible = 1"
+msgstr "Motivo: nodisponible = 1"
+
+#: includes/class-helper-sync.php:389
+msgid "Reason: estado = V (Sold)"
+msgstr "Motivo: estado = V (Vendido)"
+
+#: includes/class-helper-sync.php:393
+msgid "Reason: operation_status = Sold"
+msgstr "Motivo: operation_status = Vendido"
+
 #~ msgid "Log"
 #~ msgstr "Registro"
 
