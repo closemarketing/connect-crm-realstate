@@ -19,6 +19,12 @@ WordPress installation and then activate the Plugin from Plugins page.
 
 == Changelog ==
 
+= 1.2.0 =
+* Added rate limit detection during import for API errors 429 and 408.
+* Import waits and retries automatically when the API requests a pause.
+* User is informed with a countdown while waiting for rate limit to expire.
+* Shows detailed reason when a property is skipped as unavailable.
+
 = 1.1.0 =
 * Added option to download property images to your server for better performance.
 * Three download modes: no download, featured image only, or all images.
