@@ -225,7 +225,11 @@ class Import {
 			// Check if property is available in listing (optimization).
 			$is_available = SYNC::is_property_available( $property, $crm );
 
-			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ';
+			$key_id      = ( 'inmovilla' === $crm || 'inmovilla_procesos' === $crm ) ? 'cod_ofer' : 'id';
+			$prop_id_val = isset( $property[ $key_id ] ) ? $property[ $key_id ] : '?';
+
+			/* translators: %s: property ID from the CRM. */
+			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . sprintf( __( 'Property ID: %s', 'connect-crm-realstate' ), esc_html( $prop_id_val ) ) . ' — ';
 			if ( ! $is_available ) {
 				// Property is not available, handle according to settings.
 				$result_sync   = SYNC::handle_unavailable_property( $property, $this->settings, $this->settings_fields, $crm );

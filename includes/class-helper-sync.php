@@ -326,14 +326,18 @@ class SYNC {
 
 		if ( empty( $property_post_id ) ) {
 			// Property doesn't exist in WordPress, skip it.
+			$reason = self::get_unavailable_reason( $property, $crm );
+
 			return array(
 				'property_id' => $property_id,
-				'message'     => __( 'Skipped (Not Available in CRM)', 'connect-crm-realstate' ),
+				'message'     => __( 'Skipped (Not Available in CRM)', 'connect-crm-realstate' ) . $reason,
 			);
 		}
 
 		// Property exists, apply action according to settings.
 		$message = '';
+
+		$reason = self::get_unavailable_reason( $property, $crm );
 
 		switch ( $sold_action ) {
 			case 'draft':
@@ -343,17 +347,17 @@ class SYNC {
 						'post_status' => 'draft',
 					)
 				);
-				$message = __( 'Unpublished (Set to Draft)', 'connect-crm-realstate' );
+				$message = __( 'Unpublished (Set to Draft)', 'connect-crm-realstate' ) . $reason;
 				break;
 
 			case 'trash':
 				wp_trash_post( $property_post_id );
-				$message = __( 'Moved to Trash', 'connect-crm-realstate' );
+				$message = __( 'Moved to Trash', 'connect-crm-realstate' ) . $reason;
 				break;
 
 			case 'keep':
 			default:
-				$message = __( 'Kept Published (Not Available)', 'connect-crm-realstate' );
+				$message = __( 'Kept Published (Not Available)', 'connect-crm-realstate' ) . $reason;
 				break;
 		}
 
@@ -362,6 +366,34 @@ class SYNC {
 			'post_id'     => $property_post_id,
 			'message'     => $message,
 		);
+	}
+
+	/**
+	 * Returns a human-readable reason why the property is not available.
+	 *
+	 * @param array  $property Property data from API.
+	 * @param string $crm CRM type.
+	 * @return string Reason string with leading separator, or empty if unknown.
+	 */
+	private static function get_unavailable_reason( $property, $crm ) {
+		if ( isset( $property['status'] ) && ! (bool) $property['status'] ) {
+			/* translators: %s: status field value from the API. */
+			return ' — ' . sprintf( __( 'Reason: status = %s', 'connect-crm-realstate' ), esc_html( $property['status'] ) );
+		}
+
+		if ( 'inmovilla_procesos' === $crm && isset( $property['nodisponible'] ) && 1 === (int) $property['nodisponible'] ) {
+			return ' — ' . __( 'Reason: nodisponible = 1', 'connect-crm-realstate' );
+		}
+
+		if ( 'inmovilla' === $crm && isset( $property['estado'] ) && 'V' === $property['estado'] ) {
+			return ' — ' . __( 'Reason: estado = V (Sold)', 'connect-crm-realstate' );
+		}
+
+		if ( 'anaconda' === $crm && isset( $property['operation_status'] ) && 'Vendido' === $property['operation_status'] ) {
+			return ' — ' . __( 'Reason: operation_status = Sold', 'connect-crm-realstate' );
+		}
+
+		return '';
 	}
 
 	/**
