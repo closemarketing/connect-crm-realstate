@@ -127,13 +127,16 @@ class SYNC {
 				update_post_meta( $property_post_id, 'ccrmre_status', $property_info_meta['status'] );
 			}
 
-			// Save photo URLs for properties (without downloading).
+			// Save photo URLs and download featured image.
 			if ( isset( $item['fotos'] ) && is_array( $item['fotos'] ) && ! empty( $item['fotos'] ) ) {
-				// Save first photo as featured image URL.
-				update_post_meta( $property_post_id, 'ccrmre_featured_image_url', $item['fotos'][0] );
-
-				// Save all photos for gallery.
+				// Save all photos for gallery (external URLs).
 				update_post_meta( $property_post_id, 'ccrmre_gallery_urls', $item['fotos'] );
+
+				// Download first photo and set as real featured image.
+				$attach_id = self::download_and_set_featured_image( $property_post_id, $item['fotos'][0] );
+
+				// Save the original URL as reference for future comparisons.
+				update_post_meta( $property_post_id, 'ccrmre_featured_image_url', $item['fotos'][0] );
 			}
 
 			// Clear statistics cache after syncing.
@@ -577,6 +580,74 @@ class SYNC {
 
 		// Fallback to default property_id.
 		return 'property_id';
+	}
+
+	/**
+	 * Downloads an image from a URL and sets it as the post featured image.
+	 *
+	 * Avoids re-downloading if the URL has not changed since the last sync.
+	 * Falls back gracefully: if the download fails the property is kept without
+	 * a featured image rather than aborting the whole import.
+	 *
+	 * @param int    $post_id   WordPress post ID.
+	 * @param string $image_url External image URL.
+	 * @return int|false Attachment ID on success, false on failure.
+	 */
+	public static function download_and_set_featured_image( $post_id, $image_url ) {
+		if ( empty( $image_url ) || empty( $post_id ) ) {
+			return false;
+		}
+
+		// Check if the URL is the same as the one already downloaded.
+		$saved_url       = get_post_meta( $post_id, 'ccrmre_featured_image_url', true );
+		$current_thumb   = get_post_thumbnail_id( $post_id );
+
+		if ( $saved_url === $image_url && ! empty( $current_thumb ) && false !== get_post( $current_thumb ) ) {
+			// URL unchanged and attachment still exists — skip download.
+			return (int) $current_thumb;
+		}
+
+		// Require WordPress media helpers.
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		// Download the file to a temp location.
+		$tmp = download_url( $image_url );
+
+		if ( is_wp_error( $tmp ) ) {
+			return false;
+		}
+
+		// Build a clean file name from the URL.
+		$url_path  = wp_parse_url( $image_url, PHP_URL_PATH );
+		$file_name = ! empty( $url_path ) ? sanitize_file_name( basename( $url_path ) ) : 'property-image.jpg';
+
+		$file_array = array(
+			'name'     => $file_name,
+			'tmp_name' => $tmp,
+		);
+
+		// Sideload the file into the media library, attached to the post.
+		$attachment_id = media_handle_sideload( $file_array, $post_id );
+
+		if ( is_wp_error( $attachment_id ) ) {
+			// Clean up the temp file if sideload failed.
+			if ( file_exists( $tmp ) ) {
+				wp_delete_file( $tmp );
+			}
+			return false;
+		}
+
+		// Delete the previous attachment if it differs from the new one.
+		if ( ! empty( $current_thumb ) && (int) $current_thumb !== $attachment_id ) {
+			wp_delete_attachment( (int) $current_thumb, true );
+		}
+
+		// Set the attachment as the post featured image.
+		set_post_thumbnail( $post_id, $attachment_id );
+
+		return $attachment_id;
 	}
 
 	/**
