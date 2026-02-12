@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Connect CRM Real State
+ * Plugin Name: Connect CRM Real State PRO
  * Plugin URI: https://close.technology/wordpress-plugins/conecta-crm-realstate/
  * Description: Connect Properties from Inmovilla/Anaconda to a Custom Post Type.
  * Author: closemarketing
