@@ -985,3 +985,47 @@ msgstr "Motivo: operation_status = Vendido"
 #~ "Después de rellenar los ajustes, utilice el botón de abajo para importar "
 #~ "las propiedades. El proceso de importación puede tardar un poco y es "
 #~ "necesario mantener esta página abierta para completarlo."
+
+#: includes/class-iip-admin.php
+msgid "Download Images Locally"
+msgstr "Descargar imágenes localmente"
+
+#: includes/class-iip-admin.php
+msgid "No - Use external image links"
+msgstr "No - Usar enlaces de imágenes externos"
+
+#: includes/class-iip-admin.php
+msgid "Featured image only"
+msgstr "Solo imagen destacada"
+
+#: includes/class-iip-admin.php
+msgid "Yes - All images (featured + gallery)"
+msgstr "Sí - Todas las imágenes (destacada + galería)"
+
+#: includes/class-iip-admin.php
+msgid "Choose whether to download property images to your server."
+msgstr "Elige si descargar las imágenes de las propiedades a tu servidor."
+
+#: includes/class-iip-admin.php
+msgid ""
+"Downloading images improves page speed, works with your CDN, and does not "
+"depend on the CRM being available."
+msgstr ""
+"Descargar las imágenes mejora la velocidad de carga, funciona con tu CDN y "
+"no depende de que el CRM esté disponible."
+
+#: includes/class-iip-admin.php
+msgid ""
+"However, images will use disk space on your server and the import process "
+"will take longer."
+msgstr ""
+"Sin embargo, las imágenes ocuparán espacio en disco en tu servidor y el "
+"proceso de importación tardará más."
+
+#: includes/class-iip-admin.php
+msgid ""
+"\"Featured image only\" downloads just the main photo. \"All images\" "
+"downloads the full gallery as well."
+msgstr ""
+"\"Solo imagen destacada\" descarga solo la foto principal. \"Todas las "
+"imágenes\" descarga también la galería completa."

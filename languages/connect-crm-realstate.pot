@@ -888,3 +888,35 @@ msgstr ""
 #: includes/class-helper-sync.php:393
 msgid "Reason: operation_status = Sold"
 msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "Download Images Locally"
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "No - Use external image links"
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "Featured image only"
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "Yes - All images (featured + gallery)"
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "Choose whether to download property images to your server."
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "Downloading images improves page speed, works with your CDN, and does not depend on the CRM being available."
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "However, images will use disk space on your server and the import process will take longer."
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "\"Featured image only\" downloads just the main photo. \"All images\" downloads the full gallery as well."
+msgstr ""
