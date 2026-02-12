@@ -49,12 +49,12 @@ class PostType {
 
 		if ( 'property' === $settings_post_type ) {
 			add_action( 'init', array( $this, 'cpt_property' ) );
-			// Register Meta box for post type property.
-			add_action( 'add_meta_boxes', array( $this, 'metabox_property' ) );
-
-			add_filter( 'manage_edit-' . $settings_post_type . '_columns', array( $this, 'add_property_columns' ) );
-			add_action( 'manage_' . $settings_post_type . '_posts_custom_column', array( $this, 'manage_post_type_columns' ), 10, 2 );
 		}
+
+		// Register meta boxes and columns for the configured post type.
+		add_action( 'add_meta_boxes', array( $this, 'metabox_property' ) );
+		add_filter( 'manage_edit-' . $settings_post_type . '_columns', array( $this, 'add_property_columns' ) );
+		add_action( 'manage_' . $settings_post_type . '_posts_custom_column', array( $this, 'manage_post_type_columns' ), 10, 2 );
 	}
 
 	/**
@@ -103,11 +103,13 @@ class PostType {
 	 * @return void
 	 */
 	public function metabox_property() {
+		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+
 		add_meta_box(
 			'property',
 			__( 'Property Meta', 'connect-crm-realstate' ),
 			array( $this, 'metabox_show_property' ),
-			'property',
+			$post_type,
 			'normal'
 		);
 
@@ -115,7 +117,7 @@ class PostType {
 			'property-photos',
 			__( 'Property Photos', 'connect-crm-realstate' ),
 			array( $this, 'metabox_show_photos' ),
-			'property',
+			$post_type,
 			'side',
 			'high'
 		);

@@ -54,7 +54,8 @@ class Gallery {
 	 * @return void
 	 */
 	public function enqueue_gallery_assets() {
-		if ( ! is_singular( 'property' ) ) {
+		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		if ( ! is_singular( $post_type ) ) {
 			return;
 		}
 
@@ -81,7 +82,8 @@ class Gallery {
 	 * @return string
 	 */
 	public function auto_display_gallery( $content ) {
-		if ( ! is_singular( 'property' ) || ! in_the_loop() || ! is_main_query() ) {
+		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		if ( ! is_singular( $post_type ) || ! in_the_loop() || ! is_main_query() ) {
 			return $content;
 		}
 
