@@ -85,6 +85,9 @@ class Import {
 				'label_sync'          => __( 'Sync', 'connect-crm-realstate' ),
 				'label_syncing'       => __( 'Syncing', 'connect-crm-realstate' ),
 				'label_sync_complete' => __( 'Finished', 'connect-crm-realstate' ),
+				'label_waiting'       => __( 'Waiting', 'connect-crm-realstate' ),
+				'label_rate_limit'    => __( 'API rate limit reached. Waiting %s seconds before retrying...', 'connect-crm-realstate' ),
+				'label_resuming'      => __( 'Resuming import...', 'connect-crm-realstate' ),
 				'nonce'               => wp_create_nonce( 'ccrmre_manual_import_nonce' ),
 			)
 		);
@@ -105,6 +108,9 @@ class Import {
 			);
 			return;
 		}
+
+		// Disable server-side retry sleep so rate limit errors reach us immediately.
+		API::set_skip_retry( true );
 
 		$loop         = isset( $_POST['loop'] ) ? (int) $_POST['loop'] : 0;
 		$mode         = isset( $_POST['mode'] ) ? sanitize_text_field( wp_unslash( $_POST['mode'] ) ) : 'updated';
@@ -156,6 +162,26 @@ class Import {
 			$totalprop = count( $properties );
 
 			if ( 'error' === $result_api['status'] ) {
+				$error_type = isset( $result_api['error_type'] ) ? $result_api['error_type'] : 'default';
+
+				// Rate limit: inform user and tell JS to wait 60 seconds.
+				if ( 'rate_limit' === $error_type ) {
+					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'API rate limit reached. The API has requested a wait.', 'connect-crm-realstate' ) . '</strong><br/>';
+
+					wp_send_json_success(
+						array(
+							'loop'         => $loop,
+							'message'      => $progress_msg,
+							'pagination'   => $pagination,
+							'totalprop'    => $totalprop,
+							'finish'       => false,
+							'rate_limit'   => true,
+							'wait_seconds' => 60,
+						)
+					);
+				}
+
+				// Other errors: original behavior.
 				$error_message  = $result_api['data'] ?? __( 'Error connecting with API. Please check your API connection.', 'connect-crm-realstate' );
 				$error_message .= '. ' . __( 'If your credentials are correct, wait a few minutes and try again.', 'connect-crm-realstate' );
 
@@ -208,6 +234,26 @@ class Import {
 				// Property is available, sync full details.
 				$result_get_property = API::get_property( $property, $crm );
 				if ( 'ok' !== $result_get_property['status'] ) {
+					$error_type = isset( $result_get_property['error_type'] ) ? $result_get_property['error_type'] : 'default';
+
+					// Rate limit: inform user and tell JS to wait 60 seconds.
+					if ( 'rate_limit' === $error_type ) {
+						$progress_msg .= '<strong style="color:orange;">' . __( 'API rate limit reached. The API has requested a wait.', 'connect-crm-realstate' ) . '</strong><br/>';
+
+						wp_send_json_success(
+							array(
+								'loop'         => $loop,
+								'message'      => $progress_msg,
+								'pagination'   => $pagination,
+								'totalprop'    => $totalprop,
+								'finish'       => false,
+								'rate_limit'   => true,
+								'wait_seconds' => 60,
+							)
+						);
+					}
+
+					// Other errors: original behavior.
 					$progress_msg .= ' ' . __( 'Property ID:', 'connect-crm-realstate' ) . ' ';
 					$progress_msg .= $property['id'];
 					$progress_msg .= ' ' . __( 'Error:', 'connect-crm-realstate' ) . ' ';

@@ -73,15 +73,59 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 });
 
-function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
+/**
+ * Shows a countdown in the log and retries after waiting.
+ */
+function startWaitCountdown( element, totalSeconds, callback ) {
+	let remaining = totalSeconds;
+
+	const countdownEl = document.createElement('p');
+	countdownEl.style.cssText = 'color: #856404; background: #fff3cd; padding: 8px 12px; border-left: 4px solid #ffc107; margin: 5px 0;';
+
+	const loglist = document.querySelector('#logwrapper #loglist');
+	if ( loglist ) {
+		loglist.appendChild(countdownEl);
+	}
+
+	function tick() {
+		if ( remaining <= 0 ) {
+			const resumeLabel = ajaxAction.label_resuming || 'Resuming import...';
+			countdownEl.innerHTML = '[' + new Date().toLocaleTimeString() + '] <strong style="color:green;">&#10003; ' + resumeLabel + '</strong>';
+			element.textContent = ajaxAction.label_syncing;
+			if ( loglist ) {
+				loglist.scrollTo({ top: loglist.scrollHeight, behavior: 'smooth' });
+			}
+			callback();
+			return;
+		}
+
+		const label = ajaxAction.label_rate_limit
+			? ajaxAction.label_rate_limit.replace( '%s', remaining )
+			: 'Waiting ' + remaining + ' seconds...';
+
+		countdownEl.innerHTML = '<span class="dashicons dashicons-clock" style="margin-right: 5px;"></span>' + label;
+		element.textContent = ajaxAction.label_waiting + ' (' + remaining + 's)';
+
+		if ( loglist ) {
+			loglist.scrollTo({ top: loglist.scrollHeight, behavior: 'smooth' });
+		}
+
+		remaining--;
+		setTimeout( tick, 1000 );
+	}
+
+	tick();
+}
+
+function syncManualProperties( element, loop = 0, pagination, totalprop = 0, isRetry = false ) {
 	// Get the spinner element and mode select.
 	const spinner = element.parentElement.querySelector('.spinner');
 	const importMode = document.getElementById('import-mode');
 	const refreshButton = document.getElementById('refresh_stats');
 	const mode = importMode ? importMode.value : 'updated';
 
-	// Switch to manual tab and clear log when starting a new import (loop 0).
-	if ( loop === 0 ) {
+	// Switch to manual tab and clear log when starting a new import (loop 0, not a retry).
+	if ( loop === 0 && ! isRetry ) {
 		// Activate manual tab.
 		const manualTabButton = document.querySelector('.ccrmre-tab-button[data-tab="manual"]');
 		if ( manualTabButton ) {
@@ -130,6 +174,15 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0 ) {
 				progressElement.className = classTask;
 				document.querySelector('#logwrapper #loglist').appendChild(progressElement);
 				progressElement.innerHTML = results.data.message;
+			}
+
+			// Rate limit: wait and retry the same request.
+			if ( results.data.rate_limit ) {
+				const waitSeconds = results.data.wait_seconds || 60;
+				startWaitCountdown( element, waitSeconds, function() {
+					syncManualProperties( element, results.data.loop, results.data.pagination || pagination, results.data.totalprop || totalprop, true );
+				});
+				return;
 			}
 
 			if( ! results.data.finish ) {

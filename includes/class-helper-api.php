@@ -53,6 +53,26 @@ class API {
 	);
 
 	/**
+	 * Flag to skip server-side retry sleep during manual imports.
+	 *
+	 * @var bool
+	 */
+	private static $skip_retry = false;
+
+	/**
+	 * Set skip retry flag.
+	 *
+	 * When true, execute_with_retry returns on first error without sleeping,
+	 * so the AJAX client can handle the wait with user feedback.
+	 *
+	 * @param bool $skip Whether to skip server-side retries.
+	 * @return void
+	 */
+	public static function set_skip_retry( $skip ) {
+		self::$skip_retry = (bool) $skip;
+	}
+
+	/**
 	 * Get API configuration information
 	 *
 	 * Returns technical specifications and limitations for each API type.
@@ -113,7 +133,7 @@ class API {
 			}
 		}
 
-		if ( 429 === $code ) {
+		if ( 429 === $code || 408 === $code ) {
 			return 'rate_limit';
 		}
 
@@ -156,7 +176,14 @@ class API {
 			}
 
 			// Detect error type and get wait time.
-			$error_type   = isset( $result['error_type'] ) ? $result['error_type'] : 'default';
+			$error_type = isset( $result['error_type'] ) ? $result['error_type'] : 'default';
+
+			// If skip_retry is enabled (manual import), return immediately.
+			if ( self::$skip_retry ) {
+				$result['error_type'] = $error_type;
+				return $result;
+			}
+
 			$retry_config = isset( self::RETRY_CONFIG[ $error_type ] ) ? self::RETRY_CONFIG[ $error_type ] : self::RETRY_CONFIG['default'];
 			$wait_seconds = $retry_config['wait'];
 
@@ -378,9 +405,10 @@ class API {
 		// Check for errors.
 		if ( is_wp_error( $response ) ) {
 			return array(
-				'status'  => 'error',
-				'message' => $response->get_error_message(),
-				'data'    => array(),
+				'status'     => 'error',
+				'message'    => $response->get_error_message(),
+				'data'       => array(),
+				'error_type' => self::detect_error_type( $response, 0 ),
 			);
 		}
 
@@ -391,13 +419,14 @@ class API {
 		// Check response code.
 		if ( 200 !== $code ) {
 			return array(
-				'status'  => 'error',
-				'message' => sprintf(
+				'status'     => 'error',
+				'message'    => sprintf(
 					/* translators: %d: HTTP response code */
 					__( 'Inmovilla API returned error code: %d', 'connect-crm-realstate' ),
 					$code
 				),
-				'data'    => array(),
+				'data'       => array(),
+				'error_type' => self::detect_error_type( $response, $code ),
 			);
 		}
 
