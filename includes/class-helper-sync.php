@@ -127,16 +127,23 @@ class SYNC {
 				update_post_meta( $property_post_id, 'ccrmre_status', $property_info_meta['status'] );
 			}
 
-			// Save photo URLs and download featured image.
+			// Save photo URLs and optionally download images.
 			if ( isset( $item['fotos'] ) && is_array( $item['fotos'] ) && ! empty( $item['fotos'] ) ) {
-				// Save all photos for gallery (external URLs).
+				$download_mode = isset( $settings['download_images'] ) ? $settings['download_images'] : 'no';
+
+				// Always save external URLs as reference.
 				update_post_meta( $property_post_id, 'ccrmre_gallery_urls', $item['fotos'] );
-
-				// Download first photo and set as real featured image.
-				$attach_id = self::download_and_set_featured_image( $property_post_id, $item['fotos'][0] );
-
-				// Save the original URL as reference for future comparisons.
 				update_post_meta( $property_post_id, 'ccrmre_featured_image_url', $item['fotos'][0] );
+
+				if ( 'featured' === $download_mode || 'all' === $download_mode ) {
+					// Download first photo and set as real featured image.
+					self::download_and_set_featured_image( $property_post_id, $item['fotos'][0] );
+				}
+
+				if ( 'all' === $download_mode ) {
+					// Download all gallery images locally.
+					self::download_gallery_images( $property_post_id, $item['fotos'] );
+				}
 			}
 
 			// Clear statistics cache after syncing.
@@ -648,6 +655,98 @@ class SYNC {
 		set_post_thumbnail( $post_id, $attachment_id );
 
 		return $attachment_id;
+	}
+
+	/**
+	 * Downloads all gallery images and saves their attachment IDs.
+	 *
+	 * Compares the current URLs with previously saved ones to avoid
+	 * re-downloading unchanged images. Stores IDs in the meta key
+	 * ccrmre_gallery_attachment_ids.
+	 *
+	 * @param int   $post_id    WordPress post ID.
+	 * @param array $image_urls Array of external image URLs.
+	 * @return array Array of attachment IDs (may contain gaps where downloads failed).
+	 */
+	public static function download_gallery_images( $post_id, $image_urls ) {
+		if ( empty( $image_urls ) || ! is_array( $image_urls ) || empty( $post_id ) ) {
+			return array();
+		}
+
+		// Get previously saved data for comparison.
+		$saved_urls   = get_post_meta( $post_id, 'ccrmre_gallery_urls', true );
+		$saved_ids    = get_post_meta( $post_id, 'ccrmre_gallery_attachment_ids', true );
+		$saved_urls   = is_array( $saved_urls ) ? $saved_urls : array();
+		$saved_ids    = is_array( $saved_ids ) ? $saved_ids : array();
+
+		// Require WordPress media helpers.
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		$attachment_ids = array();
+
+		foreach ( $image_urls as $index => $image_url ) {
+			// Check if this URL already has a valid local attachment.
+			if (
+				isset( $saved_urls[ $index ] ) &&
+				$saved_urls[ $index ] === $image_url &&
+				isset( $saved_ids[ $index ] ) &&
+				! empty( $saved_ids[ $index ] ) &&
+				false !== get_post( $saved_ids[ $index ] )
+			) {
+				// URL unchanged and attachment exists — reuse it.
+				$attachment_ids[] = (int) $saved_ids[ $index ];
+				continue;
+			}
+
+			// Download the file to a temp location.
+			$tmp = download_url( $image_url );
+
+			if ( is_wp_error( $tmp ) ) {
+				$attachment_ids[] = 0;
+				continue;
+			}
+
+			// Build a clean file name.
+			$url_path  = wp_parse_url( $image_url, PHP_URL_PATH );
+			$file_name = ! empty( $url_path ) ? sanitize_file_name( basename( $url_path ) ) : 'property-gallery-' . $index . '.jpg';
+
+			$file_array = array(
+				'name'     => $file_name,
+				'tmp_name' => $tmp,
+			);
+
+			$attach_id = media_handle_sideload( $file_array, $post_id );
+
+			if ( is_wp_error( $attach_id ) ) {
+				if ( file_exists( $tmp ) ) {
+					wp_delete_file( $tmp );
+				}
+				$attachment_ids[] = 0;
+				continue;
+			}
+
+			// Delete the old attachment at this position if it changed.
+			if ( isset( $saved_ids[ $index ] ) && ! empty( $saved_ids[ $index ] ) && (int) $saved_ids[ $index ] !== $attach_id ) {
+				wp_delete_attachment( (int) $saved_ids[ $index ], true );
+			}
+
+			$attachment_ids[] = $attach_id;
+		}
+
+		// Delete any leftover attachments from previous syncs with more images.
+		if ( count( $saved_ids ) > count( $image_urls ) ) {
+			for ( $i = count( $image_urls ); $i < count( $saved_ids ); $i++ ) {
+				if ( ! empty( $saved_ids[ $i ] ) ) {
+					wp_delete_attachment( (int) $saved_ids[ $i ], true );
+				}
+			}
+		}
+
+		update_post_meta( $post_id, 'ccrmre_gallery_attachment_ids', $attachment_ids );
+
+		return $attachment_ids;
 	}
 
 	/**
