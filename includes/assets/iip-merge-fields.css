@@ -31,7 +31,7 @@
 
 .ccrmre-label {
 	font-weight: 600;
-	width: 30%;
+	width: 25%;
 }
 
 .ccrmre-label .description {
@@ -85,14 +85,14 @@
 
 /* Sample data column */
 .ccrmre-sample {
-	width: 20%;
+	width: 30%;
 	color: #646970;
 	font-size: 12px;
 }
 
 .ccrmre-sample-value {
 	display: inline-block;
-	max-width: 180px;
+	max-width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
