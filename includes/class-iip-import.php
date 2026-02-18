@@ -210,7 +210,7 @@ class Import {
 				// Save properties in transients.
 				$i = 0;
 				foreach ( $properties as $property_api ) {
-					set_transient( 'connreal_query_property_loop_' . $i, $property_api, MINUTE_IN_SECONDS * 3 );
+					set_transient( 'connreal_query_property_loop_' . $i, $property_api, 30 * MINUTE_IN_SECONDS );
 					++$i;
 				}
 
@@ -219,6 +219,23 @@ class Import {
 		} else {
 			// Get property from transient.
 			$property = get_transient( 'connreal_query_property_loop_' . $loop );
+
+			// Transient expired (e.g. after a long rate-limit wait). Re-fetch the page.
+			if ( false === $property && $loop < $totalprop ) {
+				$page       = floor( $loop / $pagination ) + 1;
+				$result_api = API::get_properties( $crm, $page );
+
+				if ( 'ok' === $result_api['status'] && ! empty( $result_api['data'] ) ) {
+					$properties = $result_api['data'];
+					$i          = 0;
+					foreach ( $properties as $property_api ) {
+						set_transient( 'connreal_query_property_loop_' . $i, $property_api, 30 * MINUTE_IN_SECONDS );
+						++$i;
+					}
+					$loop_page = $loop % $pagination;
+					$property  = isset( $properties[ $loop_page ] ) ? $properties[ $loop_page ] : null;
+				}
+			}
 		}
 
 		$finish = false;
@@ -440,5 +457,4 @@ class Import {
 			)
 		);
 	}
-
 }

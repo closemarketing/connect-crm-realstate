@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
  * Shows a countdown in the log and retries after waiting.
  */
 function startWaitCountdown( element, totalSeconds, callback ) {
-	let remaining = totalSeconds;
+	const endTime = Date.now() + ( totalSeconds * 1000 );
 
 	const countdownEl = document.createElement('p');
 	countdownEl.style.cssText = 'color: #856404; background: #fff3cd; padding: 8px 12px; border-left: 4px solid #ffc107; margin: 5px 0;';
@@ -88,6 +88,8 @@ function startWaitCountdown( element, totalSeconds, callback ) {
 	}
 
 	function tick() {
+		const remaining = Math.max( 0, Math.ceil( ( endTime - Date.now() ) / 1000 ) );
+
 		if ( remaining <= 0 ) {
 			const resumeLabel = ajaxAction.label_resuming || 'Resuming import...';
 			countdownEl.innerHTML = '[' + new Date().toLocaleTimeString() + '] <strong style="color:green;">&#10003; ' + resumeLabel + '</strong>';
@@ -110,7 +112,6 @@ function startWaitCountdown( element, totalSeconds, callback ) {
 			loglist.scrollTo({ top: loglist.scrollHeight, behavior: 'smooth' });
 		}
 
-		remaining--;
 		setTimeout( tick, 1000 );
 	}
 
