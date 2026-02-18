@@ -462,30 +462,12 @@ class Admin {
 		// Invalidate API cache when credentials are updated.
 		self::invalidate_api_cache();
 
-		// Force immediate re-validation of credentials.
-		$crm_type          = isset( $input['type'] ) ? $input['type'] : 'anaconda';
-		$validation_result = $this->validate_api_credentials( $crm_type, true );
-
-		// Add admin notice based on validation result.
-		if ( $validation_result['valid'] ) {
-			add_settings_error(
-				'conncrmreal_settings',
-				'credentials_validated',
-				__( 'Settings saved successfully. API credentials are valid and working correctly.', 'connect-crm-realstate' ),
-				'success'
-			);
-		} else {
-			add_settings_error(
-				'conncrmreal_settings',
-				'credentials_invalid',
-				sprintf(
-					/* translators: %s: error message from API */
-					__( 'Settings saved, but API validation failed: %s', 'connect-crm-realstate' ),
-					$validation_result['message']
-				),
-				'warning'
-			);
-		}
+		add_settings_error(
+			'conncrmreal_settings',
+			'settings_saved',
+			__( 'Settings saved successfully.', 'connect-crm-realstate' ),
+			'success'
+		);
 
 		return $sanitary_values;
 	}
@@ -705,21 +687,9 @@ class Admin {
 		$crm_type   = isset( $settings['type'] ) ? $settings['type'] : '';
 		$pagination = API::get_pagination_size( $crm_type );
 
-		// Check API credentials validation.
-		$credentials_valid = $this->validate_api_credentials( $crm_type );
-		$buttons_disabled  = ! $credentials_valid['valid'];
 		?>
 		<div class="connect-realstate-manual-action">
 			<h2><?php esc_html_e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
-
-			<?php if ( ! $credentials_valid['valid'] ) : ?>
-				<div class="notice notice-error">
-					<p>
-						<strong><?php esc_html_e( 'API Connection Error:', 'connect-crm-realstate' ); ?></strong>
-						<?php echo esc_html( $credentials_valid['message'] ); ?>
-					</p>
-				</div>
-			<?php endif; ?>
 			
 			<!-- Import Statistics -->
 			<div class="ccrmre-import-stats">
@@ -802,14 +772,14 @@ class Admin {
 					</h3>
 
 					<div class="import-button-wrapper">
-						<select id="import-mode" class="import-mode-select" <?php echo $buttons_disabled ? 'disabled' : ''; ?>>
+						<select id="import-mode" class="import-mode-select">
 							<option value="updated"><?php esc_html_e( 'Properties to update', 'connect-crm-realstate' ); ?></option>
 							<option value="all"><?php esc_html_e( 'All properties', 'connect-crm-realstate' ); ?></option>
 						</select>
-						<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" <?php echo $buttons_disabled ? 'disabled' : ''; ?>>
+						<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
 							<?php esc_html_e( 'Start Import', 'connect-crm-realstate' ); ?>
 						</button>
-						<button type="button" id="refresh_stats" name="refresh_stats" class="button button-large" onclick="loadImportStats();" <?php echo $buttons_disabled ? 'disabled' : ''; ?>>
+						<button type="button" id="refresh_stats" name="refresh_stats" class="button button-large" onclick="loadImportStats();">
 							<span class="dashicons dashicons-update"></span>
 							<?php esc_html_e( 'Refresh Statistics', 'connect-crm-realstate' ); ?>
 						</button>
@@ -1047,11 +1017,8 @@ class Admin {
 			}
 		}
 
-		// Load stats on page load only if credentials are valid
 		jQuery(document).ready(function() {
-			<?php if ( ! $buttons_disabled ) : ?>
 			loadImportStats();
-			<?php endif; ?>
 		});
 		</script>
 		<?php
@@ -1089,13 +1056,6 @@ class Admin {
 		$crm_type      = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
 		$post_type     = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
 		$custom_fields = $this->get_all_custom_fields( $post_type );
-
-		// Validate API credentials before making request.
-		$credentials_valid = $this->validate_api_credentials( $crm_type );
-		if ( ! $credentials_valid['valid'] ) {
-			echo '<div class="error notice"><p>' . esc_html( $credentials_valid['message'] ) . '</p></div>';
-			return;
-		}
 
 		// Get Options API.
 		$properties_fields = API::get_properties_fields( $crm_type );
@@ -1215,119 +1175,6 @@ class Admin {
 	}
 
 	/**
-	 * Validate API credentials are configured and working
-	 *
-	 * Uses a transient cache to avoid checking on every request.
-	 * Cache duration: 1 day (DAY_IN_SECONDS)
-	 *
-	 * @param string $crm_type CRM type (anaconda, inmovilla, inmovilla_procesos).
-	 * @param bool   $force_check Force validation even if cache exists.
-	 * @return array Array with 'valid' boolean and 'message' string.
-	 */
-	private function validate_api_credentials( $crm_type, $force_check = false ) {
-		// Check transient cache first (unless forced).
-		if ( ! $force_check ) {
-			$transient_key = 'ccrmre_api_valid_' . $crm_type;
-			$cached_result = get_transient( $transient_key );
-
-			if ( false !== $cached_result ) {
-				return $cached_result;
-			}
-		}
-
-		$settings = get_option( 'conncrmreal_settings', array() );
-		$result   = array(
-			'valid'   => false,
-			'message' => '',
-		);
-
-		// Validate credentials are configured.
-		if ( 'anaconda' === $crm_type ) {
-			$apipassword = isset( $settings['apipassword'] ) ? trim( $settings['apipassword'] ) : '';
-
-			if ( empty( $apipassword ) ) {
-				$result['message'] = __( 'API password is not configured. Please configure your Anaconda API credentials in the Connection tab.', 'connect-crm-realstate' );
-				$this->cache_api_validation( $crm_type, $result );
-				return $result;
-			}
-		} elseif ( 'inmovilla' === $crm_type || 'inmovilla_procesos' === $crm_type ) {
-			$apiuser     = isset( $settings['apiuser'] ) ? trim( $settings['apiuser'] ) : '';
-			$apipassword = isset( $settings['apipassword'] ) ? trim( $settings['apipassword'] ) : '';
-
-			if ( empty( $apiuser ) || empty( $apipassword ) ) {
-				$result['message'] = __( 'API credentials are not configured. Please configure your Inmovilla API user and password in the Connection tab.', 'connect-crm-realstate' );
-				$this->cache_api_validation( $crm_type, $result );
-				return $result;
-			}
-		}
-
-		// Test credentials with a simple API call.
-		$test_result = $this->test_api_connection( $crm_type );
-
-		if ( $test_result['valid'] ) {
-			$result['valid']   = true;
-			$result['message'] = '';
-		} else {
-			$result['message'] = $test_result['message'];
-		}
-
-		// Cache result for 1 day.
-		$this->cache_api_validation( $crm_type, $result );
-
-		return $result;
-	}
-
-	/**
-	 * Test API connection with a lightweight request
-	 *
-	 * @param string $crm_type CRM type (anaconda, inmovilla, inmovilla_procesos).
-	 * @return array Array with 'valid' boolean and 'message' string.
-	 */
-	private function test_api_connection( $crm_type ) {
-		// Make a lightweight API call to test credentials.
-		if ( 'anaconda' === $crm_type ) {
-			$result = API::request_anaconda( 'properties?page=1&per_page=1' );
-		} elseif ( 'inmovilla' === $crm_type ) {
-			$result = API::request_inmovilla( 'lista', 1, 1 );
-		} elseif ( 'inmovilla_procesos' === $crm_type ) {
-			$result = API::request_inmovilla_procesos( 'Procesos', array( 'pag' => 1 ) );
-		} else {
-			return array(
-				'valid'   => false,
-				'message' => __( 'Unknown CRM type', 'connect-crm-realstate' ),
-			);
-		}
-
-		if ( 'ok' === $result['status'] ) {
-			return array(
-				'valid'   => true,
-				'message' => '',
-			);
-		}
-
-		// Extract error message.
-		$error_message = isset( $result['message'] ) ? $result['message'] : __( 'API connection test failed', 'connect-crm-realstate' );
-
-		return array(
-			'valid'   => false,
-			'message' => $error_message,
-		);
-	}
-
-	/**
-	 * Cache API validation result
-	 *
-	 * @param string $crm_type CRM type.
-	 * @param array  $result Validation result.
-	 * @return void
-	 */
-	private function cache_api_validation( $crm_type, $result ) {
-		$transient_key = 'ccrmre_api_valid_' . $crm_type;
-		$cache_time    = $result['valid'] ? DAY_IN_SECONDS : 5 * MINUTE_IN_SECONDS;
-		set_transient( $transient_key, $result, $cache_time );
-	}
-
-	/**
 	 * Invalidate API credentials cache
 	 *
 	 * Should be called when credentials are updated.
@@ -1386,12 +1233,6 @@ class Admin {
 
 		$settings = get_option( 'conncrmreal_settings' );
 		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
-
-		// Validate API credentials before making request.
-		$credentials_valid = $this->validate_api_credentials( $crm_type );
-		if ( ! $credentials_valid['valid'] ) {
-			wp_send_json_error( array( 'message' => $credentials_valid['message'] ) );
-		}
 
 		// Get CRM fields.
 		$properties_fields = API::get_properties_fields( $crm_type );

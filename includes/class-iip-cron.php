@@ -12,6 +12,7 @@ namespace Close\ConnectCRM\RealState;
 
 defined( 'ABSPATH' ) || exit;
 
+use Close\ConnectCRM\RealState\API;
 use Close\ConnectCRM\RealState\SYNC;
 
 /**
@@ -66,14 +67,6 @@ class Cron {
 		$merge_fields = get_option( 'conncrmreal_merge_fields' );
 		$crm_type     = isset( $settings['type'] ) ? $settings['type'] : '';
 		$result_log   = array();
-
-		// Validate API credentials before syncing.
-		$credentials_valid = Import::validate_api_credentials_static( $crm_type );
-		if ( ! $credentials_valid['valid'] ) {
-			$result_log[] = array( 'message' => 'API Credentials Error: ' . $credentials_valid['message'] );
-			$this->save_log( $time_start, $result_log, 0 );
-			return;
-		}
 
 		// Get properties to sync.
 		$last_sync = get_option( 'ccrmre_cron_sync_last_time' );
