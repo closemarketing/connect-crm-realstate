@@ -86,7 +86,8 @@ class Import {
 				'label_syncing'       => __( 'Syncing', 'connect-crm-realstate' ),
 				'label_sync_complete' => __( 'Finished', 'connect-crm-realstate' ),
 				'label_waiting'       => __( 'Waiting', 'connect-crm-realstate' ),
-				'label_rate_limit'    => __( 'API rate limit reached. Waiting %s seconds before retrying...', 'connect-crm-realstate' ),
+				// translators: %s is the number of seconds to wait before retrying.
+			'label_rate_limit'    => __( 'API rate limit reached. Waiting %s seconds before retrying...', 'connect-crm-realstate' ),
 				'label_resuming'      => __( 'Resuming import...', 'connect-crm-realstate' ),
 				'nonce'               => wp_create_nonce( 'ccrmre_manual_import_nonce' ),
 			)
