@@ -19,6 +19,9 @@ WordPress installation and then activate the Plugin from Plugins page.
 
 == Changelog ==
 
+= n.e.x.t. =
+* Add new column example in merge variables.
+
 = 1.0.0 =
 * Imports all properties from Anaconda.
 * Option to filter by Postal code.

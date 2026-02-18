@@ -1086,6 +1086,7 @@ class Admin {
 		echo '<thead>';
 		echo '<tr valign="top">';
 		echo '<th scope="col"><strong>' . esc_html__( 'CRM Fields', 'connect-crm-realstate' ) . '</strong></th>';
+		echo '<th scope="col"><strong>' . esc_html__( 'Sample Data', 'connect-crm-realstate' ) . '</strong></th>';
 		echo '<th scope="col"><strong>' . esc_html__( 'WordPress Fields', 'connect-crm-realstate' ) . '</strong></th>';
 		echo '</tr>';
 		echo '</thead>';
@@ -1093,10 +1094,22 @@ class Admin {
 
 		$value = '';
 		foreach ( $properties_fields['data'] as $property_field ) {
-			$value = isset( $this->settings_fields[ $property_field['name'] ] ) ? $this->settings_fields[ $property_field['name'] ] : '';
+			$value  = isset( $this->settings_fields[ $property_field['name'] ] ) ? $this->settings_fields[ $property_field['name'] ] : '';
+			$sample = isset( $property_field['sample'] ) ? $property_field['sample'] : '';
+
 			echo '<tr>';
 			echo '<td class="ccrmre-label">' . esc_html( $property_field['label'] );
 			echo '<br><small class="description">' . esc_attr( $property_field['name'] ) . '</small></td>';
+
+			// Sample data column — read-only, informational.
+			echo '<td class="ccrmre-sample">';
+			if ( '' !== $sample ) {
+				echo '<span class="ccrmre-sample-value" title="' . esc_attr( $sample ) . '">' . esc_html( $sample ) . '</span>';
+			} else {
+				echo '<span class="ccrmre-sample-empty">—</span>';
+			}
+			echo '</td>';
+
 			echo '<td><select name="conncrmreal_merge_fields[' . esc_attr( $property_field['name'] ) . ']" class="ccrmre-select2-field" style="width: 100%;">';
 			echo '<option value=""';
 			selected( $value, '' );
@@ -1116,6 +1129,7 @@ class Admin {
 				echo '>' . esc_html( $meta_key ) . '</option>';
 			}
 			echo '</select></td>';
+
 			echo '</tr>';
 		}
 		echo '</tbody>';

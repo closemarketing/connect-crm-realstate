@@ -819,12 +819,43 @@ class API {
 	}
 
 	/**
+	 * Format a raw API value for display as a sample in the admin.
+	 *
+	 * @param mixed $value Raw value from API.
+	 * @return string
+	 */
+	private static function format_sample_value( $value ) {
+		if ( is_null( $value ) || '' === $value ) {
+			return '';
+		}
+
+		if ( is_bool( $value ) ) {
+			return $value ? 'true' : 'false';
+		}
+
+		if ( is_array( $value ) || is_object( $value ) ) {
+			$arr = (array) $value;
+			if ( empty( $arr ) ) {
+				return '';
+			}
+			$first = reset( $arr );
+			if ( is_scalar( $first ) && '' !== (string) $first ) {
+				return '[…] ' . wp_strip_all_tags( (string) $first );
+			}
+			return sprintf( '[%d items]', count( $arr ) );
+		}
+
+		$str = wp_strip_all_tags( (string) $value );
+		return mb_strlen( $str ) > 60 ? mb_substr( $str, 0, 57 ) . '…' : $str;
+	}
+
+	/**
 	 * Get fields from Anaconda
 	 *
 	 * @return array
 	 */
 	private static function get_fields_anaconda() {
-		$anaconda_fields = get_transient( 'ccrmre_query_anaconda_fields' );
+		$anaconda_fields = get_transient( 'ccrmre_query_anaconda_fields_v2' );
 
 		if ( ! $anaconda_fields ) {
 			// Get a sample property to extract fields.
@@ -838,7 +869,7 @@ class API {
 				);
 			}
 
-			// Get the first property to extract field structure.
+			// Get the first property to extract field structure and sample values.
 			$sample_property = $result['data']['data'][0];
 			$fields_slug     = array_keys( $sample_property );
 			$fields_slug     = array_filter( $fields_slug );
@@ -846,17 +877,18 @@ class API {
 			$anaconda_fields = array(
 				'status' => 'ok',
 				'data'   => array_map(
-					function ( $slug ) {
+					function ( $slug ) use ( $sample_property ) {
 						return array(
-							'name'  => $slug,
-							'label' => ucwords( str_replace( '_', ' ', $slug ) ),
+							'name'   => $slug,
+							'label'  => ucwords( str_replace( '_', ' ', $slug ) ),
+							'sample' => isset( $sample_property[ $slug ] ) ? self::format_sample_value( $sample_property[ $slug ] ) : '',
 						);
 					},
 					$fields_slug
 				),
 			);
 
-			set_transient( 'ccrmre_query_anaconda_fields', $anaconda_fields, DAY_IN_SECONDS );
+			set_transient( 'ccrmre_query_anaconda_fields_v2', $anaconda_fields, DAY_IN_SECONDS );
 		}
 
 		return $anaconda_fields;
@@ -868,7 +900,7 @@ class API {
 	 * @return array
 	 */
 	private static function get_fields_inmovilla_procesos() {
-		$inmovilla_fields = get_transient( 'ccrmre_query_inmovilla_procesos_fields' );
+		$inmovilla_fields = get_transient( 'ccrmre_query_inmovilla_procesos_fields_v2' );
 
 		if ( ! $inmovilla_fields ) {
 			// Get a sample property to extract fields.
@@ -898,17 +930,18 @@ class API {
 					$inmovilla_fields = array(
 						'status' => 'ok',
 						'data'   => array_map(
-							function ( $slug ) {
+							function ( $slug ) use ( $sample_property ) {
 								return array(
-									'name'  => $slug,
-									'label' => ucwords( str_replace( '_', ' ', $slug ) ),
+									'name'   => $slug,
+									'label'  => ucwords( str_replace( '_', ' ', $slug ) ),
+									'sample' => isset( $sample_property[ $slug ] ) ? self::format_sample_value( $sample_property[ $slug ] ) : '',
 								);
 							},
 							$fields_slug
 						),
 					);
 
-					set_transient( 'ccrmre_query_inmovilla_procesos_fields', $inmovilla_fields, DAY_IN_SECONDS );
+					set_transient( 'ccrmre_query_inmovilla_procesos_fields_v2', $inmovilla_fields, DAY_IN_SECONDS );
 				} else {
 					return array(
 						'status'  => 'error',
@@ -934,7 +967,7 @@ class API {
 	 * @return array
 	 */
 	private static function get_fields_inmovilla() {
-		$inmovilla_fields = get_transient( 'ccrmre_query_inmovilla_fields' );
+		$inmovilla_fields = get_transient( 'ccrmre_query_inmovilla_fields_v2' );
 
 		if ( ! $inmovilla_fields ) {
 			// Get a sample property to extract fields.
@@ -951,7 +984,7 @@ class API {
 				);
 			}
 
-			// Get the first property to extract field structure.
+			// Get the first property to extract field structure and sample values.
 			$sample_property = $result_properties['data']['paginacion'][1];
 			$fields_slug     = array_keys( $sample_property );
 			$fields_slug     = array_filter( $fields_slug );
@@ -959,17 +992,18 @@ class API {
 			$inmovilla_fields = array(
 				'status' => 'ok',
 				'data'   => array_map(
-					function ( $slug ) {
+					function ( $slug ) use ( $sample_property ) {
 						return array(
-							'name'  => $slug,
-							'label' => self::get_description_field_inmovilla( $slug ),
+							'name'   => $slug,
+							'label'  => self::get_description_field_inmovilla( $slug ),
+							'sample' => isset( $sample_property[ $slug ] ) ? self::format_sample_value( $sample_property[ $slug ] ) : '',
 						);
 					},
 					$fields_slug
 				),
 			);
 
-			set_transient( 'ccrmre_query_inmovilla_fields', $inmovilla_fields, DAY_IN_SECONDS );
+			set_transient( 'ccrmre_query_inmovilla_fields_v2', $inmovilla_fields, DAY_IN_SECONDS );
 		}
 
 		return $inmovilla_fields;
