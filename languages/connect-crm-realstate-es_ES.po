@@ -125,9 +125,49 @@ msgstr ""
 msgid "API password is empty"
 msgstr "La contraseña de la API está vacía"
 
+#: includes/class-iip-admin.php:1113
+msgid ""
+"API password is not configured. Please configure your Anaconda API "
+"credentials in the Connection tab."
+msgstr ""
+"La contraseña de la API no está configurada. Por favor, configura tus "
+"credenciales de la API de Anaconda en la pestaña de Conexión."
+
+#: includes/class-iip-admin.php:1126
+msgid ""
+"API credentials are not configured. Please configure your Inmovilla API user "
+"and password in the Connection tab."
+msgstr ""
+"Las credenciales de la API no están configuradas. Por favor, configura tu "
+"usuario y contraseña de la API de Inmovilla en la pestaña de Conexión."
+
 #: includes/class-helper-api.php:225 includes/class-iip-cron.php:79
 msgid "Unknown API error"
 msgstr "Error desconocido de API"
+
+#: includes/class-iip-import.php:XXX
+msgid "Unknown CRM type"
+msgstr "Tipo de CRM desconocido"
+
+#: includes/class-iip-import.php:XXX
+msgid "API connection test failed"
+msgstr "Falló la prueba de conexión con la API"
+
+#: includes/class-iip-admin.php:XXX
+msgid "API Connection Error:"
+msgstr "Error de Conexión con la API:"
+
+#: includes/class-iip-admin.php:XXX
+msgid "Statistics Error:"
+msgstr "Error de Estadísticas:"
+
+#: includes/class-iip-admin.php:XXX
+msgid "Settings saved successfully. API credentials are valid and working correctly."
+msgstr "Configuración guardada correctamente. Las credenciales de la API son válidas y funcionan correctamente."
+
+#: includes/class-iip-admin.php:XXX
+msgid "Settings saved, but API validation failed: %s"
+msgstr "Configuración guardada, pero la validación de la API falló: %s"
 
 #: includes/class-helper-api.php:233
 msgid "Request successful"

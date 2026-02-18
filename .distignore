@@ -10,6 +10,9 @@ circle.yml
 composer.json
 composer.lock
 .wordpress-org
+*.pot
+*.po
+docs/
 
 # PHP Linting and Testing
 .phpcs.xml.dist

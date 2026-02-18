@@ -31,7 +31,7 @@
 
 .ccrmre-label {
 	font-weight: 600;
-	width: 40%;
+	width: 25%;
 }
 
 .ccrmre-label .description {
@@ -81,5 +81,30 @@
 #ccrmre-auto-map-btn:disabled {
 	opacity: 0.6;
 	cursor: not-allowed;
+}
+
+/* Sample data column */
+.ccrmre-sample {
+	width: 30%;
+	color: #646970;
+	font-size: 12px;
+}
+
+.ccrmre-sample-value {
+	display: inline-block;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	background: #f0f6fc;
+	border: 1px solid #c3c4c7;
+	border-radius: 3px;
+	padding: 3px 6px;
+	font-family: monospace;
+	vertical-align: middle;
+}
+
+.ccrmre-sample-empty {
+	color: #c3c4c7;
 }
 
