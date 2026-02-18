@@ -127,13 +127,23 @@ class SYNC {
 				update_post_meta( $property_post_id, 'ccrmre_status', $property_info_meta['status'] );
 			}
 
-			// Save photo URLs for properties (without downloading).
+			// Save photo URLs and optionally download images.
 			if ( isset( $item['fotos'] ) && is_array( $item['fotos'] ) && ! empty( $item['fotos'] ) ) {
-				// Save first photo as featured image URL.
+				$download_mode = isset( $settings['download_images'] ) ? $settings['download_images'] : 'no';
+
+				// Always save external URLs as reference.
+				update_post_meta( $property_post_id, 'ccrmre_gallery_urls', $item['fotos'] );
 				update_post_meta( $property_post_id, 'ccrmre_featured_image_url', $item['fotos'][0] );
 
-				// Save all photos for gallery.
-				update_post_meta( $property_post_id, 'ccrmre_gallery_urls', $item['fotos'] );
+				if ( 'featured' === $download_mode || 'all' === $download_mode ) {
+					// Download first photo and set as real featured image.
+					self::download_and_set_featured_image( $property_post_id, $item['fotos'][0] );
+				}
+
+				if ( 'all' === $download_mode ) {
+					// Download all gallery images locally.
+					self::download_gallery_images( $property_post_id, $item['fotos'] );
+				}
 			}
 
 			// Clear statistics cache after syncing.
@@ -326,14 +336,18 @@ class SYNC {
 
 		if ( empty( $property_post_id ) ) {
 			// Property doesn't exist in WordPress, skip it.
+			$reason = self::get_unavailable_reason( $property, $crm );
+
 			return array(
 				'property_id' => $property_id,
-				'message'     => __( 'Skipped (Not Available in CRM)', 'connect-crm-realstate' ),
+				'message'     => __( 'Skipped (Not Available in CRM)', 'connect-crm-realstate' ) . $reason,
 			);
 		}
 
 		// Property exists, apply action according to settings.
 		$message = '';
+
+		$reason = self::get_unavailable_reason( $property, $crm );
 
 		switch ( $sold_action ) {
 			case 'draft':
@@ -343,17 +357,17 @@ class SYNC {
 						'post_status' => 'draft',
 					)
 				);
-				$message = __( 'Unpublished (Set to Draft)', 'connect-crm-realstate' );
+				$message = __( 'Unpublished (Set to Draft)', 'connect-crm-realstate' ) . $reason;
 				break;
 
 			case 'trash':
 				wp_trash_post( $property_post_id );
-				$message = __( 'Moved to Trash', 'connect-crm-realstate' );
+				$message = __( 'Moved to Trash', 'connect-crm-realstate' ) . $reason;
 				break;
 
 			case 'keep':
 			default:
-				$message = __( 'Kept Published (Not Available)', 'connect-crm-realstate' );
+				$message = __( 'Kept Published (Not Available)', 'connect-crm-realstate' ) . $reason;
 				break;
 		}
 
@@ -362,6 +376,34 @@ class SYNC {
 			'post_id'     => $property_post_id,
 			'message'     => $message,
 		);
+	}
+
+	/**
+	 * Returns a human-readable reason why the property is not available.
+	 *
+	 * @param array  $property Property data from API.
+	 * @param string $crm CRM type.
+	 * @return string Reason string with leading separator, or empty if unknown.
+	 */
+	private static function get_unavailable_reason( $property, $crm ) {
+		if ( isset( $property['status'] ) && ! (bool) $property['status'] ) {
+			/* translators: %s: status field value from the API. */
+			return ' — ' . sprintf( __( 'Reason: status = %s', 'connect-crm-realstate' ), esc_html( $property['status'] ) );
+		}
+
+		if ( 'inmovilla_procesos' === $crm && isset( $property['nodisponible'] ) && 1 === (int) $property['nodisponible'] ) {
+			return ' — ' . __( 'Reason: nodisponible = 1', 'connect-crm-realstate' );
+		}
+
+		if ( 'inmovilla' === $crm && isset( $property['estado'] ) && 'V' === $property['estado'] ) {
+			return ' — ' . __( 'Reason: estado = V (Sold)', 'connect-crm-realstate' );
+		}
+
+		if ( 'anaconda' === $crm && isset( $property['operation_status'] ) && 'Vendido' === $property['operation_status'] ) {
+			return ' — ' . __( 'Reason: operation_status = Sold', 'connect-crm-realstate' );
+		}
+
+		return '';
 	}
 
 	/**
@@ -545,6 +587,166 @@ class SYNC {
 
 		// Fallback to default property_id.
 		return 'property_id';
+	}
+
+	/**
+	 * Downloads an image from a URL and sets it as the post featured image.
+	 *
+	 * Avoids re-downloading if the URL has not changed since the last sync.
+	 * Falls back gracefully: if the download fails the property is kept without
+	 * a featured image rather than aborting the whole import.
+	 *
+	 * @param int    $post_id   WordPress post ID.
+	 * @param string $image_url External image URL.
+	 * @return int|false Attachment ID on success, false on failure.
+	 */
+	public static function download_and_set_featured_image( $post_id, $image_url ) {
+		if ( empty( $image_url ) || empty( $post_id ) ) {
+			return false;
+		}
+
+		// Check if the URL is the same as the one already downloaded.
+		$saved_url       = get_post_meta( $post_id, 'ccrmre_featured_image_url', true );
+		$current_thumb   = get_post_thumbnail_id( $post_id );
+
+		if ( $saved_url === $image_url && ! empty( $current_thumb ) && false !== get_post( $current_thumb ) ) {
+			// URL unchanged and attachment still exists — skip download.
+			return (int) $current_thumb;
+		}
+
+		// Require WordPress media helpers.
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		// Download the file to a temp location.
+		$tmp = download_url( $image_url );
+
+		if ( is_wp_error( $tmp ) ) {
+			return false;
+		}
+
+		// Build a clean file name from the URL.
+		$url_path  = wp_parse_url( $image_url, PHP_URL_PATH );
+		$file_name = ! empty( $url_path ) ? sanitize_file_name( basename( $url_path ) ) : 'property-image.jpg';
+
+		$file_array = array(
+			'name'     => $file_name,
+			'tmp_name' => $tmp,
+		);
+
+		// Sideload the file into the media library, attached to the post.
+		$attachment_id = media_handle_sideload( $file_array, $post_id );
+
+		if ( is_wp_error( $attachment_id ) ) {
+			// Clean up the temp file if sideload failed.
+			if ( file_exists( $tmp ) ) {
+				wp_delete_file( $tmp );
+			}
+			return false;
+		}
+
+		// Delete the previous attachment if it differs from the new one.
+		if ( ! empty( $current_thumb ) && (int) $current_thumb !== $attachment_id ) {
+			wp_delete_attachment( (int) $current_thumb, true );
+		}
+
+		// Set the attachment as the post featured image.
+		set_post_thumbnail( $post_id, $attachment_id );
+
+		return $attachment_id;
+	}
+
+	/**
+	 * Downloads all gallery images and saves their attachment IDs.
+	 *
+	 * Compares the current URLs with previously saved ones to avoid
+	 * re-downloading unchanged images. Stores IDs in the meta key
+	 * ccrmre_gallery_attachment_ids.
+	 *
+	 * @param int   $post_id    WordPress post ID.
+	 * @param array $image_urls Array of external image URLs.
+	 * @return array Array of attachment IDs (may contain gaps where downloads failed).
+	 */
+	public static function download_gallery_images( $post_id, $image_urls ) {
+		if ( empty( $image_urls ) || ! is_array( $image_urls ) || empty( $post_id ) ) {
+			return array();
+		}
+
+		// Get previously saved data for comparison.
+		$saved_urls   = get_post_meta( $post_id, 'ccrmre_gallery_urls', true );
+		$saved_ids    = get_post_meta( $post_id, 'ccrmre_gallery_attachment_ids', true );
+		$saved_urls   = is_array( $saved_urls ) ? $saved_urls : array();
+		$saved_ids    = is_array( $saved_ids ) ? $saved_ids : array();
+
+		// Require WordPress media helpers.
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		$attachment_ids = array();
+
+		foreach ( $image_urls as $index => $image_url ) {
+			// Check if this URL already has a valid local attachment.
+			if (
+				isset( $saved_urls[ $index ] ) &&
+				$saved_urls[ $index ] === $image_url &&
+				isset( $saved_ids[ $index ] ) &&
+				! empty( $saved_ids[ $index ] ) &&
+				false !== get_post( $saved_ids[ $index ] )
+			) {
+				// URL unchanged and attachment exists — reuse it.
+				$attachment_ids[] = (int) $saved_ids[ $index ];
+				continue;
+			}
+
+			// Download the file to a temp location.
+			$tmp = download_url( $image_url );
+
+			if ( is_wp_error( $tmp ) ) {
+				$attachment_ids[] = 0;
+				continue;
+			}
+
+			// Build a clean file name.
+			$url_path  = wp_parse_url( $image_url, PHP_URL_PATH );
+			$file_name = ! empty( $url_path ) ? sanitize_file_name( basename( $url_path ) ) : 'property-gallery-' . $index . '.jpg';
+
+			$file_array = array(
+				'name'     => $file_name,
+				'tmp_name' => $tmp,
+			);
+
+			$attach_id = media_handle_sideload( $file_array, $post_id );
+
+			if ( is_wp_error( $attach_id ) ) {
+				if ( file_exists( $tmp ) ) {
+					wp_delete_file( $tmp );
+				}
+				$attachment_ids[] = 0;
+				continue;
+			}
+
+			// Delete the old attachment at this position if it changed.
+			if ( isset( $saved_ids[ $index ] ) && ! empty( $saved_ids[ $index ] ) && (int) $saved_ids[ $index ] !== $attach_id ) {
+				wp_delete_attachment( (int) $saved_ids[ $index ], true );
+			}
+
+			$attachment_ids[] = $attach_id;
+		}
+
+		// Delete any leftover attachments from previous syncs with more images.
+		if ( count( $saved_ids ) > count( $image_urls ) ) {
+			for ( $i = count( $image_urls ); $i < count( $saved_ids ); $i++ ) {
+				if ( ! empty( $saved_ids[ $i ] ) ) {
+					wp_delete_attachment( (int) $saved_ids[ $i ], true );
+				}
+			}
+		}
+
+		update_post_meta( $post_id, 'ccrmre_gallery_attachment_ids', $attachment_ids );
+
+		return $attachment_ids;
 	}
 
 	/**

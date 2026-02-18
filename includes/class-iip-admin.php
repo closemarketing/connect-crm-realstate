@@ -382,6 +382,14 @@ class Admin {
 		);
 
 		add_settings_field(
+			'conncrmreal_download_images',
+			__( 'Download Images Locally', 'connect-crm-realstate' ),
+			array( $this, 'download_images_callback' ),
+			'conncrmreal_settings',
+			'admin_conncrmreal_settings'
+		);
+
+		add_settings_field(
 			'conncrmreal_show_gallery',
 			__( 'Auto Display Photo Gallery', 'connect-crm-realstate' ),
 			array( $this, 'show_gallery_callback' ),
@@ -438,6 +446,7 @@ class Admin {
 			'post_type_slug',
 			'postal_code',
 			'sold_action',
+			'download_images',
 			'show_gallery',
 			'show_property_info',
 		);
@@ -620,6 +629,30 @@ class Admin {
 			'<p class="description">%s</p>',
 			esc_html__( 'Choose what to do with properties that are sold or no longer available in the CRM.', 'connect-crm-realstate' )
 		);
+	}
+
+	/**
+	 * Download images callback
+	 *
+	 * @return void
+	 */
+	public function download_images_callback() {
+		$download_images = isset( $this->settings['download_images'] ) ? $this->settings['download_images'] : 'no';
+		?>
+		<select name="conncrmreal_settings[download_images]" id="download_images">
+			<option value="no" <?php selected( $download_images, 'no' ); ?>><?php esc_html_e( 'No - Use external image links', 'connect-crm-realstate' ); ?></option>
+			<option value="featured" <?php selected( $download_images, 'featured' ); ?>><?php esc_html_e( 'Featured image only', 'connect-crm-realstate' ); ?></option>
+			<option value="all" <?php selected( $download_images, 'all' ); ?>><?php esc_html_e( 'Yes - All images (featured + gallery)', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<p class="description">
+			<?php esc_html_e( 'Choose whether to download property images to your server.', 'connect-crm-realstate' ); ?>
+		</p>
+		<ul class="description" style="list-style: disc; margin-left: 20px;">
+			<li><?php esc_html_e( 'Downloading images improves page speed, works with your CDN, and does not depend on the CRM being available.', 'connect-crm-realstate' ); ?></li>
+			<li><?php esc_html_e( 'However, images will use disk space on your server and the import process will take longer.', 'connect-crm-realstate' ); ?></li>
+			<li><?php esc_html_e( '"Featured image only" downloads just the main photo. "All images" downloads the full gallery as well.', 'connect-crm-realstate' ); ?></li>
+		</ul>
+		<?php
 	}
 
 	/**

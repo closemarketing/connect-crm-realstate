@@ -55,7 +55,8 @@ class PropertyInfo {
 	 * @return void
 	 */
 	public function enqueue_property_info_assets() {
-		if ( ! is_singular( 'property' ) ) {
+		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		if ( ! is_singular( $post_type ) ) {
 			return;
 		}
 
@@ -74,7 +75,8 @@ class PropertyInfo {
 	 * @return string
 	 */
 	public function auto_display_property_info( $content ) {
-		if ( ! is_singular( 'property' ) || ! in_the_loop() || ! is_main_query() ) {
+		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		if ( ! is_singular( $post_type ) || ! in_the_loop() || ! is_main_query() ) {
 			return $content;
 		}
 

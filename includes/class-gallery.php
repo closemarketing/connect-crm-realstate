@@ -54,7 +54,8 @@ class Gallery {
 	 * @return void
 	 */
 	public function enqueue_gallery_assets() {
-		if ( ! is_singular( 'property' ) ) {
+		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		if ( ! is_singular( $post_type ) ) {
 			return;
 		}
 
@@ -81,7 +82,8 @@ class Gallery {
 	 * @return string
 	 */
 	public function auto_display_gallery( $content ) {
-		if ( ! is_singular( 'property' ) || ! in_the_loop() || ! is_main_query() ) {
+		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		if ( ! is_singular( $post_type ) || ! in_the_loop() || ! is_main_query() ) {
 			return $content;
 		}
 
@@ -115,6 +117,8 @@ class Gallery {
 	/**
 	 * Render gallery HTML
 	 *
+	 * Uses local attachment IDs when available, falls back to external URLs.
+	 *
 	 * @param int $post_id Post ID.
 	 * @return string
 	 */
@@ -127,9 +131,9 @@ class Gallery {
 			return '';
 		}
 
-		$gallery_urls = get_post_meta( $post_id, 'ccrmre_gallery_urls', true );
+		$photo_urls = $this->get_gallery_image_urls( $post_id );
 
-		if ( empty( $gallery_urls ) || ! is_array( $gallery_urls ) ) {
+		if ( empty( $photo_urls ) ) {
 			return '';
 		}
 
@@ -141,7 +145,7 @@ class Gallery {
 					<span>&lsaquo;</span>
 				</button>
 				<div class="ccrmre-gallery-slider">
-					<?php foreach ( $gallery_urls as $index => $photo_url ) : ?>
+					<?php foreach ( $photo_urls as $index => $photo_url ) : ?>
 						<div class="ccrmre-gallery-slide <?php echo 0 === $index ? 'active' : ''; ?>">
 							<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( get_the_title( $post_id ) . ' - ' . ( $index + 1 ) ); ?>" loading="lazy" />
 						</div>
@@ -151,11 +155,11 @@ class Gallery {
 					<span>&rsaquo;</span>
 				</button>
 				<div class="ccrmre-gallery-counter">
-					<span class="ccrmre-gallery-current">1</span> / <span class="ccrmre-gallery-total"><?php echo count( $gallery_urls ); ?></span>
+					<span class="ccrmre-gallery-current">1</span> / <span class="ccrmre-gallery-total"><?php echo count( $photo_urls ); ?></span>
 				</div>
 			</div>
 			<div class="ccrmre-gallery-thumbnails">
-				<?php foreach ( $gallery_urls as $index => $photo_url ) : ?>
+				<?php foreach ( $photo_urls as $index => $photo_url ) : ?>
 					<div class="ccrmre-gallery-thumb <?php echo 0 === $index ? 'active' : ''; ?>" data-index="<?php echo esc_attr( $index ); ?>">
 						<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( get_the_title( $post_id ) . ' - ' . ( $index + 1 ) ); ?>" loading="lazy" />
 					</div>
@@ -164,6 +168,44 @@ class Gallery {
 		</div>
 		<?php
 		return ob_get_clean();
+	}
+
+	/**
+	 * Gets the gallery image URLs, preferring local attachments over external URLs.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return array Array of image URLs.
+	 */
+	private function get_gallery_image_urls( $post_id ) {
+		$gallery_urls   = get_post_meta( $post_id, 'ccrmre_gallery_urls', true );
+		$attachment_ids = get_post_meta( $post_id, 'ccrmre_gallery_attachment_ids', true );
+		$gallery_urls   = is_array( $gallery_urls ) ? $gallery_urls : array();
+		$attachment_ids = is_array( $attachment_ids ) ? $attachment_ids : array();
+
+		if ( empty( $gallery_urls ) && empty( $attachment_ids ) ) {
+			return array();
+		}
+
+		$photo_urls = array();
+		$count      = max( count( $gallery_urls ), count( $attachment_ids ) );
+
+		for ( $i = 0; $i < $count; $i++ ) {
+			$local_url = '';
+
+			// Try to get local URL from attachment ID.
+			if ( isset( $attachment_ids[ $i ] ) && ! empty( $attachment_ids[ $i ] ) ) {
+				$local_url = wp_get_attachment_url( (int) $attachment_ids[ $i ] );
+			}
+
+			if ( ! empty( $local_url ) ) {
+				$photo_urls[] = $local_url;
+			} elseif ( isset( $gallery_urls[ $i ] ) && ! empty( $gallery_urls[ $i ] ) ) {
+				// Fallback to external URL.
+				$photo_urls[] = $gallery_urls[ $i ];
+			}
+		}
+
+		return $photo_urls;
 	}
 }
 

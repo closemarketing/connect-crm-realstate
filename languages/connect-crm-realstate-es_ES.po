@@ -949,6 +949,46 @@ msgstr "Posición"
 msgid "Reference"
 msgstr "Referencia"
 
+#: includes/class-iip-import.php:88
+msgid "Waiting"
+msgstr "Esperando"
+
+#. translators: %s: number of seconds to wait
+#: includes/class-iip-import.php:89
+msgid "API rate limit reached. Waiting %s seconds before retrying..."
+msgstr "Límite de la API alcanzado. Esperando %s segundos antes de reintentar..."
+
+#: includes/class-iip-import.php:90
+msgid "Resuming import..."
+msgstr "Reanudando importación..."
+
+#: includes/class-iip-import.php:169
+#: includes/class-iip-import.php:245
+msgid "API rate limit reached. The API has requested a wait."
+msgstr "Límite de la API alcanzado. La API ha solicitado una espera."
+
+#. translators: %s: property ID from the CRM
+#: includes/class-iip-import.php:232
+msgid "Property ID: %s"
+msgstr "ID de Propiedad: %s"
+
+#. translators: %s: status field value from the API
+#: includes/class-helper-sync.php:381
+msgid "Reason: status = %s"
+msgstr "Motivo: status = %s"
+
+#: includes/class-helper-sync.php:385
+msgid "Reason: nodisponible = 1"
+msgstr "Motivo: nodisponible = 1"
+
+#: includes/class-helper-sync.php:389
+msgid "Reason: estado = V (Sold)"
+msgstr "Motivo: estado = V (Vendido)"
+
+#: includes/class-helper-sync.php:393
+msgid "Reason: operation_status = Sold"
+msgstr "Motivo: operation_status = Vendido"
+
 #~ msgid "Log"
 #~ msgstr "Registro"
 
@@ -985,3 +1025,47 @@ msgstr "Referencia"
 #~ "Después de rellenar los ajustes, utilice el botón de abajo para importar "
 #~ "las propiedades. El proceso de importación puede tardar un poco y es "
 #~ "necesario mantener esta página abierta para completarlo."
+
+#: includes/class-iip-admin.php
+msgid "Download Images Locally"
+msgstr "Descargar imágenes localmente"
+
+#: includes/class-iip-admin.php
+msgid "No - Use external image links"
+msgstr "No - Usar enlaces de imágenes externos"
+
+#: includes/class-iip-admin.php
+msgid "Featured image only"
+msgstr "Solo imagen destacada"
+
+#: includes/class-iip-admin.php
+msgid "Yes - All images (featured + gallery)"
+msgstr "Sí - Todas las imágenes (destacada + galería)"
+
+#: includes/class-iip-admin.php
+msgid "Choose whether to download property images to your server."
+msgstr "Elige si descargar las imágenes de las propiedades a tu servidor."
+
+#: includes/class-iip-admin.php
+msgid ""
+"Downloading images improves page speed, works with your CDN, and does not "
+"depend on the CRM being available."
+msgstr ""
+"Descargar las imágenes mejora la velocidad de carga, funciona con tu CDN y "
+"no depende de que el CRM esté disponible."
+
+#: includes/class-iip-admin.php
+msgid ""
+"However, images will use disk space on your server and the import process "
+"will take longer."
+msgstr ""
+"Sin embargo, las imágenes ocuparán espacio en disco en tu servidor y el "
+"proceso de importación tardará más."
+
+#: includes/class-iip-admin.php
+msgid ""
+"\"Featured image only\" downloads just the main photo. \"All images\" "
+"downloads the full gallery as well."
+msgstr ""
+"\"Solo imagen destacada\" descarga solo la foto principal. \"Todas las "
+"imágenes\" descarga también la galería completa."

@@ -19,7 +19,12 @@ WordPress installation and then activate the Plugin from Plugins page.
 
 == Changelog ==
 
-= n.e.x.t. =
+= 1.1.0 =
+* Added option to download property images to your server for better performance.
+* Three download modes: no download, featured image only, or all images.
+* Gallery now uses local images when available, with automatic fallback to external links.
+* Property gallery, info box, and meta boxes now work with any custom post type.
+* Simplified featured image handling for better compatibility with the block editor.
 * Add new column example in merge variables.
 
 = 1.0.0 =

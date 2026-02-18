@@ -880,3 +880,75 @@ msgstr ""
 #: includes/class-property-info.php:238
 msgid "Reference"
 msgstr ""
+
+#: includes/class-iip-import.php:88
+msgid "Waiting"
+msgstr ""
+
+#. translators: %s: number of seconds to wait
+#: includes/class-iip-import.php:89
+msgid "API rate limit reached. Waiting %s seconds before retrying..."
+msgstr ""
+
+#: includes/class-iip-import.php:90
+msgid "Resuming import..."
+msgstr ""
+
+#: includes/class-iip-import.php:169
+#: includes/class-iip-import.php:245
+msgid "API rate limit reached. The API has requested a wait."
+msgstr ""
+
+#. translators: %s: property ID from the CRM
+#: includes/class-iip-import.php:232
+msgid "Property ID: %s"
+msgstr ""
+
+#. translators: %s: status field value from the API
+#: includes/class-helper-sync.php:381
+msgid "Reason: status = %s"
+msgstr ""
+
+#: includes/class-helper-sync.php:385
+msgid "Reason: nodisponible = 1"
+msgstr ""
+
+#: includes/class-helper-sync.php:389
+msgid "Reason: estado = V (Sold)"
+msgstr ""
+
+#: includes/class-helper-sync.php:393
+msgid "Reason: operation_status = Sold"
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "Download Images Locally"
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "No - Use external image links"
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "Featured image only"
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "Yes - All images (featured + gallery)"
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "Choose whether to download property images to your server."
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "Downloading images improves page speed, works with your CDN, and does not depend on the CRM being available."
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "However, images will use disk space on your server and the import process will take longer."
+msgstr ""
+
+#: includes/class-iip-admin.php
+msgid "\"Featured image only\" downloads just the main photo. \"All images\" downloads the full gallery as well."
+msgstr ""
