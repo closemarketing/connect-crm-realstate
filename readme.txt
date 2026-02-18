@@ -4,19 +4,6 @@ Tags: properties, inmovilla
 
 Import Inmovilla and Anaconda properties to your WordPress Installation.
 
-Docs Inmovilla: https://procesos.apinmo.com/apiweb/doc/index.html
-
-== Description ==
-
-
-== Installation ==
-
-Extract the zip file and just drop the contents in the wp-content/plugins/ directory of your
-WordPress installation and then activate the Plugin from Plugins page.
-
-== Developers ==
-
-
 == Changelog ==
 
 = 1.1.0 =
