@@ -119,6 +119,19 @@ class Import {
 		$totalprop    = isset( $_POST['totalprop'] ) ? (int) $_POST['totalprop'] : 0;
 		$progress_msg = '';
 
+		// Validate API credentials on first loop only.
+		if ( 0 === $loop ) {
+			$credentials_valid = self::validate_api_credentials_static( $crm );
+			if ( ! $credentials_valid['valid'] ) {
+				wp_send_json_error(
+					array(
+						'message' => $credentials_valid['message'],
+					)
+				);
+				return;
+			}
+		}
+
 		$loop_page = $loop % $pagination;
 		$page      = floor( $loop / $pagination ) + 1;
 
@@ -344,6 +357,12 @@ class Import {
 			wp_send_json_error( array( 'message' => __( 'CRM type not configured', 'connect-crm-realstate' ) ) );
 		}
 
+		// Validate API credentials before making request.
+		$credentials_valid = self::validate_api_credentials_static( $crm_type );
+		if ( ! $credentials_valid['valid'] ) {
+			wp_send_json_error( array( 'message' => $credentials_valid['message'] ) );
+		}
+
 		// Get properties from API with dates (with 10-minute cache).
 		$transient_key = 'ccrmre_api_properties_' . $crm_type;
 		$api_result    = get_transient( $transient_key );
@@ -438,5 +457,118 @@ class Import {
 				'delete_count'    => $delete_count,
 			)
 		);
+	}
+
+	/**
+	 * Validate API credentials are configured and working (static version)
+	 *
+	 * Uses a transient cache to avoid checking on every request.
+	 * Cache duration: 1 day for valid, 5 minutes for invalid.
+	 *
+	 * @param string $crm_type CRM type (anaconda, inmovilla, inmovilla_procesos).
+	 * @param bool   $force_check Force validation even if cache exists.
+	 * @return array Array with 'valid' boolean and 'message' string.
+	 */
+	public static function validate_api_credentials_static( $crm_type, $force_check = false ) {
+		// Check transient cache first (unless forced).
+		if ( ! $force_check ) {
+			$transient_key = 'ccrmre_api_valid_' . $crm_type;
+			$cached_result = get_transient( $transient_key );
+
+			if ( false !== $cached_result ) {
+				return $cached_result;
+			}
+		}
+
+		$settings = get_option( 'conncrmreal_settings', array() );
+		$result   = array(
+			'valid'   => false,
+			'message' => '',
+		);
+
+		// Validate credentials are configured.
+		if ( 'anaconda' === $crm_type ) {
+			$apipassword = isset( $settings['apipassword'] ) ? trim( $settings['apipassword'] ) : '';
+
+			if ( empty( $apipassword ) ) {
+				$result['message'] = __( 'API password is not configured. Please configure your Anaconda API credentials in the Connection tab.', 'connect-crm-realstate' );
+				self::cache_api_validation_static( $crm_type, $result );
+				return $result;
+			}
+		} elseif ( 'inmovilla' === $crm_type || 'inmovilla_procesos' === $crm_type ) {
+			$apiuser     = isset( $settings['apiuser'] ) ? trim( $settings['apiuser'] ) : '';
+			$apipassword = isset( $settings['apipassword'] ) ? trim( $settings['apipassword'] ) : '';
+
+			if ( empty( $apiuser ) || empty( $apipassword ) ) {
+				$result['message'] = __( 'API credentials are not configured. Please configure your Inmovilla API user and password in the Connection tab.', 'connect-crm-realstate' );
+				self::cache_api_validation_static( $crm_type, $result );
+				return $result;
+			}
+		}
+
+		// Test credentials with a simple API call.
+		$test_result = self::test_api_connection_static( $crm_type );
+
+		if ( $test_result['valid'] ) {
+			$result['valid']   = true;
+			$result['message'] = '';
+		} else {
+			$result['message'] = $test_result['message'];
+		}
+
+		// Cache result.
+		self::cache_api_validation_static( $crm_type, $result );
+
+		return $result;
+	}
+
+	/**
+	 * Test API connection with a lightweight request (static version)
+	 *
+	 * @param string $crm_type CRM type (anaconda, inmovilla, inmovilla_procesos).
+	 * @return array Array with 'valid' boolean and 'message' string.
+	 */
+	private static function test_api_connection_static( $crm_type ) {
+		// Make a lightweight API call to test credentials.
+		if ( 'anaconda' === $crm_type ) {
+			$result = API::request_anaconda( 'properties?page=1&per_page=1' );
+		} elseif ( 'inmovilla' === $crm_type ) {
+			$result = API::request_inmovilla( 'lista', 1, 1 );
+		} elseif ( 'inmovilla_procesos' === $crm_type ) {
+			$result = API::request_inmovilla_procesos( 'Procesos', array( 'pag' => 1 ) );
+		} else {
+			return array(
+				'valid'   => false,
+				'message' => __( 'Unknown CRM type', 'connect-crm-realstate' ),
+			);
+		}
+
+		if ( 'ok' === $result['status'] ) {
+			return array(
+				'valid'   => true,
+				'message' => '',
+			);
+		}
+
+		// Extract error message.
+		$error_message = isset( $result['message'] ) ? $result['message'] : __( 'API connection test failed', 'connect-crm-realstate' );
+
+		return array(
+			'valid'   => false,
+			'message' => $error_message,
+		);
+	}
+
+	/**
+	 * Cache API validation result (static version)
+	 *
+	 * @param string $crm_type CRM type.
+	 * @param array  $result Validation result.
+	 * @return void
+	 */
+	private static function cache_api_validation_static( $crm_type, $result ) {
+		$transient_key = 'ccrmre_api_valid_' . $crm_type;
+		$cache_time    = $result['valid'] ? DAY_IN_SECONDS : 5 * MINUTE_IN_SECONDS;
+		set_transient( $transient_key, $result, $cache_time );
 	}
 }

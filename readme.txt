@@ -25,6 +25,7 @@ WordPress installation and then activate the Plugin from Plugins page.
 * Gallery now uses local images when available, with automatic fallback to external links.
 * Property gallery, info box, and meta boxes now work with any custom post type.
 * Simplified featured image handling for better compatibility with the block editor.
+* Add new column example in merge variables.
 
 = 1.0.0 =
 * Imports all properties from Anaconda.
