@@ -7,10 +7,13 @@ Import Inmovilla and Anaconda properties to your WordPress Installation.
 == Changelog ==
 
 = 1.1.0 =
+<<<<<<< rate-limit
 * Added rate limit detection during import for API errors 429 and 408.
 * Import waits and retries automatically when the API requests a pause.
 * User is informed with a countdown while waiting for rate limit to expire.
 * Shows detailed reason when a property is skipped as unavailable.
+=======
+>>>>>>> main
 * Added option to download property images to your server for better performance.
 * Three download modes: no download, featured image only, or all images.
 * Gallery now uses local images when available, with automatic fallback to external links.

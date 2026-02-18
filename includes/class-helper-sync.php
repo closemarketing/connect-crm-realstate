@@ -606,8 +606,13 @@ class SYNC {
 		}
 
 		// Check if the URL is the same as the one already downloaded.
+<<<<<<< rate-limit
 		$saved_url     = get_post_meta( $post_id, 'ccrmre_featured_image_url', true );
 		$current_thumb = get_post_thumbnail_id( $post_id );
+=======
+		$saved_url       = get_post_meta( $post_id, 'ccrmre_featured_image_url', true );
+		$current_thumb   = get_post_thumbnail_id( $post_id );
+>>>>>>> main
 
 		if ( $saved_url === $image_url && ! empty( $current_thumb ) && false !== get_post( $current_thumb ) ) {
 			// URL unchanged and attachment still exists — skip download.
@@ -674,10 +679,17 @@ class SYNC {
 		}
 
 		// Get previously saved data for comparison.
+<<<<<<< rate-limit
 		$saved_urls = get_post_meta( $post_id, 'ccrmre_gallery_urls', true );
 		$saved_ids  = get_post_meta( $post_id, 'ccrmre_gallery_attachment_ids', true );
 		$saved_urls = is_array( $saved_urls ) ? $saved_urls : array();
 		$saved_ids  = is_array( $saved_ids ) ? $saved_ids : array();
+=======
+		$saved_urls   = get_post_meta( $post_id, 'ccrmre_gallery_urls', true );
+		$saved_ids    = get_post_meta( $post_id, 'ccrmre_gallery_attachment_ids', true );
+		$saved_urls   = is_array( $saved_urls ) ? $saved_urls : array();
+		$saved_ids    = is_array( $saved_ids ) ? $saved_ids : array();
+>>>>>>> main
 
 		// Require WordPress media helpers.
 		require_once ABSPATH . 'wp-admin/includes/media.php';
@@ -737,9 +749,13 @@ class SYNC {
 
 		// Delete any leftover attachments from previous syncs with more images.
 		if ( count( $saved_ids ) > count( $image_urls ) ) {
+<<<<<<< rate-limit
 			$saved_ids_count  = count( $saved_ids );
 			$image_urls_count = count( $image_urls );
 			for ( $i = $image_urls_count; $i < $saved_ids_count; $i++ ) {
+=======
+			for ( $i = count( $image_urls ); $i < count( $saved_ids ); $i++ ) {
+>>>>>>> main
 				if ( ! empty( $saved_ids[ $i ] ) ) {
 					wp_delete_attachment( (int) $saved_ids[ $i ], true );
 				}
