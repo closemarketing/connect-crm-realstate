@@ -297,16 +297,25 @@ class API {
 			foreach ( $properties as $property ) {
 				$property_info = self::get_property_info( $property, $crm_type );
 
-				if ( ! empty( $property_info['id'] ) ) {
+				// For Inmovilla Procesos, key list by match field (ref or cod_ofer) so it aligns with WP.
+				$list_key = $property_info['id'];
+				if ( 'inmovilla_procesos' === $crm_type ) {
+					$match_key = SYNC::get_property_match_key( $crm_type );
+					if ( 'ref' === $match_key && ! empty( $property_info['reference'] ) ) {
+						$list_key = $property_info['reference'];
+					}
+				}
+
+				if ( ! empty( $list_key ) ) {
 					if ( $with_metadata ) {
 						// Store as associative array with metadata.
-						$property_ids[ $property_info['id'] ] = array(
+						$property_ids[ $list_key ] = array(
 							'last_updated' => $property_info['last_updated'],
 							'status'       => $property_info['status'],
 						);
 					} else {
 						// Store as simple array of IDs.
-						$property_ids[] = $property_info['id'];
+						$property_ids[] = $list_key;
 					}
 				}
 			}
@@ -930,7 +939,6 @@ class API {
 	 */
 	private static function get_fields_inmovilla_procesos() {
 		$inmovilla_fields = get_transient( 'ccrmre_query_inmovilla_procesos_fields_v2' );
-		$inmovilla_fields = false;
 
 		if ( ! $inmovilla_fields ) {
 			// Get a sample property to extract fields.

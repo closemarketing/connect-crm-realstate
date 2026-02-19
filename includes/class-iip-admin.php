@@ -335,6 +335,17 @@ class Admin {
 			);
 		}
 
+		// Inmovilla Procesos: property identifier used for matching (ref or cod_ofer).
+		if ( isset( $this->settings['type'] ) && 'inmovilla_procesos' === $this->settings['type'] ) {
+			add_settings_field(
+				'conncrmreal_property_match_field',
+				__( 'Property identifier for matching', 'connect-crm-realstate' ),
+				array( $this, 'property_match_field_callback' ),
+				'conncrmreal_settings',
+				'admin_conncrmreal_settings'
+			);
+		}
+
 		$sync_minutes = CCRMRE_SYNC_PERIOD / 60;
 		add_settings_field(
 			'conncrmreal_cron',
@@ -459,6 +470,11 @@ class Admin {
 
 		$sanitary_values['api_pagination'] = 'anaconda' === $input['type'] ? 200 : 100;
 
+		// Property match field for Inmovilla Procesos only.
+		if ( isset( $input['type'] ) && 'inmovilla_procesos' === $input['type'] && isset( $input['property_match_field'] ) ) {
+			$sanitary_values['property_match_field'] = ( 'ref' === $input['property_match_field'] ) ? 'ref' : 'cod_ofer';
+		}
+
 		// Invalidate API cache when credentials are updated.
 		self::invalidate_api_cache();
 
@@ -479,10 +495,14 @@ class Admin {
 	 */
 	public function type_callback() {
 		$type_option = isset( $this->settings['type'] ) ? $this->settings['type'] : 'show';
+		// Preserve inmovilla on save when it is selected (option is disabled and not submitted).
+		if ( 'inmovilla' === $type_option ) {
+			echo '<input type="hidden" name="conncrmreal_settings[type]" value="inmovilla">';
+		}
 		?>
 		<select name="conncrmreal_settings[type]" id="type">
 			<option value="anaconda" <?php selected( $type_option, 'anaconda' ); ?>><?php esc_html_e( 'Anaconda', 'connect-crm-realstate' ); ?></option>
-			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?>><?php esc_html_e( 'Inmovilla APIWEB', 'connect-crm-realstate' ); ?></option>
+			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?> disabled><?php esc_html_e( 'Inmovilla APIWEB', 'connect-crm-realstate' ); ?></option>
 			<option value="inmovilla_procesos" <?php selected( $type_option, 'inmovilla_procesos' ); ?>><?php esc_html_e( 'Inmovilla Procesos', 'connect-crm-realstate' ); ?></option>
 		</select>
 		<?php
@@ -515,6 +535,22 @@ class Admin {
 			isset( $this->settings['numagencia'] ) ? esc_attr( $this->settings['numagencia'] ) : '',
 			esc_html__( 'Agency number from Inmovilla. Example: 2', 'connect-crm-realstate' )
 		);
+	}
+
+	/**
+	 * Property match field callback (Inmovilla Procesos only).
+	 *
+	 * @return void
+	 */
+	public function property_match_field_callback() {
+		$current = isset( $this->settings['property_match_field'] ) ? $this->settings['property_match_field'] : 'cod_ofer';
+		?>
+		<select name="conncrmreal_settings[property_match_field]" id="property_match_field">
+			<option value="cod_ofer" <?php selected( $current, 'cod_ofer' ); ?>><?php esc_html_e( 'cod_ofer (internal ID)', 'connect-crm-realstate' ); ?></option>
+			<option value="ref" <?php selected( $current, 'ref' ); ?>><?php esc_html_e( 'ref (reference)', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<p class="description"><?php esc_html_e( 'Field used to find and match properties in WordPress.', 'connect-crm-realstate' ); ?></p>
+		<?php
 	}
 
 	/**

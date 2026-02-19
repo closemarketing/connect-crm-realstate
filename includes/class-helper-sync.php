@@ -33,7 +33,7 @@ class SYNC {
 		$settings_fields    = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
 		$post_type          = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$filter_postal_code = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
-		$key_id             = ( 'inmovilla' === $crm || 'inmovilla_procesos' === $crm ) ? 'cod_ofer' : 'id';
+		$key_id             = self::get_property_match_key( $crm );
 		$property_id        = isset( $item[ $key_id ] ) ? $item[ $key_id ] : '';
 		$meta_name          = isset( $settings_fields[ $key_id ] ) ? $settings_fields[ $key_id ] : $key_id;
 		$property_post_id   = self::find_property( $property_id, $post_type, $meta_name );
@@ -57,8 +57,9 @@ class SYNC {
 		}
 
 		if ( self::cannot_import( $item, $filter_postal_code ) ) {
-			$message  = __( 'NOT Imported', 'connect-crm-realstate' );
-			$message .= self::add_end_message( $property_id, $property_title, $property_city );
+			$reference = self::get_reference_from_item( $item, $crm );
+			$message   = __( 'NOT Imported', 'connect-crm-realstate' );
+			$message  .= self::add_end_message( $property_id, $property_title, $property_city, $reference );
 
 			return array(
 				'property_id' => $property_id,
@@ -111,7 +112,8 @@ class SYNC {
 			$property_info['ID'] = $property_post_id;
 			wp_update_post( $property_info );
 		}
-		$message .= self::add_end_message( $property_id, $property_title, $property_city );
+		$reference = self::get_reference_from_item( $item, $crm );
+		$message  .= self::add_end_message( $property_id, $property_title, $property_city, $reference );
 
 		if ( ! empty( $property_post_id ) ) {
 			update_post_meta( $property_post_id, 'property_synced', true );
@@ -198,16 +200,42 @@ class SYNC {
 	}
 
 	/**
-	 * Adds end message.
+	 * Gets reference field from API item by CRM type.
 	 *
-	 * @param string $property_id Property ID.
-	 * @param string $property_title Property title.
-	 * @param string $property_city Property city.
+	 * @param array  $item API item.
+	 * @param string $crm  CRM type.
+	 * @return string|null Reference value or null.
+	 */
+	private static function get_reference_from_item( $item, $crm ) {
+		if ( 'inmovilla_procesos' === $crm && isset( $item['ref'] ) ) {
+			return $item['ref'];
+		}
+		if ( 'inmovilla' === $crm && isset( $item['referencia'] ) ) {
+			return $item['referencia'];
+		}
+		if ( 'anaconda' === $crm && isset( $item['referencia'] ) ) {
+			return $item['referencia'];
+		}
+		return null;
+	}
+
+	/**
+	 * Adds end message (reference when provided, otherwise property ID).
+	 *
+	 * @param string      $property_id    Property ID (internal).
+	 * @param string      $property_title  Property title.
+	 * @param string      $property_city   Property city.
+	 * @param string|null $reference       Reference (ref) when available.
 	 * @return string
 	 */
-	private static function add_end_message( $property_id, $property_title, $property_city = '' ) {
-		$message  = ' ' . __( 'Property ID:', 'connect-crm-realstate' ) . ' ';
-		$message .= $property_id;
+	private static function add_end_message( $property_id, $property_title, $property_city = '', $reference = null ) {
+		if ( null !== $reference && '' !== $reference ) {
+			$message = ' ' . __( 'Reference:', 'connect-crm-realstate' ) . ' ';
+			$message .= $reference;
+		} else {
+			$message  = ' ' . __( 'Property ID:', 'connect-crm-realstate' ) . ' ';
+			$message .= $property_id;
+		}
 		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $property_city;
 		return $message;
 	}
@@ -329,7 +357,7 @@ class SYNC {
 		$settings_fields  = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
 		$post_type        = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$sold_action      = isset( $settings['sold_action'] ) ? $settings['sold_action'] : 'draft';
-		$key_id           = ( 'inmovilla' === $crm || 'inmovilla_procesos' === $crm ) ? 'cod_ofer' : 'id';
+		$key_id           = self::get_property_match_key( $crm );
 		$property_id      = isset( $property[ $key_id ] ) ? $property[ $key_id ] : '';
 		$meta_name        = isset( $settings_fields[ $key_id ] ) ? $settings_fields[ $key_id ] : $key_id;
 		$property_post_id = self::find_property( $property_id, $post_type, $meta_name );
@@ -416,7 +444,7 @@ class SYNC {
 		$settings       = get_option( 'conncrmreal_settings' );
 		$settings_merge = get_option( 'conncrmreal_merge_fields' );
 		$post_type      = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
-		$key_id         = ( 'inmovilla' === $crm_type || 'inmovilla_procesos' === $crm_type ) ? 'cod_ofer' : 'id';
+		$key_id         = self::get_property_match_key( $crm_type );
 		$meta_name      = isset( $settings_merge[ $key_id ] ) ? $settings_merge[ $key_id ] : $key_id;
 
 		// Get all property IDs from API.
@@ -478,7 +506,7 @@ class SYNC {
 		$settings_merge = get_option( 'conncrmreal_merge_fields' );
 		$post_type      = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$crm            = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
-		$key_id         = ( 'inmovilla' === $crm || 'inmovilla_procesos' === $crm ) ? 'cod_ofer' : 'id';
+		$key_id         = self::get_property_match_key( $crm );
 		$meta_name      = isset( $settings_merge[ $key_id ] ) ? $settings_merge[ $key_id ] : $key_id;
 
 		$args            = array(
@@ -562,6 +590,25 @@ class SYNC {
 	}
 
 	/**
+	 * Get the CRM field key used for matching properties (find post, list keys).
+	 * API requests for full property details always use cod_ofer for Inmovilla Procesos.
+	 *
+	 * @param string $crm_type CRM type.
+	 * @return string Field name: 'id', 'cod_ofer', or 'ref'.
+	 */
+	public static function get_property_match_key( $crm_type ) {
+		if ( 'inmovilla_procesos' === $crm_type ) {
+			$settings = get_option( 'conncrmreal_settings', array() );
+			$match   = isset( $settings['property_match_field'] ) ? $settings['property_match_field'] : 'cod_ofer';
+			return ( 'ref' === $match ) ? 'ref' : 'cod_ofer';
+		}
+		if ( 'inmovilla' === $crm_type ) {
+			return 'cod_ofer';
+		}
+		return 'id';
+	}
+
+	/**
 	 * Get reference meta key based on CRM type
 	 *
 	 * @param string $crm_type CRM type.
@@ -580,6 +627,10 @@ class SYNC {
 				return $merge_fields['referencia'];
 			}
 		} elseif ( 'inmovilla_procesos' === $crm_type ) {
+			$match_key = self::get_property_match_key( $crm_type );
+			if ( isset( $merge_fields[ $match_key ] ) ) {
+				return $merge_fields[ $match_key ];
+			}
 			if ( isset( $merge_fields['cod_ofer'] ) ) {
 				return $merge_fields['cod_ofer'];
 			}

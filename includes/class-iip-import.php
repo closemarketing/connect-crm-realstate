@@ -243,11 +243,16 @@ class Import {
 			// Check if property is available in listing (optimization).
 			$is_available = SYNC::is_property_available( $property, $crm );
 
-			$key_id      = ( 'inmovilla' === $crm || 'inmovilla_procesos' === $crm ) ? 'cod_ofer' : 'id';
-			$prop_id_val = isset( $property[ $key_id ] ) ? $property[ $key_id ] : '?';
+			// First part: always show internal ID (cod_ofer for Inmovilla, id for Anaconda).
+			$id_display = '?';
+			if ( 'inmovilla' === $crm || 'inmovilla_procesos' === $crm ) {
+				$id_display = isset( $property['cod_ofer'] ) ? $property['cod_ofer'] : ( isset( $property['id'] ) ? $property['id'] : '?' );
+			} elseif ( isset( $property['id'] ) ) {
+				$id_display = $property['id'];
+			}
 
-			/* translators: %s: property ID from the CRM. */
-			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . sprintf( __( 'Property ID: %s', 'connect-crm-realstate' ), esc_html( $prop_id_val ) ) . ' — ';
+			/* translators: %s: property ID (internal) from the CRM. */
+			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . sprintf( __( 'Property ID: %s', 'connect-crm-realstate' ), esc_html( $id_display ) ) . ' — ';
 			if ( ! $is_available ) {
 				// Property is not available, handle according to settings.
 				$result_sync   = SYNC::handle_unavailable_property( $property, $this->settings, $this->settings_fields, $crm );

@@ -342,6 +342,22 @@ msgstr ""
 msgid "Agency Number"
 msgstr ""
 
+#: includes/class-iip-admin.php:340
+msgid "Property identifier for matching"
+msgstr ""
+
+#: includes/class-iip-admin.php:534
+msgid "cod_ofer (internal ID)"
+msgstr ""
+
+#: includes/class-iip-admin.php:535
+msgid "ref (reference)"
+msgstr ""
+
+#: includes/class-iip-admin.php:538
+msgid "Field used to find and match properties in WordPress."
+msgstr ""
+
 #. translators: %s: minutes
 #: includes/class-iip-admin.php:343
 msgid "Sync with Cron (every %s minutes)?"
