@@ -202,6 +202,8 @@ class Admin {
 					'autoMapSuccess'    => __( 'All fields have been auto-mapped successfully!', 'connect-crm-realstate' ),
 					'autoMapError'      => __( 'Error auto-mapping fields. Please try again.', 'connect-crm-realstate' ),
 					'confirmAutoMap'    => __( 'This will auto-generate WordPress field names for all CRM fields. Existing mappings will be preserved. Continue?', 'connect-crm-realstate' ),
+					'confirmClearAll'   => __( 'Clear all WordPress field selections? You will need to save the form to apply changes.', 'connect-crm-realstate' ),
+					'clearAllDone'      => __( 'All selections cleared.', 'connect-crm-realstate' ),
 				)
 			);
 		}
@@ -1104,10 +1106,15 @@ class Admin {
 			return;
 		}
 
-		// Auto-map button.
+		// Auto-map and clear-all buttons.
 		echo '<button type="button" id="ccrmre-auto-map-btn" class="button button-secondary" style="margin-bottom: 15px;">';
 		echo '<span class="dashicons dashicons-admin-generic" style="margin-top: 3px;"></span> ';
 		esc_html_e( 'Auto-Map All Fields', 'connect-crm-realstate' );
+		echo '</button>';
+		echo ' ';
+		echo '<button type="button" id="ccrmre-clear-all-selects-btn" class="button button-secondary" style="margin-bottom: 15px;">';
+		echo '<span class="dashicons dashicons-dismiss" style="margin-top: 3px;"></span> ';
+		esc_html_e( 'Clear all selects', 'connect-crm-realstate' );
 		echo '</button>';
 
 		echo '<div id="ccrmre-merge-container">';

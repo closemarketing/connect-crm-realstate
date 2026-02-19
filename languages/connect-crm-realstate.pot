@@ -629,6 +629,18 @@ msgstr ""
 msgid "Auto-Map All Fields"
 msgstr ""
 
+#: includes/class-iip-admin.php:1112
+msgid "Clear all selects"
+msgstr ""
+
+#: includes/class-iip-admin.php:200
+msgid "Clear all WordPress field selections? You will need to save the form to apply changes."
+msgstr ""
+
+#: includes/class-iip-admin.php:201
+msgid "All selections cleared."
+msgstr ""
+
 #: includes/class-iip-admin.php:1004
 msgid "CRM Fields"
 msgstr ""

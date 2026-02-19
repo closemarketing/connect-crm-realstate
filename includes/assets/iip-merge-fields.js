@@ -53,6 +53,18 @@
 		// Initialize Select2 on merge fields.
 		$('.ccrmre-select2-field').select2(select2Config);
 
+		// Clear all selects button handler.
+		$('#ccrmre-clear-all-selects-btn').on('click', function(e) {
+			e.preventDefault();
+			if (!confirm(ccrmreMergeFields.confirmClearAll)) {
+				return;
+			}
+			$('.ccrmre-select2-field').each(function() {
+				$(this).val(null).trigger('change');
+			});
+			showNotice('success', ccrmreMergeFields.clearAllDone);
+		});
+
 		// Auto-map fields button handler.
 		$('#ccrmre-auto-map-btn').on('click', function(e) {
 			e.preventDefault();
