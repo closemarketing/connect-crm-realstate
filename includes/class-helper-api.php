@@ -3,7 +3,8 @@
  * Library for API connection
  *
  * Documentation API.
- * Inmovilla: https://procesos.apinmo.com/apiweb/doc/index.html
+ * Inmovilla APIWEB: https://procesos.apinmo.com/apiweb/doc/index.html
+ * Inmovilla API REST: https://procesos.apinmo.com/api/v1/apidoc/
  *
  * @package    WordPress
  * @author     David Perez <david@close.technology>
@@ -929,6 +930,7 @@ class API {
 	 */
 	private static function get_fields_inmovilla_procesos() {
 		$inmovilla_fields = get_transient( 'ccrmre_query_inmovilla_procesos_fields_v2' );
+		$inmovilla_fields = false;
 
 		if ( ! $inmovilla_fields ) {
 			// Get a sample property to extract fields.
@@ -955,10 +957,16 @@ class API {
 					$fields_slug     = array_filter( array_keys( $sample_property ) );
 					$fields_data     = array();
 
+					$fields_inmovilla_procesos = file_get_contents( __DIR__ . '/apidata/inmovillla-procesos.json' );
+					$fields_inmovilla_procesos = json_decode( $fields_inmovilla_procesos, true );
+					$labels      = array_column( $fields_inmovilla_procesos, 'description', 'field' );
+
 					foreach ( $fields_slug as $slug ) {
+						$label = ! empty( $labels[ $slug ] ) ? $labels[ $slug ] : ucwords( str_replace( '_', ' ', $slug ) );
+
 						$fields_data[] = array(
 							'name'   => $slug,
-							'label'  => ucwords( str_replace( '_', ' ', $slug ) ),
+							'label'  => $label,
 							'sample' => isset( $sample_property[ $slug ] ) ? self::format_sample_value( $sample_property[ $slug ] ) : '',
 						);
 					}

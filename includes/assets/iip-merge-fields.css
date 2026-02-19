@@ -40,6 +40,18 @@
 	font-style: italic;
 }
 
+/* WordPress field column */
+.ccrmre-wp-field {
+	width: 50%;
+}
+
+/* Sample data column */
+.ccrmre-sample {
+	width: 25%;
+	color: #646970;
+	font-size: 12px;
+}
+
 .select2-container {
 	max-width: 100%;
 }
@@ -81,13 +93,6 @@
 #ccrmre-auto-map-btn:disabled {
 	opacity: 0.6;
 	cursor: not-allowed;
-}
-
-/* Sample data column */
-.ccrmre-sample {
-	width: 30%;
-	color: #646970;
-	font-size: 12px;
 }
 
 .ccrmre-sample-value {

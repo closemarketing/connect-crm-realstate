@@ -556,9 +556,7 @@ msgstr "Inactivo"
 
 #: includes/class-iip-admin.php:719
 msgid "Check the logs in the tab below to see automatic sync history."
-msgstr ""
-"Consulta los registros en la pestaña de abajo para ver el historial de "
-"sincronización automática."
+msgstr "Consulta los registros en la pestaña de abajo para ver el historial de sincronización automática."
 
 #: includes/class-iip-admin.php:727 includes/class-iip-admin.php:756
 msgid "Manual Import"
