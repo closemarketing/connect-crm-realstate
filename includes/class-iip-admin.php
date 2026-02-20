@@ -1197,11 +1197,10 @@ class Admin {
 			$sanitized_key = sanitize_text_field( $key );
 
 			// Sanitize the WordPress field name.
-			// Allow lowercase letters, numbers, and underscores only.
+			// Allow lowercase letters, numbers, and underscores only (leading _ allowed for private meta).
 			$sanitized_value = strtolower( trim( $value ) );
 			$sanitized_value = preg_replace( '/[^a-z0-9_]/', '_', $sanitized_value );
-			$sanitized_value = preg_replace( '/_+/', '_', $sanitized_value ); // Remove duplicate underscores.
-			$sanitized_value = trim( $sanitized_value, '_' ); // Remove leading/trailing underscores.
+			$sanitized_value = preg_replace( '/_+/', '_', $sanitized_value ); // Collapse duplicate underscores.
 
 			// Only save if we have a valid value after sanitization.
 			if ( ! empty( $sanitized_value ) && ! empty( $sanitized_key ) ) {
