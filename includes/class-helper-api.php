@@ -965,9 +965,10 @@ class API {
 					$fields_slug     = array_filter( array_keys( $sample_property ) );
 					$fields_data     = array();
 
-					$fields_inmovilla_procesos = file_get_contents( __DIR__ . '/apidata/inmovillla-procesos.json' );
-					$fields_inmovilla_procesos = json_decode( $fields_inmovilla_procesos, true );
-					$labels      = array_column( $fields_inmovilla_procesos, 'description', 'field' );
+					// Local file, not a remote URL.
+					$fields_inmovilla_procesos  = file_get_contents( __DIR__ . '/apidata/inmovillla-procesos.json' );
+					$fields_inmovilla_procesos  = json_decode( $fields_inmovilla_procesos, true );
+					$labels                      = array_column( $fields_inmovilla_procesos, 'description', 'field' );
 
 					foreach ( $fields_slug as $slug ) {
 						$label = ! empty( $labels[ $slug ] ) ? $labels[ $slug ] : ucwords( str_replace( '_', ' ', $slug ) );

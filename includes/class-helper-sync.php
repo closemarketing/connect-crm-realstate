@@ -230,7 +230,7 @@ class SYNC {
 	 */
 	private static function add_end_message( $property_id, $property_title, $property_city = '', $reference = null ) {
 		if ( null !== $reference && '' !== $reference ) {
-			$message = ' ' . __( 'Reference:', 'connect-crm-realstate' ) . ' ';
+			$message  = ' ' . __( 'Reference:', 'connect-crm-realstate' ) . ' ';
 			$message .= $reference;
 		} else {
 			$message  = ' ' . __( 'Property ID:', 'connect-crm-realstate' ) . ' ';
@@ -599,7 +599,7 @@ class SYNC {
 	public static function get_property_match_key( $crm_type ) {
 		if ( 'inmovilla_procesos' === $crm_type ) {
 			$settings = get_option( 'conncrmreal_settings', array() );
-			$match   = isset( $settings['property_match_field'] ) ? $settings['property_match_field'] : 'cod_ofer';
+			$match    = isset( $settings['property_match_field'] ) ? $settings['property_match_field'] : 'cod_ofer';
 			return ( 'ref' === $match ) ? 'ref' : 'cod_ofer';
 		}
 		if ( 'inmovilla' === $crm_type ) {
