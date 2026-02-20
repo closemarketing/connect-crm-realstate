@@ -53,7 +53,15 @@ document.addEventListener('DOMContentLoaded', function() {
 						},
 						body: 'action=ccrmre_load_log_content&nonce=' + ajaxAction.nonce + '&filename=' + encodeURIComponent(filename),
 					})
-					.then(resp => resp.json())
+					.then( function( resp ) { return resp.text(); } )
+					.then( function( text ) {
+						try {
+							return JSON.parse( text );
+						} catch ( e ) {
+							console.error( 'Log content response was not JSON:', text.substring( 0, 500 ) );
+							throw new Error( 'Server returned an invalid response. Check the PHP error log.' );
+						}
+					} )
 					.then(function(response) {
 						if (response && response.success) {
 							content.innerHTML = '<div class="ccrmre-log-data">' + response.data.content + '</div>';
@@ -166,7 +174,15 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0, isR
 		},
 		body: 'action=manual_import&nonce=' + ajaxAction.nonce + '&loop=' + loop + '&pagination=' + pagination + '&totalprop=' + totalprop + '&mode=' + mode,
 	})
-	.then( (resp) => resp.json() )
+	.then( function( resp ) { return resp.text(); } )
+	.then( function( text ) {
+		try {
+			return JSON.parse( text );
+		} catch ( e ) {
+			console.error( 'Import response was not JSON:', text.substring( 0, 500 ) );
+			throw new Error( 'Server returned an invalid response (possibly a PHP error). Check the PHP error log.' );
+		}
+	} )
 	.then( function(results) {
 		if ( results.success ){
 			// Success - show message and continue or finish
