@@ -33,8 +33,8 @@ class Featured_Image_URL {
 	/**
 	 * Fallback: render external image URL when the post has no real featured image.
 	 *
-	 * This covers properties imported before the download feature was added.
-	 * If the post already has a real attachment the filter does nothing.
+	 * Only applies to the post type configured for properties. Replaces empty
+	 * thumbnail output with the image from ccrmre_featured_image_url meta.
 	 *
 	 * @param string       $html              Post thumbnail HTML.
 	 * @param int          $post_id           Post ID.
@@ -44,15 +44,21 @@ class Featured_Image_URL {
 	 * @return string
 	 */
 	public function fallback_thumbnail_html( $html, $post_id, $post_thumbnail_id, $size, $attr ) {
+		$settings  = get_option( 'conncrmreal_settings', array() );
+		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+
+		if ( get_post_type( $post_id ) !== $post_type ) {
+			return $html;
+		}
+
 		// If WordPress already rendered a real thumbnail, leave it alone.
 		if ( ! empty( $html ) ) {
 			return $html;
 		}
 
-		// Check for external URL saved in meta.
 		$url = get_post_meta( $post_id, 'ccrmre_featured_image_url', true );
 
-		if ( empty( $url ) ) {
+		if ( empty( $url ) || ! is_string( $url ) ) {
 			return $html;
 		}
 
