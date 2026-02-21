@@ -1,8 +1,8 @@
 === Connect CRM RealState ===
-Contributors: closemarketing, davidperez
+Contributors: closetechnology, davidperez
 Tags: real estate, properties, inmovilla, anaconda, crm
 Requires at least: 5.8
-Tested up to: 6.7
+Tested up to: 6.9
 Requires PHP: 7.4
 Stable tag: 1.0.0
 License: GPL-2.0-or-later
@@ -39,6 +39,12 @@ Connect CRM RealState imports properties from popular real estate CRM systems (I
 
 * `[property_gallery]` - Display property photo gallery
 * `[property_info]` - Display property information box with price, bedrooms, bathrooms, area, and location
+
+**PRO Features (via [Connect CRM RealState PRO](https://close.technology/wordpress-plugins/conecta-crm-realstate/) add-on):**
+
+* Automatic background synchronization via cron
+* SEO-optimized property content *(coming soon)*
+* AI-powered property descriptions with LLM *(coming soon)*
 
 == Installation ==
 
