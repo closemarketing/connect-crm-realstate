@@ -532,3 +532,33 @@
 		height: 16px;
 	}
 }
+
+/* Property Info meta box */
+.ccrmre-property-info-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.ccrmre-property-info-table th,
+.ccrmre-property-info-table td {
+	padding: 5px 4px;
+	vertical-align: top;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.ccrmre-property-info-table th {
+	color: #646970;
+	font-weight: 600;
+	white-space: nowrap;
+	padding-right: 8px;
+	width: 40%;
+}
+
+.ccrmre-property-info-table code {
+	font-size: 11px;
+	background: #f0f0f1;
+	padding: 1px 4px;
+	border-radius: 2px;
+	word-break: break-all;
+}

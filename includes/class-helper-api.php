@@ -293,30 +293,23 @@ class API {
 				break;
 			}
 
-			// Extract IDs/references, dates, and status based on CRM type.
+			// Extract IDs, dates and status for each property.
 			foreach ( $properties as $property ) {
 				$property_info = self::get_property_info( $property, $crm_type );
+				$list_key      = $property_info['id'];
 
-				// For Inmovilla Procesos, key list by match field (ref or cod_ofer) so it aligns with WP.
-				$list_key = $property_info['id'];
-				if ( 'inmovilla_procesos' === $crm_type ) {
-					$match_key = SYNC::get_property_match_key( $crm_type );
-					if ( 'ref' === $match_key && ! empty( $property_info['reference'] ) ) {
-						$list_key = $property_info['reference'];
-					}
+				if ( empty( $property_info['id'] ) ) {
+					continue;
 				}
-
-				if ( ! empty( $list_key ) ) {
-					if ( $with_metadata ) {
-						// Store as associative array with metadata.
-						$property_ids[ $list_key ] = array(
-							'last_updated' => $property_info['last_updated'],
-							'status'       => $property_info['status'],
-						);
-					} else {
-						// Store as simple array of IDs.
-						$property_ids[] = $list_key;
-					}
+				if ( $with_metadata ) {
+					// Store as associative array with metadata.
+					$property_ids[ $list_key ] = array(
+						'last_updated' => $property_info['last_updated'],
+						'status'       => $property_info['status'],
+					);
+				} else {
+					// Store as simple array of IDs.
+					$property_ids[] = $list_key;
 				}
 			}
 

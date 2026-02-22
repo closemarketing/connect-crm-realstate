@@ -108,6 +108,15 @@ class PostType {
 		);
 
 		add_meta_box(
+			'property-info',
+			__( 'Property Info', 'connect-crm-real-state' ),
+			array( $this, 'metabox_show_property_info' ),
+			$post_type,
+			'side',
+			'high'
+		);
+
+		add_meta_box(
 			'property-photos',
 			__( 'Property Photos', 'connect-crm-real-state' ),
 			array( $this, 'metabox_show_photos' ),
@@ -172,6 +181,41 @@ class PostType {
 				}
 				?>
 			</tbody>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Metabox for property identification info in sidebar.
+	 *
+	 * @param object $post Post object.
+	 * @return void
+	 */
+	public function metabox_show_property_info( $post ) {
+		$property_id  = get_post_meta( $post->ID, 'ccrmre_property_id', true );
+		$last_updated = get_post_meta( $post->ID, 'ccrmre_last_updated', true );
+		?>
+		<table class="ccrmre-property-info-table">
+			<tr>
+				<th><?php esc_html_e( 'ID', 'connect-crm-real-state' ); ?></th>
+				<td>
+					<?php if ( ! empty( $property_id ) ) : ?>
+						<code><?php echo esc_html( $property_id ); ?></code>
+					<?php else : ?>
+						<em><?php esc_html_e( 'Not synced', 'connect-crm-real-state' ); ?></em>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Last updated', 'connect-crm-real-state' ); ?></th>
+				<td>
+					<?php if ( ! empty( $last_updated ) ) : ?>
+						<?php echo esc_html( $last_updated ); ?>
+					<?php else : ?>
+						<em><?php esc_html_e( 'Not synced', 'connect-crm-real-state' ); ?></em>
+					<?php endif; ?>
+				</td>
+			</tr>
 		</table>
 		<?php
 	}

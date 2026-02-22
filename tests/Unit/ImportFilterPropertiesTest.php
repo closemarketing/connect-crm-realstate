@@ -400,19 +400,6 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 	 * @param string $crm_type CRM type.
 	 */
 	private function create_wp_properties( $properties, $crm_type = 'anaconda' ) {
-		// Get the correct meta key based on CRM type and merge fields
-		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
-		
-		if ( 'anaconda' === $crm_type ) {
-			$meta_key = isset( $merge_fields['id'] ) ? $merge_fields['id'] : 'property_id';
-		} elseif ( 'inmovilla' === $crm_type ) {
-			$meta_key = isset( $merge_fields['referencia'] ) ? $merge_fields['referencia'] : 'property_id';
-		} elseif ( 'inmovilla_procesos' === $crm_type ) {
-			$meta_key = isset( $merge_fields['cod_ofer'] ) ? $merge_fields['cod_ofer'] : 'property_id';
-		} else {
-			$meta_key = 'property_id';
-		}
-
 		foreach ( $properties as $prop ) {
 			$post_id = wp_insert_post(
 				array(
@@ -422,8 +409,8 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 				)
 			);
 
-			// Save property reference with the correct meta key
-			update_post_meta( $post_id, $meta_key, $prop['id'] );
+			// Save property reference using the fixed meta key.
+			update_post_meta( $post_id, 'ccrmre_property_id', $prop['id'] );
 
 			// Save last updated date (can be null)
 			if ( isset( $prop['last_updated'] ) && ! is_null( $prop['last_updated'] ) ) {

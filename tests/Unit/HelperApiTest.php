@@ -693,7 +693,7 @@ class HelperApiTest extends WP_UnitTestCase {
 	/**
 	 * Creates WordPress property posts with the given cod_ofer values.
 	 *
-	 * Uses 'property_id' as the meta key (fallback when no merge fields are configured).
+	 * Uses 'ccrmre_property_id' as the fixed meta key for property identification.
 	 *
 	 * @param int[] $cod_ofer_list List of cod_ofer values to store in WP.
 	 */
@@ -707,7 +707,7 @@ class HelperApiTest extends WP_UnitTestCase {
 				)
 			);
 
-			update_post_meta( $post_id, 'property_id', (string) $cod_ofer );
+			update_post_meta( $post_id, 'ccrmre_property_id', (string) $cod_ofer );
 			update_post_meta( $post_id, 'ccrmre_last_updated', '2024-01-01 10:00:00' );
 			update_post_meta( $post_id, 'ccrmre_status', true );
 		}

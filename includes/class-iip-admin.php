@@ -349,17 +349,6 @@ class Admin {
 			);
 		}
 
-		// Inmovilla Procesos: property identifier used for matching (ref or cod_ofer).
-		if ( isset( $this->settings['type'] ) && 'inmovilla_procesos' === $this->settings['type'] ) {
-			add_settings_field(
-				'conncrmreal_property_match_field',
-				__( 'Property identifier for matching', 'connect-crm-real-state' ),
-				array( $this, 'property_match_field_callback' ),
-				'conncrmreal_settings',
-				'admin_conncrmreal_settings'
-			);
-		}
-
 		add_settings_field(
 			'conncrmreal_post_type',
 			__( 'Post Type', 'connect-crm-real-state' ),
@@ -485,11 +474,6 @@ class Admin {
 
 		$sanitary_values['api_pagination'] = 'anaconda' === $input['type'] ? 200 : 100;
 
-		// Property match field for Inmovilla Procesos only.
-		if ( isset( $input['type'] ) && 'inmovilla_procesos' === $input['type'] && isset( $input['property_match_field'] ) ) {
-			$sanitary_values['property_match_field'] = ( 'ref' === $input['property_match_field'] ) ? 'ref' : 'cod_ofer';
-		}
-
 		// Invalidate API cache when credentials are updated.
 		self::invalidate_api_cache();
 
@@ -549,22 +533,6 @@ class Admin {
 			isset( $this->settings['numagencia'] ) ? esc_attr( $this->settings['numagencia'] ) : '',
 			esc_html__( 'Agency number from Inmovilla. Example: 2', 'connect-crm-real-state' )
 		);
-	}
-
-	/**
-	 * Property match field callback (Inmovilla Procesos only).
-	 *
-	 * @return void
-	 */
-	public function property_match_field_callback() {
-		$current = isset( $this->settings['property_match_field'] ) ? $this->settings['property_match_field'] : 'cod_ofer';
-		?>
-		<select name="conncrmreal_settings[property_match_field]" id="property_match_field">
-			<option value="cod_ofer" <?php selected( $current, 'cod_ofer' ); ?>><?php esc_html_e( 'cod_ofer (internal ID)', 'connect-crm-real-state' ); ?></option>
-			<option value="ref" <?php selected( $current, 'ref' ); ?>><?php esc_html_e( 'ref (reference)', 'connect-crm-real-state' ); ?></option>
-		</select>
-		<p class="description"><?php esc_html_e( 'Field used to find and match properties in WordPress.', 'connect-crm-real-state' ); ?></p>
-		<?php
 	}
 
 	/**

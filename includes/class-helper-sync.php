@@ -27,16 +27,15 @@ class SYNC {
 	 * @return array
 	 */
 	public static function sync_property( $item, $settings = array(), $settings_fields = array() ) {
-		$message            = '';
-		$settings           = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
-		$crm                = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
-		$settings_fields    = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
-		$post_type          = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
-		$filter_postal_code = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
-		$key_id             = self::get_property_match_key( $crm );
-		$property_id        = isset( $item[ $key_id ] ) ? $item[ $key_id ] : '';
-		$meta_name          = isset( $settings_fields[ $key_id ] ) ? $settings_fields[ $key_id ] : $key_id;
-		$property_post_id   = self::find_property( $property_id, $post_type, $meta_name );
+		$message             = '';
+		$settings            = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
+		$crm                 = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+		$settings_fields     = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
+		$post_type           = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$filter_postal_code  = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
+		$property_info_early = API::get_property_info( $item, $crm );
+		$property_id         = $property_info_early['id'];
+		$property_post_id    = self::find_property( $property_id, $post_type );
 
 		if ( 'inmovilla_procesos' === $crm ) {
 			// Inmovilla Procesos: descripciones and tituloes are direct strings.
@@ -125,8 +124,9 @@ class SYNC {
 			delete_post_meta( $property_post_id, 'property_description' );
 			delete_post_meta( $property_post_id, 'property_name' );
 
-			// Save last updated date and status from CRM.
+			// Save fixed meta keys for property identification and sync tracking.
 			$property_info_meta = API::get_property_info( $item, $crm );
+			update_post_meta( $property_post_id, 'ccrmre_property_id', $property_id );
 			if ( ! empty( $property_info_meta['last_updated'] ) ) {
 				update_post_meta( $property_post_id, 'ccrmre_last_updated', $property_info_meta['last_updated'] );
 			}
@@ -316,18 +316,17 @@ class SYNC {
 	 *
 	 * @param string $property_id Property ID.
 	 * @param string $post_type Post type.
-	 * @param string $key Meta key.
 	 *
 	 * @return int
 	 */
-	public static function find_property( $property_id, $post_type, $key = 'property_id' ) {
+	public static function find_property( $property_id, $post_type ) {
 		$property = get_posts(
 			array(
 				'post_type'  => $post_type,
 				'fields'     => 'ids',
 				'meta_query' => array(
 					array(
-						'key'     => $key,
+						'key'     => 'ccrmre_property_id',
 						'value'   => $property_id,
 						'compare' => '=',
 					),
@@ -398,10 +397,9 @@ class SYNC {
 		$settings_fields  = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
 		$post_type        = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
 		$sold_action      = isset( $settings['sold_action'] ) ? $settings['sold_action'] : 'draft';
-		$key_id           = self::get_property_match_key( $crm );
-		$property_id      = isset( $property[ $key_id ] ) ? $property[ $key_id ] : '';
-		$meta_name        = isset( $settings_fields[ $key_id ] ) ? $settings_fields[ $key_id ] : $key_id;
-		$property_post_id = self::find_property( $property_id, $post_type, $meta_name );
+		$property_info_h  = API::get_property_info( $property, $crm );
+		$property_id      = $property_info_h['id'];
+		$property_post_id = self::find_property( $property_id, $post_type );
 
 		if ( empty( $property_post_id ) ) {
 			// Property doesn't exist in WordPress, skip it.
@@ -482,11 +480,9 @@ class SYNC {
 	 * @return array Array with count and detailed info of removed properties.
 	 */
 	public static function remove_properties_not_in_api( $crm_type ) {
-		$settings       = get_option( 'conncrmreal_settings' );
-		$settings_merge = get_option( 'conncrmreal_merge_fields' );
-		$post_type      = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
-		$key_id         = self::get_property_match_key( $crm_type );
-		$meta_name      = isset( $settings_merge[ $key_id ] ) ? $settings_merge[ $key_id ] : $key_id;
+		$settings  = get_option( 'conncrmreal_settings' );
+		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$meta_name = 'ccrmre_property_id';
 
 		// Get all property IDs from API.
 		$api_result = API::get_all_property_ids( $crm_type, false );
@@ -503,7 +499,7 @@ class SYNC {
 		$api_ids        = array_keys( $api_properties );
 
 		// Get all property IDs from WordPress.
-		$wp_properties = self::get_wordpress_property_data( $crm_type );
+		$wp_properties = self::get_wordpress_property_data();
 		$wp_ids        = array_keys( $wp_properties );
 
 		// Find properties in WordPress that are NOT in API.
@@ -512,7 +508,7 @@ class SYNC {
 
 		foreach ( $to_remove as $property_ref ) {
 			// Find the WordPress post by property reference.
-			$post_id = self::find_property( $property_ref, $post_type, $meta_name );
+			$post_id = self::find_property( $property_ref, $post_type );
 
 			if ( ! empty( $post_id ) ) {
 				$post_title        = get_the_title( $post_id );
@@ -543,12 +539,9 @@ class SYNC {
 	 * @return array Array with count and detailed info of trashed properties.
 	 */
 	public static function trash_not_synced() {
-		$settings       = get_option( 'conncrmreal_settings' );
-		$settings_merge = get_option( 'conncrmreal_merge_fields' );
-		$post_type      = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
-		$crm            = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
-		$key_id         = self::get_property_match_key( $crm );
-		$meta_name      = isset( $settings_merge[ $key_id ] ) ? $settings_merge[ $key_id ] : $key_id;
+		$settings  = get_option( 'conncrmreal_settings' );
+		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$meta_name = 'ccrmre_property_id';
 
 		$args            = array(
 			'posts_per_page' => -1,
@@ -586,15 +579,13 @@ class SYNC {
 	/**
 	 * Get WordPress property data with dates and status
 	 *
-	 * @param string $crm_type CRM type.
 	 * @return array Associative array of property_id => array(last_updated, status)
 	 */
-	public static function get_wordpress_property_data( $crm_type ) {
+	public static function get_wordpress_property_data() {
 		global $wpdb;
 
 		$settings  = get_option( 'conncrmreal_settings' );
-		$meta_key  = self::get_reference_meta_key( $crm_type );
-		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'ccrmre_property';
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$results = $wpdb->get_results(
@@ -609,9 +600,8 @@ class SYNC {
 				LEFT JOIN {$wpdb->postmeta} pm3 ON p.ID = pm3.post_id AND pm3.meta_key = 'ccrmre_status'
 				WHERE p.post_type = %s
 				AND p.post_status != 'trash'
-				AND pm1.meta_key = %s",
-				$post_type,
-				$meta_key
+				AND pm1.meta_key = 'ccrmre_property_id'",
+				$post_type
 			),
 			ARRAY_A
 		);
@@ -631,54 +621,12 @@ class SYNC {
 	}
 
 	/**
-	 * Get the CRM field key used for matching properties (find post, list keys).
-	 * API requests for full property details always use cod_ofer for Inmovilla Procesos.
+	 * Get reference meta key - always returns the fixed meta key for property identification.
 	 *
-	 * @param string $crm_type CRM type.
-	 * @return string Field name: 'id', 'cod_ofer', or 'ref'.
+	 * @return string Fixed meta key for property reference.
 	 */
-	public static function get_property_match_key( $crm_type ) {
-		if ( 'inmovilla_procesos' === $crm_type ) {
-			$settings = get_option( 'conncrmreal_settings', array() );
-			$match    = isset( $settings['property_match_field'] ) ? $settings['property_match_field'] : 'cod_ofer';
-			return ( 'ref' === $match ) ? 'ref' : 'cod_ofer';
-		}
-		if ( 'inmovilla' === $crm_type ) {
-			return 'cod_ofer';
-		}
-		return 'id';
-	}
-
-	/**
-	 * Get reference meta key based on CRM type
-	 *
-	 * @param string $crm_type CRM type.
-	 * @return string Meta key for property reference
-	 */
-	public static function get_reference_meta_key( $crm_type ) {
-		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
-
-		// Try to find the reference field in merge fields.
-		if ( 'anaconda' === $crm_type ) {
-			if ( isset( $merge_fields['id'] ) ) {
-				return $merge_fields['id'];
-			}
-		} elseif ( 'inmovilla' === $crm_type ) {
-			if ( isset( $merge_fields['referencia'] ) ) {
-				return $merge_fields['referencia'];
-			}
-		} elseif ( 'inmovilla_procesos' === $crm_type ) {
-			$match_key = self::get_property_match_key( $crm_type );
-			if ( isset( $merge_fields[ $match_key ] ) ) {
-				return $merge_fields[ $match_key ];
-			}
-			if ( isset( $merge_fields['cod_ofer'] ) ) {
-				return $merge_fields['cod_ofer'];
-			}
-		}
-
-		// Fallback to default property_id.
-		return 'property_id';
+	public static function get_reference_meta_key() {
+		return 'ccrmre_property_id';
 	}
 
 	/**
@@ -857,7 +805,7 @@ class SYNC {
 		}
 
 		$api_properties = isset( $api_result['data'] ) ? $api_result['data'] : array();
-		$wp_properties  = self::get_wordpress_property_data( $crm_type );
+		$wp_properties  = self::get_wordpress_property_data();
 
 		// Properties in API but missing from WordPress.
 		$unsynced = array_diff_key( $api_properties, $wp_properties );
@@ -898,21 +846,25 @@ class SYNC {
 	 */
 	public static function filter_properties_to_update( $properties, $crm_type ) {
 		// Get WordPress properties data with cache.
-		$wp_properties = self::get_wordpress_property_data( $crm_type );
-		$wp_ids        = array_keys( $wp_properties );
+		$wp_properties = self::get_wordpress_property_data();
+		$wp_refs       = array_keys( $wp_properties );
+
+		if ( empty( $wp_refs ) ) {
+			return $properties;
+		}
 
 		// Filter properties.
 		$filtered = array();
 		foreach ( $properties as $property ) {
 			$property_info = API::get_property_info( $property, $crm_type );
-			$property_id   = ! empty( $property_info['id'] ) ? $property_info['id'] : $property_info['reference'];
+			$property_ref  = $property_info['id'];
 
-			if ( empty( $property_id ) ) {
+			if ( empty( $property_ref ) ) {
 				continue;
 			}
 
 			// Check if property is new.
-			if ( ! in_array( $property_id, $wp_ids, true ) ) {
+			if ( ! in_array( $property_ref, $wp_refs, true ) ) {
 				// Only import new properties if they are available (status = true).
 				$api_status = (bool) $property_info['status'];
 				if ( $api_status ) {
@@ -922,8 +874,8 @@ class SYNC {
 			}
 
 			// Check if property is outdated (date or status changed).
-			if ( isset( $wp_properties[ $property_id ] ) ) {
-				$wp_data      = $wp_properties[ $property_id ];
+			if ( isset( $wp_properties[ $property_ref ] ) ) {
+				$wp_data      = $wp_properties[ $property_ref ];
 				$needs_update = false;
 
 				// Get dates and status.
