@@ -872,8 +872,8 @@ class SYNC {
 				$needs_update = false;
 
 				// Get dates and status.
-				$api_date  = $property_info['last_updated'];
-				$wp_date   = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
+				$api_date = $property_info['last_updated'];
+				$wp_date  = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
 
 				// Check if date is newer in API.
 				if ( ! empty( $api_date ) && ! empty( $wp_date ) ) {
