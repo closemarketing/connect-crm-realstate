@@ -40,25 +40,25 @@ class SYNC {
 
 		if ( 'inmovilla_procesos' === $crm ) {
 			// Inmovilla Procesos: descripciones and tituloes are direct strings.
-			$property_title       = isset( $item['tituloes'] ) ? $item['tituloes'] : __( 'Property', 'connect-crm-realstate' );
+			$property_title       = isset( $item['tituloes'] ) ? $item['tituloes'] : __( 'Property', 'connect-crm-real-state' );
 			$property_description = isset( $item['descripciones'] ) ? $item['descripciones'] : '';
 			$property_city        = isset( $item['ciudad'] ) ? $item['ciudad'] : '';
 		} elseif ( 'inmovilla' === $crm ) {
 			// Inmovilla APIWEB: descripciones is an array with titulo and descrip.
 			$descripciones        = isset( $item['descripciones'] ) ? $item['descripciones'] : array();
-			$property_title       = isset( $descripciones['titulo'] ) ? $descripciones['titulo'] : __( 'Property', 'connect-crm-realstate' );
+			$property_title       = isset( $descripciones['titulo'] ) ? $descripciones['titulo'] : __( 'Property', 'connect-crm-real-state' );
 			$property_description = isset( $descripciones['descrip'] ) ? $descripciones['descrip'] : '';
 			$property_city        = isset( $item['ciudad'] ) ? $item['ciudad'] : '';
 		} else {
 			// Anaconda.
-			$property_title       = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' );
+			$property_title       = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-real-state' );
 			$property_description = isset( $item['description'] ) ? $item['description'] : '';
 			$property_city        = isset( $item['city'] ) ? $item['city'] : '';
 		}
 
 		if ( self::cannot_import( $item, $filter_postal_code ) ) {
 			$reference = self::get_reference_from_item( $item, $crm );
-			$message   = __( 'NOT Imported', 'connect-crm-realstate' );
+			$message   = __( 'NOT Imported', 'connect-crm-real-state' );
 			$message  .= self::add_end_message( $property_id, $property_title, $property_city, $reference );
 
 			return array(
@@ -111,9 +111,9 @@ class SYNC {
 			$property_info['post_name']    = sanitize_title( $property_title );
 			$property_info['post_content'] = $property_description;
 			$property_post_id              = wp_insert_post( $property_info );
-			$message                      .= __( 'Created', 'connect-crm-realstate' );
+			$message                      .= __( 'Created', 'connect-crm-real-state' );
 		} else {
-			$message            .= __( 'Updated', 'connect-crm-realstate' );
+			$message            .= __( 'Updated', 'connect-crm-real-state' );
 			$property_info['ID'] = $property_post_id;
 			wp_update_post( $property_info );
 		}
@@ -271,10 +271,10 @@ class SYNC {
 	 */
 	private static function add_end_message( $property_id, $property_title, $property_city = '', $reference = null ) {
 		if ( null !== $reference && '' !== $reference ) {
-			$message  = ' ' . __( 'Reference:', 'connect-crm-realstate' ) . ' ';
+			$message  = ' ' . __( 'Reference:', 'connect-crm-real-state' ) . ' ';
 			$message .= $reference;
 		} else {
-			$message  = ' ' . __( 'Property ID:', 'connect-crm-realstate' ) . ' ';
+			$message  = ' ' . __( 'Property ID:', 'connect-crm-real-state' ) . ' ';
 			$message .= $property_id;
 		}
 		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $property_city;
@@ -409,7 +409,7 @@ class SYNC {
 
 			return array(
 				'property_id' => $property_id,
-				'message'     => __( 'Skipped (Not Available in CRM)', 'connect-crm-realstate' ) . $reason,
+				'message'     => __( 'Skipped (Not Available in CRM)', 'connect-crm-real-state' ) . $reason,
 			);
 		}
 
@@ -426,17 +426,17 @@ class SYNC {
 						'post_status' => 'draft',
 					)
 				);
-				$message = __( 'Unpublished (Set to Draft)', 'connect-crm-realstate' ) . $reason;
+				$message = __( 'Unpublished (Set to Draft)', 'connect-crm-real-state' ) . $reason;
 				break;
 
 			case 'trash':
 				wp_trash_post( $property_post_id );
-				$message = __( 'Moved to Trash', 'connect-crm-realstate' ) . $reason;
+				$message = __( 'Moved to Trash', 'connect-crm-real-state' ) . $reason;
 				break;
 
 			case 'keep':
 			default:
-				$message = __( 'Kept Published (Not Available)', 'connect-crm-realstate' ) . $reason;
+				$message = __( 'Kept Published (Not Available)', 'connect-crm-real-state' ) . $reason;
 				break;
 		}
 
@@ -457,19 +457,19 @@ class SYNC {
 	private static function get_unavailable_reason( $property, $crm ) {
 		if ( isset( $property['status'] ) && ! (bool) $property['status'] ) {
 			/* translators: %s: status field value from the API. */
-			return ' — ' . sprintf( __( 'Reason: status = %s', 'connect-crm-realstate' ), esc_html( $property['status'] ) );
+			return ' — ' . sprintf( __( 'Reason: status = %s', 'connect-crm-real-state' ), esc_html( $property['status'] ) );
 		}
 
 		if ( 'inmovilla_procesos' === $crm && isset( $property['nodisponible'] ) && 1 === (int) $property['nodisponible'] ) {
-			return ' — ' . __( 'Reason: nodisponible = 1', 'connect-crm-realstate' );
+			return ' — ' . __( 'Reason: nodisponible = 1', 'connect-crm-real-state' );
 		}
 
 		if ( 'inmovilla' === $crm && isset( $property['estado'] ) && 'V' === $property['estado'] ) {
-			return ' — ' . __( 'Reason: estado = V (Sold)', 'connect-crm-realstate' );
+			return ' — ' . __( 'Reason: estado = V (Sold)', 'connect-crm-real-state' );
 		}
 
 		if ( 'anaconda' === $crm && isset( $property['operation_status'] ) && 'Vendido' === $property['operation_status'] ) {
-			return ' — ' . __( 'Reason: operation_status = Sold', 'connect-crm-realstate' );
+			return ' — ' . __( 'Reason: operation_status = Sold', 'connect-crm-real-state' );
 		}
 
 		return '';

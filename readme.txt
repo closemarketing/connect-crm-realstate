@@ -46,6 +46,16 @@ Connect CRM RealState imports properties from popular real estate CRM systems (I
 * SEO-optimized property content *(coming soon)*
 * AI-powered property descriptions with LLM *(coming soon)*
 
+== External Services ==
+
+This plugin connects to third-party real estate CRM APIs to import property data. Connection only occurs when you run an import.
+
+**Anaconda (api.anaconda.guru)**  
+Used to fetch property listings and details. The plugin sends your configured API credentials and request parameters (e.g. filters, pagination) when you use the Anaconda CRM type. Data is sent only when importing or syncing. Check your Anaconda provider or contract for [terms](https://www.anacondasolutions.es/aviso-legal/) and [privacy](https://www.anacondasolutions.es/politica-de-privacidad/).
+
+**Inmovilla**  
+Used to fetch property data when you use the Inmovilla Procesos CRM type. The plugin sends your API credentials and request parameters only during import or sync. Inmovilla [terms](https://inmovilla.com/aviso-legal/) and [privacy policy](https://www.inmovilla.com/politica-de-privacidad/)
+
 == Installation ==
 
 1. Upload the plugin files to the `/wp-content/plugins/connect-crm-realstate` directory, or install the plugin through the WordPress plugins screen.

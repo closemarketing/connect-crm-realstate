@@ -56,19 +56,19 @@ class PostType {
 	 * @return void
 	 **/
 	public function cpt_property() {
-		$settings_post_type_slug = isset( $this->settings['post_type_slug'] ) ? $this->settings['post_type_slug'] : __( 'properties', 'connect-crm-realstate' );
+		$settings_post_type_slug = isset( $this->settings['post_type_slug'] ) ? $this->settings['post_type_slug'] : __( 'properties', 'connect-crm-real-state' );
 
 		$labels = array(
-			'name'               => __( 'Property', 'connect-crm-realstate' ),
-			'singular_name'      => __( 'Properties', 'connect-crm-realstate' ),
-			'add_new'            => __( 'Add New Properties', 'connect-crm-realstate' ),
-			'add_new_item'       => __( 'Add New Properties', 'connect-crm-realstate' ),
-			'edit_item'          => __( 'Edit Properties', 'connect-crm-realstate' ),
-			'new_item'           => __( 'New Properties', 'connect-crm-realstate' ),
-			'view_item'          => __( 'View Properties', 'connect-crm-realstate' ),
-			'search_items'       => __( 'Search Property', 'connect-crm-realstate' ),
-			'not_found'          => __( 'Not found Property', 'connect-crm-realstate' ),
-			'not_found_in_trash' => __( 'Not found Property in trash', 'connect-crm-realstate' ),
+			'name'               => __( 'Property', 'connect-crm-real-state' ),
+			'singular_name'      => __( 'Properties', 'connect-crm-real-state' ),
+			'add_new'            => __( 'Add New Properties', 'connect-crm-real-state' ),
+			'add_new_item'       => __( 'Add New Properties', 'connect-crm-real-state' ),
+			'edit_item'          => __( 'Edit Properties', 'connect-crm-real-state' ),
+			'new_item'           => __( 'New Properties', 'connect-crm-real-state' ),
+			'view_item'          => __( 'View Properties', 'connect-crm-real-state' ),
+			'search_items'       => __( 'Search Property', 'connect-crm-real-state' ),
+			'not_found'          => __( 'Not found Property', 'connect-crm-real-state' ),
+			'not_found_in_trash' => __( 'Not found Property in trash', 'connect-crm-real-state' ),
 		);
 		$args   = array(
 			'labels'             => $labels,
@@ -88,7 +88,7 @@ class PostType {
 			'menu_icon'          => 'dashicons-admin-users',
 			'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ),
 		);
-		register_post_type( 'property', $args );
+		register_post_type( 'ccrmre_property', $args );
 	}
 
 	/**
@@ -101,7 +101,7 @@ class PostType {
 
 		add_meta_box(
 			'property',
-			__( 'Property Meta', 'connect-crm-realstate' ),
+			__( 'Property Meta', 'connect-crm-real-state' ),
 			array( $this, 'metabox_show_property' ),
 			$post_type,
 			'normal'
@@ -109,7 +109,7 @@ class PostType {
 
 		add_meta_box(
 			'property-photos',
-			__( 'Property Photos', 'connect-crm-realstate' ),
+			__( 'Property Photos', 'connect-crm-real-state' ),
 			array( $this, 'metabox_show_photos' ),
 			$post_type,
 			'side',
@@ -127,7 +127,7 @@ class PostType {
 		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
 
 		if ( empty( $merge_fields ) ) {
-			echo '<p>' . esc_html__( 'No merge fields configured. Please configure merge fields in the plugin settings.', 'connect-crm-realstate' ) . '</p>';
+			echo '<p>' . esc_html__( 'No merge fields configured. Please configure merge fields in the plugin settings.', 'connect-crm-real-state' ) . '</p>';
 			return;
 		}
 
@@ -149,9 +149,9 @@ class PostType {
 		<table class="property-meta-table">
 			<thead>
 				<tr>
-					<th><?php esc_html_e( 'CRM Field', 'connect-crm-realstate' ); ?></th>
-					<th><?php esc_html_e( 'WordPress Field', 'connect-crm-realstate' ); ?></th>
-					<th><?php esc_html_e( 'Value', 'connect-crm-realstate' ); ?></th>
+					<th><?php esc_html_e( 'CRM Field', 'connect-crm-real-state' ); ?></th>
+					<th><?php esc_html_e( 'WordPress Field', 'connect-crm-real-state' ); ?></th>
+					<th><?php esc_html_e( 'Value', 'connect-crm-real-state' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -189,7 +189,7 @@ class PostType {
 		if ( empty( $featured_image_url ) && ( empty( $gallery_urls ) || ! is_array( $gallery_urls ) ) ) {
 			?>
 			<div class="ccrmre-no-photos">
-				<p><?php esc_html_e( 'No photos available from CRM', 'connect-crm-realstate' ); ?></p>
+				<p><?php esc_html_e( 'No photos available from CRM', 'connect-crm-real-state' ); ?></p>
 			</div>
 			<?php
 			return;
@@ -198,7 +198,7 @@ class PostType {
 		if ( ! empty( $featured_image_url ) ) {
 			?>
 			<div class="ccrmre-sidebar-featured">
-				<strong><?php esc_html_e( 'Featured Image', 'connect-crm-realstate' ); ?></strong>
+				<strong><?php esc_html_e( 'Featured Image', 'connect-crm-real-state' ); ?></strong>
 				<img src="<?php echo esc_url( $featured_image_url ); ?>" alt="<?php echo esc_attr( get_the_title( $post->ID ) ); ?>" />
 				<p><?php echo esc_url( $featured_image_url ); ?></p>
 			</div>
@@ -211,7 +211,7 @@ class PostType {
 				<h4>
 					<?php
 					/* translators: %d: number of photos */
-					echo esc_html( sprintf( __( 'Gallery (%d photos)', 'connect-crm-realstate' ), count( $gallery_urls ) ) );
+					echo esc_html( sprintf( __( 'Gallery (%d photos)', 'connect-crm-real-state' ), count( $gallery_urls ) ) );
 					?>
 				</h4>
 				<div class="ccrmre-sidebar-gallery-grid">
@@ -234,19 +234,19 @@ class PostType {
 		unset( $post_type_columns );
 
 		$new_columns['cb']            = '<input type="checkbox" />';
-		$new_columns['title']         = __( 'Title', 'connect-crm-realstate' );
-		$new_columns['property_data'] = __( 'Property', 'connect-crm-realstate' );
+		$new_columns['title']         = __( 'Title', 'connect-crm-real-state' );
+		$new_columns['property_data'] = __( 'Property', 'connect-crm-real-state' );
 
 		if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) || is_plugin_active( 'wordpress-seo-premium/wp-seo-premium.php' ) ) {
-			$new_columns['wpseo-score']             = __( 'SEO', 'wordpress-seo' );
-			$new_columns['wpseo-score-readability'] = __( 'Readability', 'wordpress-seo' );
-			$new_columns['wpseo-title']             = __( 'SEO Title', 'wordpress-seo' );
-			$new_columns['wpseo-metadesc']          = __( 'Meta Desc.', 'wordpress-seo' );
-			$new_columns['wpseo-focuskw']           = __( 'Focus KW', 'wordpress-seo' );
+			$new_columns['wpseo-score']             = __( 'SEO', 'connect-crm-real-state' );
+			$new_columns['wpseo-score-readability'] = __( 'Readability', 'connect-crm-real-state' );
+			$new_columns['wpseo-title']             = __( 'SEO Title', 'connect-crm-real-state' );
+			$new_columns['wpseo-metadesc']          = __( 'Meta Desc.', 'connect-crm-real-state' );
+			$new_columns['wpseo-focuskw']           = __( 'Focus KW', 'connect-crm-real-state' );
 		}
 
 		if ( is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
-			$new_columns['rank_math_seo_details'] = __( 'SEO Details', 'rankmath' );
+			$new_columns['rank_math_seo_details'] = __( 'SEO Details', 'connect-crm-real-state' );
 		}
 
 		return $new_columns;
@@ -277,23 +277,23 @@ class PostType {
 
 		$property_id = $this->get_property_meta_value( $post_id, 'id', $crm_type );
 		if ( ! empty( $property_id ) ) {
-			$this->render_meta_field( __( 'Property ID', 'connect-crm-realstate' ), $property_id );
+			$this->render_meta_field( __( 'Property ID', 'connect-crm-real-state' ), $property_id );
 		}
 
 		if ( 'anaconda' === $crm_type ) {
 			$internal_id = $this->get_property_meta_value( $post_id, 'internal_property_id', $crm_type );
 			if ( ! empty( $internal_id ) ) {
-				$this->render_meta_field( __( 'Property Internal ID', 'connect-crm-realstate' ), $internal_id );
+				$this->render_meta_field( __( 'Property Internal ID', 'connect-crm-real-state' ), $internal_id );
 			}
 		}
 
 		$enabled = $this->get_property_meta_value( $post_id, 'enabled', $crm_type );
-		$status  = ! empty( $enabled ) ? __( 'Available', 'connect-crm-realstate' ) : __( 'Sold', 'connect-crm-realstate' );
-		$this->render_meta_field( __( 'Status', 'connect-crm-realstate' ), $status );
+		$status  = ! empty( $enabled ) ? __( 'Available', 'connect-crm-real-state' ) : __( 'Sold', 'connect-crm-real-state' );
+		$this->render_meta_field( __( 'Status', 'connect-crm-real-state' ), $status );
 
 		$agent = $this->get_property_meta_value( $post_id, 'agent', $crm_type );
 		if ( ! empty( $agent ) ) {
-			$this->render_meta_field( __( 'Agent', 'connect-crm-realstate' ), $agent );
+			$this->render_meta_field( __( 'Agent', 'connect-crm-real-state' ), $agent );
 		}
 	}
 

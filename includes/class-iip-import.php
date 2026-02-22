@@ -75,13 +75,13 @@ class Import {
 			'ajaxAction',
 			array(
 				'url'                 => admin_url( 'admin-ajax.php' ),
-				'label_sync'          => __( 'Sync', 'connect-crm-realstate' ),
-				'label_syncing'       => __( 'Syncing', 'connect-crm-realstate' ),
-				'label_sync_complete' => __( 'Finished', 'connect-crm-realstate' ),
-				'label_waiting'       => __( 'Waiting', 'connect-crm-realstate' ),
+				'label_sync'          => __( 'Sync', 'connect-crm-real-state' ),
+				'label_syncing'       => __( 'Syncing', 'connect-crm-real-state' ),
+				'label_sync_complete' => __( 'Finished', 'connect-crm-real-state' ),
+				'label_waiting'       => __( 'Waiting', 'connect-crm-real-state' ),
 				/* translators: %s is the number of seconds to wait before retrying. */
-				'label_rate_limit'    => __( 'API rate limit reached. Waiting %s seconds before retrying...', 'connect-crm-realstate' ),
-				'label_resuming'      => __( 'Resuming import...', 'connect-crm-realstate' ),
+				'label_rate_limit'    => __( 'API rate limit reached. Waiting %s seconds before retrying...', 'connect-crm-real-state' ),
+				'label_resuming'      => __( 'Resuming import...', 'connect-crm-real-state' ),
 				'nonce'               => wp_create_nonce( 'ccrmre_manual_import_nonce' ),
 			)
 		);
@@ -96,7 +96,7 @@ class Import {
 		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'ccrmre_manual_import_nonce' ) ) {
 			wp_send_json_error(
 				array(
-					'message' => __( 'Security verification failed. Please refresh the page and try again.', 'connect-crm-realstate' ),
+					'message' => __( 'Security verification failed. Please refresh the page and try again.', 'connect-crm-real-state' ),
 				)
 			);
 			return;
@@ -119,19 +119,19 @@ class Import {
 		if ( 0 === $loop ) {
 			SYNC::clear_property_meta();
 
-			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Checking properties to remove...', 'connect-crm-realstate' ) . '<br/>';
+			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Checking properties to remove...', 'connect-crm-real-state' ) . '<br/>';
 			$remove_result = SYNC::remove_properties_not_in_api( $crm );
 
 			if ( 'error' === $remove_result['status'] ) {
-				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'Error checking API:', 'connect-crm-realstate' ) . '</strong> ' . esc_html( $remove_result['message'] ) . '<br/>';
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'Error checking API:', 'connect-crm-real-state' ) . '</strong> ' . esc_html( $remove_result['message'] ) . '<br/>';
 			} elseif ( $remove_result['count'] > 0 ) {
-				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'Properties removed (not in API):', 'connect-crm-realstate' ) . '</strong> ' . $remove_result['count'] . '<br/>';
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'Properties removed (not in API):', 'connect-crm-real-state' ) . '</strong> ' . $remove_result['count'] . '<br/>';
 
 				foreach ( $remove_result['details'] as $removed ) {
-					$progress_msg .= '&nbsp;&nbsp;&nbsp;- ' . esc_html__( 'ID:', 'connect-crm-realstate' ) . ' ' . esc_html( $removed['property_id'] ) . ' - ' . esc_html( $removed['title'] ) . '<br/>';
+					$progress_msg .= '&nbsp;&nbsp;&nbsp;- ' . esc_html__( 'ID:', 'connect-crm-real-state' ) . ' ' . esc_html( $removed['property_id'] ) . ' - ' . esc_html( $removed['title'] ) . '<br/>';
 				}
 			} else {
-				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'No properties to remove.', 'connect-crm-realstate' ) . '<br/>';
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'No properties to remove.', 'connect-crm-real-state' ) . '<br/>';
 			}
 		}
 
@@ -139,13 +139,13 @@ class Import {
 		if ( ( 0 === $loop_page && 0 < $pagination ) || ( 0 === $loop && -1 === $pagination ) ) {
 			$result_api   = API::get_properties( $crm, $page );
 			$properties   = 'ok' === $result_api['status'] ? $result_api['data'] : array();
-			$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-realstate' ) . '<br/>';
+			$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-real-state' ) . '<br/>';
 
 			if ( 'updated' === $mode && ! empty( $properties ) ) {
 				$properties    = SYNC::filter_properties_to_update( $properties, $crm );
 				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . sprintf(
 					/* translators: %d: number of properties to update */
-					__( 'Filtering properties to update... Found %d properties.', 'connect-crm-realstate' ),
+					__( 'Filtering properties to update... Found %d properties.', 'connect-crm-real-state' ),
 					count( $properties )
 				) . '<br/>';
 			}
@@ -156,7 +156,7 @@ class Import {
 				$error_type = isset( $result_api['error_type'] ) ? $result_api['error_type'] : 'default';
 
 				if ( 'rate_limit' === $error_type ) {
-					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'API rate limit reached. The API has requested a wait.', 'connect-crm-realstate' ) . '</strong><br/>';
+					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'API rate limit reached. The API has requested a wait.', 'connect-crm-real-state' ) . '</strong><br/>';
 
 					wp_send_json_success(
 						array(
@@ -171,10 +171,10 @@ class Import {
 					);
 				}
 
-				$error_message  = $result_api['data'] ?? __( 'Error connecting with API. Please check your API connection.', 'connect-crm-realstate' );
-				$error_message .= '. ' . __( 'If your credentials are correct, wait a few minutes and try again.', 'connect-crm-realstate' );
+				$error_message  = $result_api['data'] ?? __( 'Error connecting with API. Please check your API connection.', 'connect-crm-real-state' );
+				$error_message .= '. ' . __( 'If your credentials are correct, wait a few minutes and try again.', 'connect-crm-real-state' );
 
-				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $error_message . '<br/>';
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-real-state' ) . '</strong> ' . $error_message . '<br/>';
 
 				wp_send_json_error(
 					array(
@@ -186,9 +186,9 @@ class Import {
 
 			if ( 0 === $totalprop ) {
 				if ( 0 === $loop ) {
-					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'No properties found to import.', 'connect-crm-realstate' ) . '</strong><br/>';
+					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'No properties found to import.', 'connect-crm-real-state' ) . '</strong><br/>';
 				} else {
-					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'No more properties from API. Import complete.', 'connect-crm-realstate' ) . '<br/>';
+					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'No more properties from API. Import complete.', 'connect-crm-real-state' ) . '<br/>';
 				}
 				$property = null;
 			} else {
@@ -233,7 +233,7 @@ class Import {
 			}
 
 			/* translators: %s: property ID (internal) from the CRM. */
-			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . sprintf( __( 'Property ID: %s', 'connect-crm-realstate' ), esc_html( $id_display ) ) . ' — ';
+			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . sprintf( __( 'Property ID: %s', 'connect-crm-real-state' ), esc_html( $id_display ) ) . ' — ';
 			if ( ! $is_available ) {
 				$result_sync   = SYNC::handle_unavailable_property( $property, $this->settings, $this->settings_fields, $crm );
 				$progress_msg .= $result_sync['message'];
@@ -243,7 +243,7 @@ class Import {
 					$error_type = isset( $result_get_property['error_type'] ) ? $result_get_property['error_type'] : 'default';
 
 					if ( 'rate_limit' === $error_type ) {
-						$progress_msg .= '<strong style="color:orange;">' . __( 'API rate limit reached. The API has requested a wait.', 'connect-crm-realstate' ) . '</strong><br/>';
+						$progress_msg .= '<strong style="color:orange;">' . __( 'API rate limit reached. The API has requested a wait.', 'connect-crm-real-state' ) . '</strong><br/>';
 
 						wp_send_json_success(
 							array(
@@ -258,10 +258,10 @@ class Import {
 						);
 					}
 
-					$progress_msg .= ' ' . __( 'Property ID:', 'connect-crm-realstate' ) . ' ';
+					$progress_msg .= ' ' . __( 'Property ID:', 'connect-crm-real-state' ) . ' ';
 					$progress_msg .= $property['id'];
-					$progress_msg .= ' ' . __( 'Error:', 'connect-crm-realstate' ) . ' ';
-					$progress_msg .= '<strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $result_get_property['message'] . '<br/>';
+					$progress_msg .= ' ' . __( 'Error:', 'connect-crm-real-state' ) . ' ';
+					$progress_msg .= '<strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-real-state' ) . '</strong> ' . $result_get_property['message'] . '<br/>';
 					wp_send_json_error(
 						array(
 							'message' => $progress_msg,
@@ -275,7 +275,7 @@ class Import {
 
 				if ( ! empty( $result_sync['post_id'] ) ) {
 					$edit_link     = get_edit_post_link( $result_sync['post_id'] );
-					$progress_msg .= ' - <a href="' . esc_url( $edit_link ) . '" target="_blank">' . __( 'View Post', 'connect-crm-realstate' ) . '</a>';
+					$progress_msg .= ' - <a href="' . esc_url( $edit_link ) . '" target="_blank">' . __( 'View Post', 'connect-crm-real-state' ) . '</a>';
 				}
 			}
 
@@ -296,14 +296,14 @@ class Import {
 			$trash_result = SYNC::trash_not_synced();
 
 			if ( $trash_result['count'] > 0 ) {
-				$progress_msg .= '<br/>[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . esc_html__( 'Properties that failed sync (sent to trash):', 'connect-crm-realstate' ) . '</strong> ' . $trash_result['count'] . '<br/>';
+				$progress_msg .= '<br/>[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . esc_html__( 'Properties that failed sync (sent to trash):', 'connect-crm-real-state' ) . '</strong> ' . $trash_result['count'] . '<br/>';
 
 				foreach ( $trash_result['details'] as $trashed ) {
-					$progress_msg .= '&nbsp;&nbsp;&nbsp;- ' . esc_html__( 'ID:', 'connect-crm-realstate' ) . ' ' . esc_html( $trashed['property_id'] ) . ' - ' . esc_html( $trashed['title'] ) . '<br/>';
+					$progress_msg .= '&nbsp;&nbsp;&nbsp;- ' . esc_html__( 'ID:', 'connect-crm-real-state' ) . ' ' . esc_html( $trashed['property_id'] ) . ' - ' . esc_html( $trashed['title'] ) . '<br/>';
 				}
 			}
 
-			$progress_msg .= '<br/>[' . date_i18n( 'H:i:s' ) . '] <strong style="color:green;">' . esc_html__( 'Import completed successfully!', 'connect-crm-realstate' ) . '</strong><br/>';
+			$progress_msg .= '<br/>[' . date_i18n( 'H:i:s' ) . '] <strong style="color:green;">' . esc_html__( 'Import completed successfully!', 'connect-crm-real-state' ) . '</strong><br/>';
 
 			$size_clean = -1 === $pagination ? $totalprop : $pagination;
 			for ( $i = 0; $i < $size_clean; $i++ ) {
@@ -333,7 +333,7 @@ class Import {
 		$crm_type = isset( $this->settings['type'] ) ? $this->settings['type'] : '';
 
 		if ( empty( $crm_type ) ) {
-			wp_send_json_error( array( 'message' => __( 'CRM type not configured', 'connect-crm-realstate' ) ) );
+			wp_send_json_error( array( 'message' => __( 'CRM type not configured', 'connect-crm-real-state' ) ) );
 		}
 
 		$transient_key = 'ccrmre_api_properties_' . $crm_type;
@@ -345,7 +345,7 @@ class Import {
 			if ( 'error' === $api_result['status'] ) {
 				$error_message = isset( $api_result['message'] ) && ! empty( $api_result['message'] )
 					? $api_result['message']
-					: __( 'Error fetching property IDs from API', 'connect-crm-realstate' );
+					: __( 'Error fetching property IDs from API', 'connect-crm-real-state' );
 				wp_send_json_error( array( 'message' => $error_message ) );
 			}
 

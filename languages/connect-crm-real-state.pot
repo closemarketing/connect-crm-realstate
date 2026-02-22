@@ -2,8 +2,8 @@
 # This file is distributed under the GNU General Public License version 3.0.
 msgid ""
 msgstr ""
-"Project-Id-Version: Connect CRM Real State PRO 1.1.0-beta.3\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/connect-crm-realstate-pro\n"
+"Project-Id-Version: Connect CRM Real State 1.2.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/connect-crm-real-state\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -12,7 +12,7 @@ msgstr ""
 "POT-Creation-Date: 2026-02-20T10:16:40+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
-"X-Domain: connect-crm-realstate\n"
+"X-Domain: connect-crm-real-state\n"
 
 #. Plugin Name of the plugin
 #: connect-crm-realstate.php

@@ -8,7 +8,7 @@
  * Version: 1.2.0
  *
  * @package WordPress
- * Text Domain: connect-crm-realstate
+ * Text Domain: connect-crm-real-state
  * Domain Path: /languages
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -35,7 +35,7 @@ add_action(
 			add_action(
 				'admin_notices',
 				function () {
-					echo '<div class="notice notice-error"><p><strong>Connect CRM RealState:</strong> ' . esc_html__( 'Composer autoloader not found. Please run "composer install".', 'connect-crm-realstate' ) . '</p></div>';
+					echo '<div class="notice notice-error"><p><strong>Connect CRM RealState:</strong> ' . esc_html__( 'Composer autoloader not found. Please run "composer install".', 'connect-crm-real-state' ) . '</p></div>';
 				}
 			);
 			return;

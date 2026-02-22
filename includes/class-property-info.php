@@ -152,7 +152,7 @@ class PropertyInfo {
 		<div class="ccrmre-property-info-box">
 			<?php if ( ! empty( $info_fields['price'] ) ) : ?>
 				<div class="ccrmre-info-price">
-					<span class="ccrmre-price-label"><?php esc_html_e( 'Price', 'connect-crm-realstate' ); ?></span>
+					<span class="ccrmre-price-label"><?php esc_html_e( 'Price', 'connect-crm-real-state' ); ?></span>
 					<span class="ccrmre-price-value"><?php echo esc_html( $info_fields['price'] ); ?></span>
 				</div>
 			<?php endif; ?>
@@ -167,7 +167,7 @@ class PropertyInfo {
 						</span>
 						<div class="ccrmre-info-content">
 							<span class="ccrmre-info-value"><?php echo esc_html( $info_fields['bedrooms'] ); ?></span>
-							<span class="ccrmre-info-label"><?php esc_html_e( 'Bedrooms', 'connect-crm-realstate' ); ?></span>
+							<span class="ccrmre-info-label"><?php esc_html_e( 'Bedrooms', 'connect-crm-real-state' ); ?></span>
 						</div>
 					</div>
 				<?php endif; ?>
@@ -181,7 +181,7 @@ class PropertyInfo {
 						</span>
 						<div class="ccrmre-info-content">
 							<span class="ccrmre-info-value"><?php echo esc_html( $info_fields['bathrooms'] ); ?></span>
-							<span class="ccrmre-info-label"><?php esc_html_e( 'Bathrooms', 'connect-crm-realstate' ); ?></span>
+							<span class="ccrmre-info-label"><?php esc_html_e( 'Bathrooms', 'connect-crm-real-state' ); ?></span>
 						</div>
 					</div>
 				<?php endif; ?>
@@ -195,7 +195,7 @@ class PropertyInfo {
 						</span>
 						<div class="ccrmre-info-content">
 							<span class="ccrmre-info-value"><?php echo esc_html( $info_fields['area'] ); ?> m²</span>
-							<span class="ccrmre-info-label"><?php esc_html_e( 'Area', 'connect-crm-realstate' ); ?></span>
+							<span class="ccrmre-info-label"><?php esc_html_e( 'Area', 'connect-crm-real-state' ); ?></span>
 						</div>
 					</div>
 				<?php endif; ?>
@@ -209,7 +209,7 @@ class PropertyInfo {
 						</span>
 						<div class="ccrmre-info-content">
 							<span class="ccrmre-info-value"><?php echo esc_html( $info_fields['type'] ); ?></span>
-							<span class="ccrmre-info-label"><?php esc_html_e( 'Type', 'connect-crm-realstate' ); ?></span>
+							<span class="ccrmre-info-label"><?php esc_html_e( 'Type', 'connect-crm-real-state' ); ?></span>
 						</div>
 					</div>
 				<?php endif; ?>
@@ -223,7 +223,7 @@ class PropertyInfo {
 						</span>
 						<div class="ccrmre-info-content">
 							<span class="ccrmre-info-value"><?php echo esc_html( $info_fields['location'] ); ?></span>
-							<span class="ccrmre-info-label"><?php esc_html_e( 'Location', 'connect-crm-realstate' ); ?></span>
+							<span class="ccrmre-info-label"><?php esc_html_e( 'Location', 'connect-crm-real-state' ); ?></span>
 						</div>
 					</div>
 				<?php endif; ?>
@@ -237,7 +237,7 @@ class PropertyInfo {
 						</span>
 						<div class="ccrmre-info-content">
 							<span class="ccrmre-info-value"><?php echo esc_html( $info_fields['reference'] ); ?></span>
-							<span class="ccrmre-info-label"><?php esc_html_e( 'Reference', 'connect-crm-realstate' ); ?></span>
+							<span class="ccrmre-info-label"><?php esc_html_e( 'Reference', 'connect-crm-real-state' ); ?></span>
 						</div>
 					</div>
 				<?php endif; ?>
