@@ -7,6 +7,60 @@
  * @since 1.0.0
  */
 
+/* Import Tabs */
+.ccrmre-import-tabs-wrapper {
+	margin: 20px 0 0;
+	display: flex;
+	border-bottom: 1px solid #c3c4c7;
+}
+
+.ccrmre-import-tab-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 12px 24px;
+	margin: 0;
+	border: 1px solid transparent;
+	border-bottom: none;
+	border-radius: 4px 4px 0 0;
+	background: none;
+	color: #50575e;
+	font-size: 14px;
+	font-weight: 400;
+	cursor: pointer;
+	position: relative;
+	bottom: -1px;
+}
+
+.ccrmre-import-tab-btn:hover {
+	color: #1d2327;
+	background: #f0f0f1;
+}
+
+.ccrmre-import-tab-btn:focus {
+	outline: none;
+	box-shadow: none;
+}
+
+.ccrmre-import-tab-btn.active {
+	background: #fff;
+	border-color: #c3c4c7;
+	border-bottom-color: #fff;
+	color: #1d2327;
+	font-weight: 600;
+}
+
+.ccrmre-import-tab-btn .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 16px;
+}
+
+.ccrmre-import-tab-content {
+	padding: 20px 0 0;
+}
+
 /* Statistics Cards */
 .ccrmre-import-stats {
 	display: grid;

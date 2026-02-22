@@ -138,6 +138,15 @@ class Admin {
 					'statisticsErrorLabel'   => __( 'Statistics Error:', 'connect-crm-real-state' ),
 				)
 			);
+
+			// Import tabs script (no page reload).
+			wp_enqueue_script(
+				'ccrmre-import-tabs',
+				CCRMRE_PLUGIN_URL . 'assets/js/import-tabs.js',
+				array(),
+				CCRMRE_VERSION,
+				true
+			);
 		}
 
 		// Enqueue settings scripts on settings tab.
@@ -765,6 +774,31 @@ class Admin {
 				</div>
 			</div>
 
+		<!-- Import Tabs -->
+		<div class="ccrmre-import-tabs-wrapper">
+			<?php
+			/**
+			 * Allow PRO to add automatic sync tab button.
+			 */
+			do_action( 'ccrmre_import_tabs' );
+			?>
+			<button type="button" class="ccrmre-import-tab-btn" data-tab="manual">
+				<span class="dashicons dashicons-upload"></span>
+				<?php esc_html_e( 'Manual Import', 'connect-crm-real-state' ); ?>
+			</button>
+		</div>
+
+		<?php
+		/**
+		 * Allow PRO to render automatic sync tab content.
+		 *
+		 * @param array $settings Current plugin settings.
+		 */
+		do_action( 'ccrmre_import_tab_content', $settings );
+		?>
+
+		<!-- Manual Import Section -->
+		<div class="ccrmre-import-tab-content" data-tab="manual">
 			<?php
 			/** Allow PRO to hide the upsell notice when active. */
 			if ( apply_filters( 'ccrmre_show_pro_upsell', true ) ) :
@@ -773,7 +807,7 @@ class Admin {
 				<p>
 					<strong><?php esc_html_e( 'Need automatic sync?', 'connect-crm-real-state' ); ?></strong>
 					<?php esc_html_e( 'Upgrade to Connect CRM RealState PRO for automatic background synchronization using cron.', 'connect-crm-real-state' ); ?>
-					<a href="https://close.technology/wordpress-plugins/conecta-crm-realstate/" target="_blank" rel="noopener noreferrer">
+					<a href="https://close.technology/wordpress-plugins/connect-crm-realstate/" target="_blank" rel="noopener noreferrer">
 						<?php esc_html_e( 'Learn more', 'connect-crm-real-state' ); ?> &rarr;
 					</a>
 				</p>
@@ -782,38 +816,20 @@ class Admin {
 			endif;
 			?>
 
-			<!-- Manual Import Section -->
-			<div class="ccrmre-manual-import">
-				<h3>
-					<span class="dashicons dashicons-upload" style="vertical-align: middle;"></span>
-					<?php esc_html_e( 'Manual Import', 'connect-crm-real-state' ); ?>
-				</h3>
-
-				<div class="import-button-wrapper">
-					<select id="import-mode" class="import-mode-select">
-						<option value="updated"><?php esc_html_e( 'Properties to update', 'connect-crm-real-state' ); ?></option>
-						<option value="all"><?php esc_html_e( 'All properties', 'connect-crm-real-state' ); ?></option>
-					</select>
-					<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
-						<?php esc_html_e( 'Start Import', 'connect-crm-real-state' ); ?>
-					</button>
-					<button type="button" id="refresh_stats" name="refresh_stats" class="button button-large" onclick="loadImportStats();">
-						<span class="dashicons dashicons-update"></span>
-						<?php esc_html_e( 'Refresh Statistics', 'connect-crm-real-state' ); ?>
-					</button>
-					<span class="spinner"></span>
-				</div>
+			<div class="import-button-wrapper">
+				<select id="import-mode" class="import-mode-select">
+					<option value="updated"><?php esc_html_e( 'Properties to update', 'connect-crm-real-state' ); ?></option>
+					<option value="all"><?php esc_html_e( 'All properties', 'connect-crm-real-state' ); ?></option>
+				</select>
+				<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
+					<?php esc_html_e( 'Start Import', 'connect-crm-real-state' ); ?>
+				</button>
+				<button type="button" id="refresh_stats" name="refresh_stats" class="button button-large" onclick="loadImportStats();">
+					<span class="dashicons dashicons-update"></span>
+					<?php esc_html_e( 'Refresh Statistics', 'connect-crm-real-state' ); ?>
+				</button>
+				<span class="spinner"></span>
 			</div>
-
-			<?php
-			/**
-			 * Allow PRO or add-ons to inject content after the manual import section.
-			 * Used by PRO to add the cron sync column.
-			 *
-			 * @param array $settings Current plugin settings.
-			 */
-			do_action( 'ccrmre_import_page_after_manual', $settings );
-			?>
 
 			<!-- Import Log -->
 			<div class="ccrmre-log-container">
