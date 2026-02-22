@@ -31,7 +31,7 @@ class SYNC {
 		$settings            = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
 		$crm                 = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 		$settings_fields     = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
-		$post_type           = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$post_type           = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 		$filter_postal_code  = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
 		$property_info_early = API::get_property_info( $item, $crm );
 		$property_id         = $property_info_early['id'];
@@ -395,7 +395,7 @@ class SYNC {
 	public static function handle_unavailable_property( $property, $settings = array(), $settings_fields = array(), $crm = 'anaconda' ) {
 		$settings         = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
 		$settings_fields  = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
-		$post_type        = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$post_type        = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 		$sold_action      = isset( $settings['sold_action'] ) ? $settings['sold_action'] : 'draft';
 		$property_info_h  = API::get_property_info( $property, $crm );
 		$property_id      = $property_info_h['id'];
@@ -481,11 +481,10 @@ class SYNC {
 	 */
 	public static function remove_properties_not_in_api( $crm_type ) {
 		$settings  = get_option( 'conncrmreal_settings' );
-		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
-		$meta_name = 'ccrmre_property_id';
+		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 
 		// Get all property IDs from API.
-		$api_result = API::get_all_property_ids( $crm_type, false );
+		$api_result = API::get_all_property_ids( $crm_type );
 		if ( 'error' === $api_result['status'] ) {
 			return array(
 				'status'  => 'error',
@@ -495,15 +494,15 @@ class SYNC {
 			);
 		}
 
-		$api_properties = isset( $api_result['data'] ) ? $api_result['data'] : array();
-		$api_ids        = array_keys( $api_properties );
+		$api_properties     = isset( $api_result['data'] ) ? $api_result['data'] : array();
+		$api_properties_ids = self::filter_active_properties( $api_properties );
 
 		// Get all property IDs from WordPress.
 		$wp_properties = self::get_wordpress_property_data();
 		$wp_ids        = array_keys( $wp_properties );
 
 		// Find properties in WordPress that are NOT in API.
-		$to_remove       = array_diff( $wp_ids, $api_ids );
+		$to_remove       = array_diff( $wp_ids, $api_properties_ids );
 		$removed_details = array();
 
 		foreach ( $to_remove as $property_ref ) {
@@ -540,7 +539,7 @@ class SYNC {
 	 */
 	public static function trash_not_synced() {
 		$settings  = get_option( 'conncrmreal_settings' );
-		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 		$meta_name = 'ccrmre_property_id';
 
 		$args            = array(
@@ -583,7 +582,6 @@ class SYNC {
 	 */
 	public static function get_wordpress_property_data() {
 		global $wpdb;
-
 		$settings  = get_option( 'conncrmreal_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'ccrmre_property';
 
@@ -611,8 +609,8 @@ class SYNC {
 		foreach ( $results as $row ) {
 			if ( ! empty( $row['property_ref'] ) ) {
 				$property_data[ $row['property_ref'] ] = array(
-					'last_updated' => $row['last_updated'],
-					'status'       => (bool) $row['status'],
+					'last_updated' => isset( $row['last_updated'] ) ? $row['last_updated'] : null,
+					'status'       => isset( $row['status'] ) ? (bool) $row['status'] : null,
 				);
 			}
 		}
@@ -845,28 +843,22 @@ class SYNC {
 	 * @return array Filtered list of properties
 	 */
 	public static function filter_properties_to_update( $properties, $crm_type ) {
-		// Get WordPress properties data with cache.
-		$wp_properties = self::get_wordpress_property_data();
+		$wp_properties = self::get_wordpress_property_data( $crm_type );
 		$wp_refs       = array_keys( $wp_properties );
-
-		if ( empty( $wp_refs ) ) {
-			return $properties;
-		}
 
 		// Filter properties.
 		$filtered = array();
 		foreach ( $properties as $property ) {
 			$property_info = API::get_property_info( $property, $crm_type );
-			$property_ref  = $property_info['id'];
+			$api_status    = (bool) $property_info['status'];
 
-			if ( empty( $property_ref ) ) {
+			if ( empty( $property_info['id'] ) ) {
 				continue;
 			}
 
 			// Check if property is new.
-			if ( ! in_array( $property_ref, $wp_refs, true ) ) {
+			if ( ! in_array( $property_info['id'], $wp_refs, true ) ) {
 				// Only import new properties if they are available (status = true).
-				$api_status = (bool) $property_info['status'];
 				if ( $api_status ) {
 					$filtered[] = $property;
 				}
@@ -874,15 +866,14 @@ class SYNC {
 			}
 
 			// Check if property is outdated (date or status changed).
-			if ( isset( $wp_properties[ $property_ref ] ) ) {
-				$wp_data      = $wp_properties[ $property_ref ];
+			if ( isset( $wp_properties[ $property_info['id'] ] ) ) {
+				$wp_data      = $wp_properties[ $property_info['id'] ];
 				$needs_update = false;
 
 				// Get dates and status.
-				$api_date   = $property_info['last_updated'];
-				$wp_date    = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
-				$api_status = (bool) $property_info['status']; // Convert to bool for comparison.
-				$wp_status  = isset( $wp_data['status'] ) ? $wp_data['status'] : null;
+				$api_date  = $property_info['last_updated'];
+				$wp_date   = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
+				$wp_status = isset( $wp_data['status'] ) ? $wp_data['status'] : null;
 
 				// Check if date is newer in API.
 				if ( ! empty( $api_date ) && ! empty( $wp_date ) ) {
@@ -894,7 +885,7 @@ class SYNC {
 					}
 				}
 
-				// Check if status has changed.
+				// Check if status has changed (both are booleans or null).
 				if ( $api_status !== $wp_status ) {
 					$needs_update = true;
 				}
@@ -905,6 +896,22 @@ class SYNC {
 			}
 		}
 
+		return $filtered;
+	}
+
+	/**
+	 * Filter properties to only include those that are active
+	 *
+	 * @param array $properties List of properties from API. ID => array(last_updated, status).
+	 * @return array Filtered list of property IDs.
+	 */
+	public static function filter_active_properties( $properties ) {
+		$filtered = array();
+		foreach ( $properties as $id => $property ) {
+			if ( isset( $property['status'] ) && ! empty( $property['status'] ) && '0' !== $property['status'] && false !== $property['status'] ) {
+				$filtered[] = $id;
+			}
+		}
 		return $filtered;
 	}
 }

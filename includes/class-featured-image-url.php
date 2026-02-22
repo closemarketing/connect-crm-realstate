@@ -45,7 +45,7 @@ class Featured_Image_URL {
 	 */
 	public function fallback_thumbnail_html( $html, $post_id, $post_thumbnail_id, $size, $attr ) {
 		$settings  = get_option( 'conncrmreal_settings', array() );
-		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'property';
+		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 
 		if ( get_post_type( $post_id ) !== $post_type ) {
 			return $html;

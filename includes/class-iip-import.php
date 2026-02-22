@@ -142,11 +142,13 @@ class Import {
 			$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-real-state' ) . '<br/>';
 
 			if ( 'updated' === $mode && ! empty( $properties ) ) {
-				$properties    = SYNC::filter_properties_to_update( $properties, $crm );
-				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . sprintf(
-					/* translators: %d: number of properties to update */
-					__( 'Filtering properties to update... Found %d properties.', 'connect-crm-real-state' ),
-					count( $properties )
+				$api_properties = count( $properties );
+				$properties     = SYNC::filter_properties_to_update( $properties, $crm );
+				$progress_msg  .= '[' . date_i18n( 'H:i:s' ) . '] ' . sprintf(
+					/* translators: %1$d: number of properties to update, %2$d: number of properties from API */
+					__( 'Filtering properties to update... Found %1$d / %2$d properties.', 'connect-crm-real-state' ),
+					count( $properties ),
+					$api_properties
 				) . '<br/>';
 			}
 

@@ -22,6 +22,10 @@ if ( ! defined( 'CCRMRE_PLUGIN_PATH' ) ) {
 	define( 'CCRMRE_PLUGIN_PATH', dirname( __DIR__ ) . '/' );
 }
 
+if ( ! defined( 'CCRMRE_POST_TYPE' ) ) {
+	define( 'CCRMRE_POST_TYPE', 'ccrmre_property' );
+}
+
 if ( ! defined( 'DOING_AJAX' ) ) {
 	define( 'DOING_AJAX', false );
 }

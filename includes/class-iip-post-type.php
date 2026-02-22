@@ -88,7 +88,7 @@ class PostType {
 			'menu_icon'          => 'dashicons-admin-users',
 			'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ),
 		);
-		register_post_type( 'ccrmre_property', $args );
+		register_post_type( CCRMRE_POST_TYPE, $args );
 	}
 
 	/**
@@ -97,7 +97,7 @@ class PostType {
 	 * @return void
 	 */
 	public function metabox_property() {
-		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		$post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : CCRMRE_POST_TYPE;
 
 		add_meta_box(
 			'property',

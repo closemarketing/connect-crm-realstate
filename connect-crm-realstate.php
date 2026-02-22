@@ -23,6 +23,7 @@ define( 'CCRMRE_VERSION', '1.2.0' );
 define( 'CCRMRE_PLUGIN', __FILE__ );
 define( 'CCRMRE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'CCRMRE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
+define( 'CCRMRE_POST_TYPE', 'ccrmre_property' );
 
 /**
  * Initialize plugin functionality.
