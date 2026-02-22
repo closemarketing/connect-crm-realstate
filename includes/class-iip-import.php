@@ -366,7 +366,7 @@ class Import {
 		}
 		$available_ids = array_keys( $available_properties );
 
-		$wp_properties = SYNC::get_wordpress_property_data();
+		$wp_properties = SYNC::get_wordpress_property_data( $crm_type );
 		$wp_count      = count( $wp_properties );
 		$wp_ids        = array_keys( $wp_properties );
 

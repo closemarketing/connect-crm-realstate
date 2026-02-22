@@ -578,9 +578,10 @@ class SYNC {
 	/**
 	 * Get WordPress property data with dates and status
 	 *
+	 * @param string $crm_type CRM type.
 	 * @return array Associative array of property_id => array(last_updated, status)
 	 */
-	public static function get_wordpress_property_data() {
+	public static function get_wordpress_property_data( $crm_type ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		global $wpdb;
 		$settings  = get_option( 'conncrmreal_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'ccrmre_property';
@@ -873,7 +874,6 @@ class SYNC {
 				// Get dates and status.
 				$api_date  = $property_info['last_updated'];
 				$wp_date   = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
-				$wp_status = isset( $wp_data['status'] ) ? $wp_data['status'] : null;
 
 				// Check if date is newer in API.
 				if ( ! empty( $api_date ) && ! empty( $wp_date ) ) {
@@ -886,7 +886,7 @@ class SYNC {
 				}
 
 				// Check if status has changed (both are booleans or null).
-				if ( $api_status !== $wp_status ) {
+				if ( ! $api_status ) {
 					$needs_update = true;
 				}
 
