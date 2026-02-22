@@ -383,6 +383,13 @@ class Admin {
 			'admin_conncrmreal_settings'
 		);
 
+		/**
+		 * Allow PRO or add-ons to register extra settings fields.
+		 *
+		 * @param array $settings Current plugin settings.
+		 */
+		do_action( 'ccrmre_register_settings', $this->settings );
+
 		add_settings_field(
 			'conncrmreal_download_images',
 			__( 'Download Images Locally', 'connect-crm-real-state' ),
@@ -406,13 +413,6 @@ class Admin {
 			'conncrmreal_settings',
 			'admin_conncrmreal_settings'
 		);
-
-		/**
-		 * Allow PRO or add-ons to register extra settings fields.
-		 *
-		 * @param array $settings Current plugin settings.
-		 */
-		do_action( 'ccrmre_register_settings', $this->settings );
 
 		// Merge fields settings.
 		register_setting(
