@@ -498,7 +498,7 @@ class SYNC {
 		$api_properties_ids = self::filter_active_properties( $api_properties );
 
 		// Get all property IDs from WordPress.
-		$wp_properties = self::get_wordpress_property_data();
+		$wp_properties = self::get_wordpress_property_data( $crm_type );
 		$wp_ids        = array_keys( $wp_properties );
 
 		// Find properties in WordPress that are NOT in API.
@@ -803,7 +803,7 @@ class SYNC {
 		}
 
 		$api_properties = isset( $api_result['data'] ) ? $api_result['data'] : array();
-		$wp_properties  = self::get_wordpress_property_data();
+		$wp_properties  = self::get_wordpress_property_data( $crm_type );
 
 		// Properties in API but missing from WordPress.
 		$unsynced = array_diff_key( $api_properties, $wp_properties );
