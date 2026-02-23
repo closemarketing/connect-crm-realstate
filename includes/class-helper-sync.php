@@ -576,10 +576,10 @@ class SYNC {
 	}
 
 	/**
-	 * Get WordPress property data with dates and status
+	 * Get WordPress property data with dates
 	 *
 	 * @param string $crm_type CRM type.
-	 * @return array Associative array of property_id => array(last_updated, status)
+	 * @return array Associative array of property_id => array(last_updated)
 	 */
 	public static function get_wordpress_property_data( $crm_type ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		global $wpdb;
@@ -591,12 +591,10 @@ class SYNC {
 			$wpdb->prepare(
 				"SELECT 
 					pm1.meta_value as property_ref, 
-					pm2.meta_value as last_updated,
-					pm3.meta_value as status
+					pm2.meta_value as last_updated
 				FROM {$wpdb->postmeta} pm1
 				INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
 				LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = 'ccrmre_last_updated'
-				LEFT JOIN {$wpdb->postmeta} pm3 ON p.ID = pm3.post_id AND pm3.meta_key = 'ccrmre_status'
 				WHERE p.post_type = %s
 				AND p.post_status != 'trash'
 				AND pm1.meta_key = 'ccrmre_property_id'",
@@ -611,7 +609,6 @@ class SYNC {
 			if ( ! empty( $row['property_ref'] ) ) {
 				$property_data[ $row['property_ref'] ] = array(
 					'last_updated' => isset( $row['last_updated'] ) ? $row['last_updated'] : null,
-					'status'       => isset( $row['status'] ) ? (bool) $row['status'] : null,
 				);
 			}
 		}
@@ -885,8 +882,8 @@ class SYNC {
 					}
 				}
 
-				// Check if status has changed (both are booleans or null).
-				if ( ! $api_status ) {
+				// Check if status changed to unavailable.
+				if ( false === $api_status ) {
 					$needs_update = true;
 				}
 

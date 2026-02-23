@@ -710,7 +710,6 @@ class HelperApiTest extends WP_UnitTestCase {
 
 			update_post_meta( $post_id, 'ccrmre_property_id', (string) $cod_ofer );
 			update_post_meta( $post_id, 'ccrmre_last_updated', '2024-01-01 10:00:00' );
-			update_post_meta( $post_id, 'ccrmre_status', true );
 		}
 
 		delete_transient( 'ccrmre_wp_properties_inmovilla_procesos' );

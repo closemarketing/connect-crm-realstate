@@ -107,34 +107,33 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test filtering single property with changed status
+	 * Test filtering single property that becomes unavailable
 	 */
-	public function test_filter_single_property_with_changed_status() {
-		// Setup: Create ONE WordPress property with status unavailable
+	public function test_filter_single_property_becomes_unavailable() {
+		// Setup: Create ONE WordPress property that was available
 		$this->create_wp_properties(
 			array(
 				array(
 					'id'           => 'TEST2',
 					'last_updated' => '2024-01-01 10:00:00',
-					'status'       => false, // Was unavailable
 				),
 			)
 		);
 
-		// API property with CHANGED status to available
+		// API property with CHANGED status to unavailable
 		$api_properties = array(
 			array(
 				'id'         => 'TEST2',
 				'name'       => 'Property 2',
 				'updated_at' => '2024-01-01 10:00:00', // Same date
-				'status'     => '1', // CHANGED to available
+				'status'     => false, // CHANGED to unavailable
 			),
 		);
 
 		$filtered = $this->call_filter_method( $api_properties, 'anaconda' );
 
 		$this->assertGreaterThan( 0, count( $filtered ), 'Should return at least 1 property' );
-		$this->assertEquals( 'TEST2', $filtered[0]['id'], 'Should return TEST2 with changed status' );
+		$this->assertEquals( 'TEST2', $filtered[0]['id'], 'Should return TEST2 that became unavailable' );
 	}
 
 	/**
@@ -415,11 +414,6 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 			// Save last updated date (can be null)
 			if ( isset( $prop['last_updated'] ) && ! is_null( $prop['last_updated'] ) ) {
 				update_post_meta( $post_id, 'ccrmre_last_updated', $prop['last_updated'] );
-			}
-
-			// Save status (can be null)
-			if ( isset( $prop['status'] ) && ! is_null( $prop['status'] ) ) {
-				update_post_meta( $post_id, 'ccrmre_status', $prop['status'] );
 			}
 		}
 
