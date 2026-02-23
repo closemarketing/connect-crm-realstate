@@ -65,7 +65,7 @@ class Import {
 		wp_enqueue_script(
 			'ccrmre-manual-sync',
 			CCRMRE_PLUGIN_URL . 'includes/assets/iip-manual-sync.js',
-			array(),
+			array( 'ccrmre-admin-import-stats' ),
 			CCRMRE_VERSION,
 			true
 		);
@@ -157,23 +157,23 @@ class Import {
 			if ( 'error' === $result_api['status'] ) {
 				$error_type = isset( $result_api['error_type'] ) ? $result_api['error_type'] : 'default';
 
-				if ( 'rate_limit' === $error_type ) {
-					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'API rate limit reached. The API has requested a wait.', 'connect-crm-real-state' ) . '</strong><br/>';
+			if ( 'rate_limit' === $error_type ) {
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'API rate limit reached. The API has requested a wait.', 'connect-crm-real-state' ) . '</strong><br/>';
 
-					wp_send_json_success(
-						array(
-							'loop'         => $loop,
-							'message'      => $progress_msg,
-							'pagination'   => $pagination,
-							'totalprop'    => $totalprop,
-							'finish'       => false,
-							'rate_limit'   => true,
-							'wait_seconds' => 60,
-						)
-					);
-				}
+				wp_send_json_success(
+					array(
+						'loop'         => $loop,
+						'message'      => $progress_msg,
+						'pagination'   => $pagination,
+						'totalprop'    => $totalprop,
+						'finish'       => false,
+						'rate_limit'   => true,
+						'wait_seconds' => 60,
+					)
+				);
+			}
 
-				$error_message  = $result_api['data'] ?? __( 'Error connecting with API. Please check your API connection.', 'connect-crm-real-state' );
+			$error_message  = $result_api['data'] ?? __( 'Error connecting with API. Please check your API connection.', 'connect-crm-real-state' );
 				$error_message .= '. ' . __( 'If your credentials are correct, wait a few minutes and try again.', 'connect-crm-real-state' );
 
 				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-real-state' ) . '</strong> ' . $error_message . '<br/>';
@@ -223,9 +223,10 @@ class Import {
 			}
 		}
 
-		$finish = false;
-		if ( ! empty( $property ) ) {
-			$is_available = SYNC::is_property_available( $property, $crm );
+	$finish  = false;
+	$is_new  = false;
+	if ( ! empty( $property ) ) {
+		$is_available = SYNC::is_property_available( $property, $crm );
 
 			$id_display = '?';
 			if ( 'inmovilla' === $crm || 'inmovilla_procesos' === $crm ) {
@@ -244,21 +245,21 @@ class Import {
 				if ( 'ok' !== $result_get_property['status'] ) {
 					$error_type = isset( $result_get_property['error_type'] ) ? $result_get_property['error_type'] : 'default';
 
-					if ( 'rate_limit' === $error_type ) {
-						$progress_msg .= '<strong style="color:orange;">' . __( 'API rate limit reached. The API has requested a wait.', 'connect-crm-real-state' ) . '</strong><br/>';
+				if ( 'rate_limit' === $error_type ) {
+					$progress_msg .= '<strong style="color:orange;">' . __( 'API rate limit reached. The API has requested a wait.', 'connect-crm-real-state' ) . '</strong><br/>';
 
-						wp_send_json_success(
-							array(
-								'loop'         => $loop,
-								'message'      => $progress_msg,
-								'pagination'   => $pagination,
-								'totalprop'    => $totalprop,
-								'finish'       => false,
-								'rate_limit'   => true,
-								'wait_seconds' => 60,
-							)
-						);
-					}
+					wp_send_json_success(
+						array(
+							'loop'         => $loop,
+							'message'      => $progress_msg,
+							'pagination'   => $pagination,
+							'totalprop'    => $totalprop,
+							'finish'       => false,
+							'rate_limit'   => true,
+							'wait_seconds' => 60,
+						)
+					);
+				}
 
 					$progress_msg .= ' ' . __( 'Property ID:', 'connect-crm-real-state' ) . ' ';
 					$progress_msg .= $property['id'];
@@ -271,9 +272,10 @@ class Import {
 						)
 					);
 				}
-				$property_complete = $result_get_property['data'];
-				$result_sync       = SYNC::sync_property( $property_complete, $this->settings, $this->settings_fields );
-				$progress_msg     .= $result_sync['message'];
+			$property_complete = $result_get_property['data'];
+			$result_sync       = SYNC::sync_property( $property_complete, $this->settings, $this->settings_fields );
+			$progress_msg     .= $result_sync['message'];
+			$is_new            = ! empty( $result_sync['is_new'] ) ? true : false;
 
 				if ( ! empty( $result_sync['post_id'] ) ) {
 					$edit_link     = get_edit_post_link( $result_sync['post_id'] );
@@ -310,6 +312,7 @@ class Import {
 				'pagination' => $pagination,
 				'totalprop'  => $totalprop,
 				'finish'     => $finish,
+				'is_new'     => $is_new,
 			)
 		);
 	}

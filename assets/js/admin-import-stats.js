@@ -1,10 +1,12 @@
 /**
  * Import Properties page: load and display statistics via AJAX.
  */
+var loadImportStats;
+
 (function() {
 	'use strict';
 
-	function loadImportStats() {
+	loadImportStats = function() {
 		var btn = document.getElementById('refresh_stats');
 		var cards = document.querySelectorAll('.ccrmre-stat-card');
 

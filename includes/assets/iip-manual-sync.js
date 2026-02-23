@@ -82,6 +82,33 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /**
+ * Updates stat card values incrementally during import.
+ * Avoids DB queries — decrements pending count and increments WP count for new properties.
+ *
+ * @param {Object} data Response data from manual_import AJAX.
+ */
+function updateImportStats( data ) {
+	const importCountEl = document.getElementById('stat-import-count');
+	const wpCountEl     = document.getElementById('stat-wp-count');
+
+	// Decrement pending import count by 1 per processed property.
+	if ( importCountEl && importCountEl.textContent !== '--' ) {
+		const current = parseInt( importCountEl.textContent.replace(/[^\d]/g, ''), 10 );
+		if ( ! isNaN( current ) && current > 0 ) {
+			importCountEl.textContent = ( current - 1 ).toLocaleString();
+		}
+	}
+
+	// Increment WP count only when a new property was created.
+	if ( data.is_new && wpCountEl && wpCountEl.textContent !== '--' ) {
+		const current = parseInt( wpCountEl.textContent.replace(/[^\d]/g, ''), 10 );
+		if ( ! isNaN( current ) ) {
+			wpCountEl.textContent = ( current + 1 ).toLocaleString();
+		}
+	}
+}
+
+/**
  * Shows a countdown in the log and retries after waiting.
  */
 function startWaitCountdown( element, totalSeconds, callback ) {
@@ -185,13 +212,16 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0, isR
 	} )
 	.then( function(results) {
 		if ( results.success ){
-			// Success - show message and continue or finish
+			// Success - show message and continue or finish.
 			if( results.data && results.data.message ){
 				const progressElement = document.createElement('p');
 				progressElement.className = classTask;
 				document.querySelector('#logwrapper #loglist').appendChild(progressElement);
 				progressElement.innerHTML = results.data.message;
 			}
+
+			// Update stat values in real time.
+			updateImportStats( results.data );
 
 			// Rate limit: wait and retry the same request.
 			if ( results.data.rate_limit ) {
@@ -215,6 +245,10 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0, isR
 				}
 				if ( spinner ) {
 					spinner.classList.remove('is-active');
+				}
+				// Refresh all stats from server after import finishes.
+				if ( typeof loadImportStats === 'function' ) {
+					loadImportStats();
 				}
 			}
 		} else {

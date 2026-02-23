@@ -105,7 +105,8 @@ class SYNC {
 			}
 		}
 
-		if ( empty( $property_post_id ) ) {
+		$is_new_property = empty( $property_post_id );
+	if ( $is_new_property ) {
 			$property_info['post_title']   = $property_title;
 			$property_info['post_name']    = sanitize_title( $property_title );
 			$property_info['post_content'] = $property_description;
@@ -153,16 +154,17 @@ class SYNC {
 				}
 			}
 
-			// Clear statistics cache after syncing.
-			delete_transient( 'ccrmre_wp_properties_' . $crm );
-		}
-
-		return array(
-			'property_id' => $property_id,
-			'post_id'     => $property_post_id,
-			'message'     => $message,
-		);
+		// Clear statistics cache after syncing.
+		delete_transient( 'ccrmre_wp_properties_' . $crm );
 	}
+
+	return array(
+		'property_id' => $property_id,
+		'post_id'     => $property_post_id,
+		'message'     => $message,
+		'is_new'      => $is_new_property,
+	);
+}
 
 	/**
 	 * Formats the item meta.
