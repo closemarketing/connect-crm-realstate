@@ -295,16 +295,6 @@ class Import {
 		}
 
 		if ( $finish ) {
-			$trash_result = SYNC::trash_not_synced();
-
-			if ( $trash_result['count'] > 0 ) {
-				$progress_msg .= '<br/>[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . esc_html__( 'Properties that failed sync (sent to trash):', 'connect-crm-real-state' ) . '</strong> ' . $trash_result['count'] . '<br/>';
-
-				foreach ( $trash_result['details'] as $trashed ) {
-					$progress_msg .= '&nbsp;&nbsp;&nbsp;- ' . esc_html__( 'ID:', 'connect-crm-real-state' ) . ' ' . esc_html( $trashed['property_id'] ) . ' - ' . esc_html( $trashed['title'] ) . '<br/>';
-				}
-			}
-
 			$progress_msg .= '<br/>[' . date_i18n( 'H:i:s' ) . '] <strong style="color:green;">' . esc_html__( 'Import completed successfully!', 'connect-crm-real-state' ) . '</strong><br/>';
 
 			$size_clean = -1 === $pagination ? $totalprop : $pagination;

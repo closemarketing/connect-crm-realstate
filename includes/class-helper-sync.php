@@ -533,49 +533,6 @@ class SYNC {
 	}
 
 	/**
-	 * Sends to trash not synced products.
-	 *
-	 * @return array Array with count and detailed info of trashed properties.
-	 */
-	public static function trash_not_synced() {
-		$settings  = get_option( 'conncrmreal_settings' );
-		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
-		$meta_name = 'ccrmre_property_id';
-
-		$args            = array(
-			'posts_per_page' => -1,
-			'post_type'      => $post_type,
-			'meta_query'     => array(
-				array(
-					'key'     => 'property_synced',
-					'compare' => 'NOT EXISTS',
-				),
-			),
-		);
-		$posts_to_delete = get_posts( $args );
-		$trashed_details = array();
-
-		foreach ( $posts_to_delete as $post ) {
-			$post_id     = is_object( $post ) ? $post->ID : $post;
-			$post_title  = get_the_title( $post_id );
-			$property_id = get_post_meta( $post_id, $meta_name, true );
-
-			$trashed_details[] = array(
-				'post_id'     => $post_id,
-				'title'       => $post_title,
-				'property_id' => $property_id,
-			);
-
-			wp_trash_post( $post_id );
-		}
-
-		return array(
-			'count'   => count( $posts_to_delete ),
-			'details' => $trashed_details,
-		);
-	}
-
-	/**
 	 * Get WordPress property data with dates
 	 *
 	 * @param string $crm_type CRM type.
