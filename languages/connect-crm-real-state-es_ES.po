@@ -1,0 +1,979 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Connect CRM Real State\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/connect-crm-real-state\n"
+"Last-Translator: David Pérez <david@close.marketing>\n"
+"Language-Team: David Pérez <david@close.marketing>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-01-25T11:20:48+00:00\n"
+"PO-Revision-Date: 2026-01-25 11:52+0100\n"
+"Language: es_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.8\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: connect-crm-real-state\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.min.js\n"
+
+#: includes/class-iip-admin.php:93
+#: includes/class-iip-admin.php:94
+#: includes/class-iip-admin.php:226
+msgid "Connect CRM Real State"
+msgstr "Connect CRM Real State"
+
+#. Description of the plugin
+#: connect-crm-realstate.php
+msgid "Connect Properties from Inmovilla/Anaconda to a Custom Post Type."
+msgstr "Conectar propiedades de Inmovilla/Anaconda a un tipo de entrada personalizado."
+
+#. Author of the plugin
+#: connect-crm-realstate.php
+msgid "closemarketing"
+msgstr "closemarketing"
+
+#. Author URI of the plugin
+#: connect-crm-realstate.php
+msgid "https://close.technology/"
+msgstr "https://close.technology/"
+
+#: connect-crm-realstate.php:65
+msgid "Composer autoloader not found. Please run \"composer install\"."
+msgstr "No se encontró el cargador automático de Composer. Por favor ejecuta \"composer install\"."
+
+#: connect-crm-realstate.php:78
+msgid "License Manager class not found. Please check Composer dependencies."
+msgstr "Clase License Manager no encontrada. Por favor verifica las dependencias de Composer."
+
+#: connect-crm-realstate.php:106
+msgid "Connect CRM Real State License"
+msgstr "Licencia de Connect CRM Real State"
+
+#: connect-crm-realstate.php:107
+msgid "Manage your license to receive updates and support."
+msgstr "Administra tu licencia para recibir actualizaciones y soporte."
+
+#: connect-crm-realstate.php:112
+msgid "Automatic plugin updates"
+msgstr "Actualizaciones automáticas del plugin"
+
+#: connect-crm-realstate.php:113
+msgid "Access to new features"
+msgstr "Acceso a nuevas funcionalidades"
+
+#: connect-crm-realstate.php:114
+msgid "Priority support"
+msgstr "Soporte prioritario"
+
+#: connect-crm-realstate.php:115
+msgid "Security patches"
+msgstr "Parches de seguridad"
+
+#: connect-crm-realstate.php:125
+msgid "License manager not initialized."
+msgstr "Gestor de licencias no inicializado."
+
+#: connect-crm-realstate.php:143
+msgid "This plugin requires an active license to function. Please"
+msgstr "Este plugin requiere una licencia activa para funcionar. Por favor"
+
+#: connect-crm-realstate.php:143
+msgid "activate your license"
+msgstr "activa tu licencia"
+
+#: connect-crm-realstate.php:143
+msgid "to continue using the plugin."
+msgstr "para continuar usando el plugin."
+
+#: includes/class-gallery.php:144
+msgid "Previous photo"
+msgstr "Foto anterior"
+
+#: includes/class-gallery.php:154
+msgid "Next photo"
+msgstr "Siguiente Foto"
+
+#. translators: %s: API name
+#: includes/class-helper-api.php:173
+msgid "%s: Maximum retry attempts reached. Last error: "
+msgstr "%s: Se alcanzó el número máximo de reintentos. Último error: "
+
+#. translators: 1: Attempt number, 2: Max retries, 3: Wait seconds
+#: includes/class-helper-api.php:194
+msgid "Attempt %1$d/%2$d failed. Waiting %3$d seconds before retry..."
+msgstr "Intento %1$d/%2$d falló. Esperando %3$d segundos antes de reintentar..."
+
+#: includes/class-helper-api.php:222
+msgid "API password is empty"
+msgstr "La contraseña de la API está vacía"
+
+#: includes/class-helper-api.php:251
+#: includes/class-iip-cron.php:80
+msgid "Unknown API error"
+msgstr "Error desconocido de API"
+
+#: includes/class-iip-admin.php:1049
+msgid "Statistics Error:"
+msgstr "Error de Estadísticas:"
+
+#: includes/class-helper-api.php:259
+msgid "Request successful"
+msgstr "Solicitud exitosa"
+
+#: includes/class-helper-api.php:366
+msgid "Inmovilla API credentials are not configured"
+msgstr "Las credenciales de la API de Inmovilla no están configuradas"
+
+#. translators: %d: HTTP response code
+#: includes/class-helper-api.php:435
+msgid "Inmovilla API returned error code: %d"
+msgstr "La API de Inmovilla devolvió el código de error: %d"
+
+#: includes/class-helper-api.php:447
+msgid "Invalid JSON response from Inmovilla API"
+msgstr "Respuesta JSON inválida de la API de Inmovilla"
+
+#: includes/class-helper-api.php:546
+msgid "Inmovilla Procesos API token is not configured"
+msgstr "El token de la API de Inmovilla Procesos no está configurado"
+
+#. translators: %d: HTTP error code
+#: includes/class-helper-api.php:591
+msgid "Inmovilla Procesos API returned error code: %d"
+msgstr "La API de Inmovilla Procesos devolvió el código de error: %d"
+
+#: includes/class-helper-api.php:605
+msgid "Invalid JSON response from Inmovilla Procesos API"
+msgstr "Respuesta JSON inválida de la API de Inmovilla Procesos"
+
+#: includes/class-helper-api.php:612
+msgid "Properties fetched successfully"
+msgstr "Propiedades obtenidas correctamente"
+
+#: includes/class-helper-api.php:712
+#: includes/class-helper-api.php:757
+#: includes/class-iip-import.php:367
+msgid "CRM type not configured"
+msgstr "Tipo de CRM no configurado"
+
+#: includes/class-helper-api.php:791
+msgid "Property ID is required"
+msgstr "Se requiere el ID de la propiedad."
+
+#: includes/class-helper-api.php:906
+msgid "Error getting Anaconda fields. Please check your API connection."
+msgstr "Error al obtener los campos de Anaconda. Por favor verifica tu conexión API."
+
+#: includes/class-helper-api.php:950
+msgid "Error getting Inmovilla Procesos fields. Please check your API connection."
+msgstr "Error al obtener los campos de Inmovilla Procesos. Por favor verifica tu conexión API."
+
+#: includes/class-helper-api.php:992
+msgid "Error getting Inmovilla Procesos property details."
+msgstr "Error al obtener los detalles de la propiedad de Inmovilla Procesos."
+
+#: includes/class-helper-api.php:999
+msgid "No properties found in Inmovilla Procesos."
+msgstr "No se encontraron propiedades en Inmovilla Procesos."
+
+#: includes/class-helper-api.php:1021
+msgid "Error getting Inmovilla fields. Please check your API connection."
+msgstr "Error al obtener los campos de Inmovilla. Por favor verifica tu conexión API."
+
+#: includes/class-helper-sync.php:43
+#: includes/class-helper-sync.php:49
+#: includes/class-helper-sync.php:54
+#: includes/class-iip-post-type.php:69
+#: includes/class-iip-post-type.php:252
+msgid "Property"
+msgstr "Propiedad"
+
+#: includes/class-helper-sync.php:61
+msgid "NOT Imported"
+msgstr "NO Importado"
+
+#: includes/class-helper-sync.php:109
+msgid "Created"
+msgstr "Creado"
+
+#: includes/class-helper-sync.php:111
+msgid "Updated"
+msgstr "Actualizado"
+
+#: includes/class-helper-sync.php:236
+#: includes/class-iip-import.php:284
+msgid "Property ID:"
+msgstr "ID de Propiedad:"
+
+#: includes/class-helper-sync.php:371
+msgid "Skipped (Not Available in CRM)"
+msgstr "Omitido (no disponible en CRM)"
+
+#: includes/class-helper-sync.php:388
+msgid "Unpublished (Set to Draft)"
+msgstr "Sin publicar (establecido como borrador)"
+
+#: includes/class-helper-sync.php:393
+msgid "Moved to Trash"
+msgstr "Movido a la papelera"
+
+#: includes/class-helper-sync.php:398
+msgid "Kept Published (Not Available)"
+msgstr "Mantenido Publicado (No disponible)"
+
+#: includes/class-iip-admin.php:65
+msgid "Merge fields saved successfully!"
+msgstr "¡Campos de fusión guardados exitosamente!"
+
+#. translators: %d: number of mappings
+#: includes/class-iip-admin.php:68
+msgid "%d field mapping saved."
+msgid_plural "%d field mappings saved."
+msgstr[0] "%d mapeo de campo guardado."
+msgstr[1] "%d mapeos de campos guardados."
+
+#: includes/class-iip-admin.php:195
+msgid "Search or create WordPress field..."
+msgstr "Buscar o crear campo de WordPress..."
+
+#: includes/class-iip-admin.php:196
+msgid "(New field)"
+msgstr "(Campo nuevo)"
+
+#: includes/class-iip-admin.php:197
+#: includes/class-iip-admin.php:271
+msgid "Creating New Fields:"
+msgstr "Creando Nuevos Campos:"
+
+#: includes/class-iip-admin.php:198
+#: includes/class-iip-admin.php:272
+msgid "You can create new WordPress custom fields by typing a name that doesn't exist in the list. The field name will be automatically sanitized (lowercase, numbers, and underscores only)."
+msgstr "Puedes crear nuevos campos personalizados de WordPress escribiendo un nombre que no exista en la lista. El nombre del campo será sanitizado automáticamente (solo minúsculas, números y guiones bajos)."
+
+#: includes/class-iip-admin.php:201
+msgid "Auto-mapping fields..."
+msgstr "Mapeando campos automáticamente..."
+
+#: includes/class-iip-admin.php:202
+msgid "All fields have been auto-mapped successfully!"
+msgstr "¡Todos los campos han sido mapeados automáticamente con éxito!"
+
+#: includes/class-iip-admin.php:203
+msgid "Error auto-mapping fields. Please try again."
+msgstr "Error al mapear campos automáticamente. Por favor inténtalo de nuevo."
+
+#: includes/class-iip-admin.php:204
+msgid "This will auto-generate WordPress field names for all CRM fields. Existing mappings will be preserved. Continue?"
+msgstr "Esto generará automáticamente nombres de campos de WordPress para todos los campos del CRM. Los mapeos existentes se conservarán. ¿Continuar?"
+
+#: includes/class-iip-admin.php:233
+#: includes/class-iip-admin.php:730
+msgid "Import Properties"
+msgstr "Importar propiedades"
+
+#: includes/class-iip-admin.php:238
+msgid "Settings"
+msgstr "Ajustes"
+
+#: includes/class-iip-admin.php:243
+msgid "Merge variables"
+msgstr "Emparejar variables"
+
+#: includes/class-iip-admin.php:249
+msgid "License"
+msgstr "Licencia"
+
+#: includes/class-iip-admin.php:262
+msgid "Save changes"
+msgstr "Guardar los cambios"
+
+#: includes/class-iip-admin.php:268
+msgid "Merge Variables with custom values"
+msgstr "Emparejar variables con valores personalizados"
+
+#: includes/class-iip-admin.php:308
+#: includes/class-iip-admin.php:430
+msgid "Settings for Integration with CRM Real State"
+msgstr "Ajustes para la integración con CRM Real State"
+
+#: includes/class-iip-admin.php:315
+#: includes/class-property-info.php:212
+msgid "Type"
+msgstr "Tipo"
+
+#: includes/class-iip-admin.php:323
+msgid "API Password / Token"
+msgstr "Contraseña / Token API"
+
+#: includes/class-iip-admin.php:333
+msgid "Agency Number"
+msgstr "Número de Agencia"
+
+#: includes/class-iip-admin.php:344
+msgid "Property identifier for matching"
+msgstr "Identificador de propiedad para coincidencia"
+
+#: includes/class-iip-admin.php:551
+msgid "cod_ofer (internal ID)"
+msgstr "cod_ofer (ID interno)"
+
+#: includes/class-iip-admin.php:552
+msgid "ref (reference)"
+msgstr "ref (referencia)"
+
+#: includes/class-iip-admin.php:554
+msgid "Field used to find and match properties in WordPress."
+msgstr "Campo usado para buscar y coincidir propiedades en WordPress."
+
+#. translators: %s: minutes
+#: includes/class-iip-admin.php:356
+msgid "Sync with Cron (every %s minutes)?"
+msgstr "¿Sincronizar con Cron (cada %s minutos)?"
+
+#: includes/class-iip-admin.php:366
+msgid "Post Type"
+msgstr "Tipo de contenido"
+
+#: includes/class-iip-admin.php:375
+msgid "Post Type SLUG"
+msgstr "SLUG del tipo de contenido"
+
+#: includes/class-iip-admin.php:383
+msgid "Include Properties by Postal Code"
+msgstr "Incluir inmuebles por código postal"
+
+#: includes/class-iip-admin.php:391
+msgid "Action for Sold/Unavailable Properties"
+msgstr "Acción para propiedades vendidas/no disponibles"
+
+#: includes/class-iip-admin.php:407
+msgid "Auto Display Photo Gallery"
+msgstr "Galería de fotos con visualización automática"
+
+#: includes/class-iip-admin.php:415
+msgid "Auto Display Property Info Box"
+msgstr "Mostrar automáticamente el cuadro de información de la propiedad"
+
+#: includes/class-iip-admin.php:437
+msgid "Merge Fields"
+msgstr "Emparejar Campos"
+
+#: includes/class-iip-admin.php:506
+msgid "Anaconda"
+msgstr "Anaconda"
+
+#: includes/class-iip-admin.php:507
+msgid "Inmovilla APIWEB"
+msgstr "Inmovilla APIWEB"
+
+#: includes/class-iip-admin.php:508
+msgid "Inmovilla Procesos"
+msgstr "Inmovilla Procesos"
+
+#: includes/class-iip-admin.php:520
+msgid "API Password"
+msgstr "Contraseña API"
+
+#: includes/class-iip-admin.php:520
+msgid "API Token"
+msgstr "Token API"
+
+#: includes/class-iip-admin.php:538
+msgid "Agency number from Inmovilla. Example: 2"
+msgstr "Número de agencia de Inmovilla. Ejemplo: 2"
+
+#: includes/class-iip-admin.php:567
+msgid "No"
+msgstr "No"
+
+#: includes/class-iip-admin.php:568
+msgid "Yes"
+msgstr "Sí"
+
+#: includes/class-iip-admin.php:588
+msgid "Created by this plugin"
+msgstr "Creado por este plugin"
+
+#: includes/class-iip-admin.php:612
+msgid "Slug for the post type. If you change this, you need to save the permalinks again."
+msgstr "Slug para el tipo de entrada. Si cambia esto, es necesario guardar los permalinks de nuevo."
+
+#: includes/class-iip-admin.php:629
+msgid "Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma."
+msgstr "Incluir todas las propiedades por Código Postal. Si está en blanco, importará todas las propiedades. Añade los códigos postales que deseas importar. Por ejemplo: 18100. Puede utilizar un marcador como 18* para incluir toda Granada. Añada varias zonas separadas por comas."
+
+#: includes/class-iip-admin.php:642
+msgid "Unpublish (Set to Draft)"
+msgstr "Despublicar (establecer como borrador)"
+
+#: includes/class-iip-admin.php:643
+msgid "Keep Published"
+msgstr "Mantener publicado"
+
+#: includes/class-iip-admin.php:644
+msgid "Move to Trash"
+msgstr "Mover a la papelera"
+
+#: includes/class-iip-admin.php:650
+msgid "Choose what to do with properties that are sold or no longer available in the CRM."
+msgstr "Elige qué hacer con las propiedades que se venden o que ya no están disponibles en el CRM."
+
+#: includes/class-iip-admin.php:687
+#: includes/class-iip-admin.php:707
+msgid "No - Use shortcode only"
+msgstr "No, utilice solo el código abreviado."
+
+#: includes/class-iip-admin.php:688
+msgid "Yes - Auto display after title"
+msgstr "Sí - Visualización automática después del título"
+
+#: includes/class-iip-admin.php:694
+msgid "Enable automatic display of photo gallery carousel after the property title, or use the shortcode manually:"
+msgstr "Habilita la visualización automática del carrusel de la galería de fotos después del título de la propiedad, o utiliza el código abreviado manualmente:"
+
+#: includes/class-iip-admin.php:708
+msgid "Yes - Auto display after content"
+msgstr "Sí - Visualización automática después del contenido"
+
+#: includes/class-iip-admin.php:714
+msgid "Enable automatic display of property information box with icons and price, or use the shortcode manually:"
+msgstr "Habilita la visualización automática del cuadro de información de la propiedad con iconos y precio, o utiliza el código abreviado manualmente:"
+
+#: includes/class-iip-admin.php:740
+msgid "Available in API"
+msgstr "Disponibles en API"
+
+#: includes/class-iip-admin.php:742
+msgid "Total:"
+msgstr "Total:"
+
+#: includes/class-iip-admin.php:753
+msgid "Properties in WordPress"
+msgstr "Propiedades en WordPress"
+
+#: includes/class-iip-admin.php:754
+msgid "Published properties"
+msgstr "Propiedades publicadas"
+
+#: includes/class-iip-admin.php:764
+msgid "To Import/Update"
+msgstr "Importar/Actualizar"
+
+#: includes/class-iip-admin.php:766
+msgid "new"
+msgstr "nuevo"
+
+#: includes/class-iip-admin.php:767
+msgid "outdated"
+msgstr "anticuado"
+
+#: includes/class-iip-admin.php:778
+msgid "To Remove"
+msgstr "Para eliminar"
+
+#: includes/class-iip-admin.php:779
+msgid "Not in API"
+msgstr "No en API"
+
+#: includes/class-iip-admin.php:793
+msgid "Automatic Sync (Cron)"
+msgstr "Sincronización automática (Cron)"
+
+#: includes/class-iip-admin.php:795
+msgid "Enabled"
+msgstr "Activo"
+
+#: includes/class-iip-admin.php:797
+msgid "Disabled"
+msgstr "Inactivo"
+
+#: includes/class-iip-admin.php:801
+msgid "Check the logs in the tab below to see automatic sync history."
+msgstr "Consulta los registros en la pestaña de abajo para ver el historial de sincronización automática."
+
+#: includes/class-iip-admin.php:809
+#: includes/class-iip-admin.php:838
+msgid "Manual Import"
+msgstr "Importación manual"
+
+#: includes/class-iip-admin.php:814
+msgid "Properties to update"
+msgstr "Propiedades a actualizar"
+
+#: includes/class-iip-admin.php:815
+msgid "All properties"
+msgstr "Todas las propiedades"
+
+#: includes/class-iip-admin.php:818
+msgid "Start Import"
+msgstr "Iniciar importación"
+
+#: includes/class-iip-admin.php:822
+msgid "Refresh Statistics"
+msgstr "Actualizar estadísticas"
+
+#: includes/class-iip-admin.php:834
+msgid "Automatic Sync"
+msgstr "Sincronización Automática"
+
+#: includes/class-iip-admin.php:862
+msgid "No automatic sync logs yet."
+msgstr "Aún no hay registros de sincronización automática."
+
+#: includes/class-iip-admin.php:883
+msgid "Loading..."
+msgstr "Cargando..."
+
+#: includes/class-iip-admin.php:913
+#: includes/class-iip-admin.php:922
+msgid "minutes"
+msgstr "minutos"
+
+#: includes/class-iip-admin.php:914
+msgid "minute"
+msgstr "minuto"
+
+#: includes/class-iip-admin.php:917
+msgid "All at once"
+msgstr "De repente"
+
+#: includes/class-iip-admin.php:920
+msgid "seconds"
+msgstr "segundos"
+
+#. translators: %s: API name
+#: includes/class-iip-admin.php:940
+msgid "API Limitations - %s"
+msgstr "Limitaciones de la API - %s"
+
+#: includes/class-iip-admin.php:948
+msgid "Request Timeout:"
+msgstr "Tiempo de espera de la solicitud:"
+
+#: includes/class-iip-admin.php:952
+msgid "Properties per Request:"
+msgstr "Propiedades por solicitud:"
+
+#: includes/class-iip-admin.php:956
+msgid "Automatic Retries:"
+msgstr "Reintentos automáticos:"
+
+#. translators: %d: max retries
+#: includes/class-iip-admin.php:961
+msgid "Up to %d attempts"
+msgstr "Hasta %d intentos"
+
+#: includes/class-iip-admin.php:968
+msgid "Retry Wait Time:"
+msgstr "Tiempo de espera para reintentar:"
+
+#. translators: 1: timeout retry, 2: rate limit retry
+#: includes/class-iip-admin.php:973
+msgid "%1$s (timeout) / %2$s (rate limit)"
+msgstr "%1$s (tiempo de espera) / %2$s (límite de velocidad)"
+
+#: includes/class-iip-admin.php:982
+msgid "The system will automatically retry failed requests with intelligent wait times based on the error type."
+msgstr "El sistema volverá a intentar automáticamente las solicitudes fallidas con tiempos de espera inteligentes basados en el tipo de error."
+
+#: includes/class-iip-admin.php:1029
+msgid "Error loading statistics"
+msgstr "Error al cargar las estadísticas"
+
+#: includes/class-iip-admin.php:1071
+msgid "Put the connection API key settings in order to connect external data."
+msgstr "Poner la configuración de la clave de la API de conexión con el fin de conectar los datos externos."
+
+#: includes/class-iip-admin.php:1081
+msgid "Map CRM fields to WordPress custom fields. Select an existing field or type a new field name to create it."
+msgstr "Mapea los campos del CRM a campos personalizados de WordPress. Selecciona un campo existente o escribe un nuevo nombre de campo para crearlo."
+
+#: includes/class-iip-admin.php:1084
+msgid "Fields marked with (Custom) are saved values that will be created automatically when properties are imported."
+msgstr "Los campos marcados con (Personalizado) son valores guardados que se crearán automáticamente cuando se importen las propiedades."
+
+#: includes/class-iip-admin.php:1112
+msgid "Auto-Map All Fields"
+msgstr "Auto-Mapear Todos los Campos"
+
+#: includes/class-iip-admin.php:1117
+msgid "Clear all selects"
+msgstr "Borrar todos los select"
+
+#: includes/class-iip-admin.php:205
+msgid "Clear all WordPress field selections? You will need to save the form to apply changes."
+msgstr "¿Borrar todas las selecciones de campos de WordPress? Deberás guardar el formulario para aplicar los cambios."
+
+#: includes/class-iip-admin.php:206
+msgid "All selections cleared."
+msgstr "Todas las selecciones borradas."
+
+#: includes/class-iip-admin.php:1124
+msgid "CRM Fields"
+msgstr "Campos CRM"
+
+#: includes/class-iip-admin.php:1126
+msgid "WordPress Fields"
+msgstr "Campos WordPress"
+
+#: includes/class-iip-admin.php:1152
+msgid "-- Select WordPress Field --"
+msgstr "-- Seleccionar Campo de WordPress --"
+
+#: includes/class-iip-admin.php:1157
+msgid "(Custom)"
+msgstr "(Personalizado)"
+
+#: includes/class-iip-admin.php:1268
+msgid "Security check failed"
+msgstr "Falló la verificación de seguridad"
+
+#: includes/class-iip-admin.php:1273
+msgid "Insufficient permissions"
+msgstr "Permisos insuficientes"
+
+#. translators: %d: number of fields
+#: includes/class-iip-admin.php:1315
+msgid "%d field auto-mapped successfully!"
+msgid_plural "%d fields auto-mapped successfully!"
+msgstr[0] "¡%d campo auto-mapeado exitosamente!"
+msgstr[1] "¡%d campos auto-mapeados exitosamente!"
+
+#: includes/class-iip-admin.php:1361
+msgid "Unauthorized"
+msgstr "No autorizado"
+
+#: includes/class-iip-admin.php:1367
+msgid "Invalid filename"
+msgstr "Nombre de archivo inválido"
+
+#: includes/class-iip-admin.php:1378
+msgid "Invalid file path"
+msgstr "Ruta de archivo inválida"
+
+#: includes/class-iip-admin.php:1382
+msgid "Log file not found"
+msgstr "Archivo de registro no encontrado"
+
+#: includes/class-iip-admin.php:1388
+msgid "Error reading log file"
+msgstr "Error al leer el archivo de registro"
+
+#: includes/class-iip-cron.php:115
+msgid "Unknown property error"
+msgstr "Error desconocido de propiedad"
+
+#: includes/class-iip-import.php:85
+msgid "Sync"
+msgstr "Sincronizar"
+
+#: includes/class-iip-import.php:86
+msgid "Syncing"
+msgstr "Sincronizando"
+
+#: includes/class-iip-import.php:87
+msgid "Finished"
+msgstr "Finalizado"
+
+#: includes/class-iip-import.php:107
+msgid "Security verification failed. Please refresh the page and try again."
+msgstr "Falló la verificación de seguridad. Por favor actualiza la página e inténtalo de nuevo."
+
+#: includes/class-iip-import.php:131
+msgid "Checking properties to remove..."
+msgstr "Comprobando propiedades para eliminar..."
+
+#: includes/class-iip-import.php:135
+msgid "Error checking API:"
+msgstr "Error al comprobar la API:"
+
+#: includes/class-iip-import.php:137
+msgid "Properties removed (not in API):"
+msgstr "Propiedades eliminadas (no en API):"
+
+#: includes/class-iip-import.php:140
+#: includes/class-iip-import.php:330
+msgid "ID:"
+msgstr "ID:"
+
+#: includes/class-iip-import.php:143
+msgid "No properties to remove."
+msgstr "No hay propiedades para eliminar."
+
+#: includes/class-iip-import.php:151
+msgid "Connecting with API and syncing Properties ..."
+msgstr "Conectando con la con API y sincronizando propiedades ..."
+
+#. translators: %d: number of properties to update
+#: includes/class-iip-import.php:158
+msgid "Filtering properties to update... Found %d properties."
+msgstr "Filtrando propiedades a actualizar... Se encontraron %d propiedades."
+
+#: includes/class-iip-import.php:186
+msgid "Error connecting with API. Please check your API connection."
+msgstr "Error al conectarse con la API. Compruebe su conexión API."
+
+#: includes/class-iip-import.php:187
+msgid "If your credentials are correct, wait a few minutes and try again."
+msgstr "Si tus credenciales son correctas, espera unos minutos e inténtalo de nuevo."
+
+#: includes/class-iip-import.php:189
+#: includes/class-iip-import.php:288
+msgid "API ERROR:"
+msgstr "ERROR DE API:"
+
+#: includes/class-iip-import.php:203
+msgid "No properties found to import."
+msgstr "No se encontraron propiedades para importar."
+
+#: includes/class-iip-import.php:206
+msgid "No more properties from API. Import complete."
+msgstr "No hay más propiedades de la API. Importación completa."
+
+#: includes/class-iip-import.php:286
+msgid "Error:"
+msgstr "Error:"
+
+#: includes/class-iip-import.php:303
+msgid "View Post"
+msgstr "Ver entrada"
+
+#: includes/class-iip-import.php:327
+msgid "Properties that failed sync (sent to trash):"
+msgstr "Propiedades no sincronizadas y enviadas a la papelera: "
+
+#: includes/class-iip-import.php:334
+msgid "Import completed successfully!"
+msgstr "Import completed successfully!"
+
+#: includes/class-iip-import.php:381
+msgid "Error fetching property IDs from API"
+msgstr "Error al obtener los ID de propiedad de la API"
+
+#: includes/class-iip-post-type.php:66
+msgid "properties"
+msgstr "propiedades"
+
+#: includes/class-iip-post-type.php:70
+msgid "Properties"
+msgstr "Propiedades"
+
+#: includes/class-iip-post-type.php:71
+#: includes/class-iip-post-type.php:72
+msgid "Add New Properties"
+msgstr "Añadir nuevas propiedades"
+
+#: includes/class-iip-post-type.php:73
+msgid "Edit Properties"
+msgstr "Editar propiedades"
+
+#: includes/class-iip-post-type.php:74
+msgid "New Properties"
+msgstr "Nuevas propiedades"
+
+#: includes/class-iip-post-type.php:75
+msgid "View Properties"
+msgstr "Ver propiedades"
+
+#: includes/class-iip-post-type.php:76
+msgid "Search Property"
+msgstr "Buscar propiedad"
+
+#: includes/class-iip-post-type.php:77
+msgid "Not found Property"
+msgstr "No encontrado Propiedad"
+
+#: includes/class-iip-post-type.php:78
+msgid "Not found Property in trash"
+msgstr "No encontrado Propiedad en la basura"
+
+#: includes/class-iip-post-type.php:110
+msgid "Property Meta"
+msgstr "Metadatos de la propiedad"
+
+#: includes/class-iip-post-type.php:118
+msgid "Property Photos"
+msgstr "Fotos de la propiedad"
+
+#: includes/class-iip-post-type.php:136
+msgid "No merge fields configured. Please configure merge fields in the plugin settings."
+msgstr "No hay campos de combinación configurados. Configura los campos de combinación en los ajustes del complemento."
+
+#: includes/class-iip-post-type.php:160
+msgid "CRM Field"
+msgstr "Campo CRM"
+
+#: includes/class-iip-post-type.php:161
+msgid "WordPress Field"
+msgstr "Campo de WordPress"
+
+#: includes/class-iip-post-type.php:162
+msgid "Value"
+msgstr "Valor"
+
+#: includes/class-iip-post-type.php:203
+msgid "No photos available from CRM"
+msgstr "No hay fotos disponibles en CRM."
+
+#: includes/class-iip-post-type.php:213
+msgid "Featured Image"
+msgstr "Imagen Destacada"
+
+#. translators: %d: number of photos
+#: includes/class-iip-post-type.php:227
+msgid "Gallery (%d photos)"
+msgstr "Galería (%d fotos)"
+
+#: includes/class-iip-post-type.php:251
+msgid "Title"
+msgstr "Título"
+
+#: includes/class-iip-post-type.php:302
+msgid "Property ID"
+msgstr "ID de Propiedad"
+
+#: includes/class-iip-post-type.php:309
+msgid "Property Internal ID"
+msgstr "ID Interno de Propiedad"
+
+#: includes/class-iip-post-type.php:315
+msgid "Available"
+msgstr "Disponible"
+
+#: includes/class-iip-post-type.php:315
+msgid "Sold"
+msgstr "Vendido"
+
+#: includes/class-iip-post-type.php:316
+msgid "Status"
+msgstr "Estado"
+
+#: includes/class-iip-post-type.php:321
+msgid "Agent"
+msgstr "Agente"
+
+#: includes/class-property-info.php:155
+msgid "Price"
+msgstr "Precio"
+
+#: includes/class-property-info.php:170
+msgid "Bedrooms"
+msgstr "Dormitorios"
+
+#: includes/class-property-info.php:184
+msgid "Bathrooms"
+msgstr "Baños"
+
+#: includes/class-property-info.php:198
+msgid "Area"
+msgstr "Área"
+
+#: includes/class-property-info.php:226
+msgid "Location"
+msgstr "Posición"
+
+#: includes/class-property-info.php:240
+msgid "Reference"
+msgstr "Referencia"
+
+#: includes/class-iip-import.php:88
+msgid "Waiting"
+msgstr "Esperando"
+
+#. translators: %s is the number of seconds to wait before retrying.
+#: includes/class-iip-import.php:90
+msgid "API rate limit reached. Waiting %s seconds before retrying..."
+msgstr "Límite de la API alcanzado. Esperando %s segundos antes de reintentar..."
+
+#: includes/class-iip-import.php:91
+msgid "Resuming import..."
+msgstr "Reanudando importación..."
+
+#: includes/class-iip-import.php:170
+#: includes/class-iip-import.php:268
+msgid "API rate limit reached. The API has requested a wait."
+msgstr "Límite de la API alcanzado. La API ha solicitado una espera."
+
+#. translators: %s: property ID (internal) from the CRM.
+#: includes/class-iip-import.php:255
+msgid "Property ID: %s"
+msgstr "ID de Propiedad: %s"
+
+#. translators: %s: status field value from the API.
+#: includes/class-helper-sync.php:419
+msgid "Reason: status = %s"
+msgstr "Motivo: status = %s"
+
+#: includes/class-helper-sync.php:423
+msgid "Reason: nodisponible = 1"
+msgstr "Motivo: nodisponible = 1"
+
+#: includes/class-helper-sync.php:427
+msgid "Reason: estado = V (Sold)"
+msgstr "Motivo: estado = V (Vendido)"
+
+#: includes/class-helper-sync.php:431
+msgid "Reason: operation_status = Sold"
+msgstr "Motivo: operation_status = Vendido"
+
+#: includes/class-iip-admin.php:399
+msgid "Download Images Locally"
+msgstr "Descargar imágenes localmente"
+
+#: includes/class-iip-admin.php:663
+msgid "No - Use external image links"
+msgstr "No - Usar enlaces de imágenes externos"
+
+#: includes/class-iip-admin.php:664
+msgid "Featured image only"
+msgstr "Solo imagen destacada"
+
+#: includes/class-iip-admin.php:665
+msgid "Yes - All images (featured + gallery)"
+msgstr "Sí - Todas las imágenes (destacada + galería)"
+
+#: includes/class-iip-admin.php:668
+msgid "Choose whether to download property images to your server."
+msgstr "Elige si descargar las imágenes de las propiedades a tu servidor."
+
+#: includes/class-iip-admin.php:671
+msgid "Downloading images improves page speed, works with your CDN, and does not depend on the CRM being available."
+msgstr "Descargar las imágenes mejora la velocidad de carga, funciona con tu CDN y no depende de que el CRM esté disponible."
+
+#: includes/class-iip-admin.php:672
+msgid "However, images will use disk space on your server and the import process will take longer."
+msgstr "Sin embargo, las imágenes ocuparán espacio en disco en tu servidor y el proceso de importación tardará más."
+
+#: includes/class-iip-admin.php:673
+msgid "\"Featured image only\" downloads just the main photo. \"All images\" downloads the full gallery as well."
+msgstr "\"Solo imagen destacada\" descarga solo la foto principal. \"Todas las imágenes\" descarga también la galería completa."
+
+#. Plugin Name of the plugin
+#: connect-crm-realstate.php
+msgid "Connect CRM Real State PRO"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: connect-crm-realstate.php
+msgid "https://close.technology/wordpress-plugins/conecta-crm-realstate/"
+msgstr ""
+
+#: includes/class-helper-sync.php:233
+msgid "Reference:"
+msgstr ""
+
+#: includes/class-iip-admin.php:486
+msgid "Settings saved successfully."
+msgstr ""
+
+#: includes/class-iip-admin.php:1104
+msgid "Unknown error"
+msgstr ""
+
+#: includes/class-iip-admin.php:1125
+msgid "Sample Data"
+msgstr ""
