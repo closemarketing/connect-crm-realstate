@@ -283,7 +283,10 @@ class Import {
 
 				if ( ! empty( $result_sync['post_id'] ) ) {
 					$edit_link     = get_edit_post_link( $result_sync['post_id'] );
-					$progress_msg .= ' - <a href="' . esc_url( $edit_link ) . '" target="_blank">' . __( 'View Post', 'connect-crm-real-state' ) . '</a>';
+					$progress_msg .= ' - <a href="' . esc_url( $edit_link ) . '" target="_blank">' . __( 'Edit', 'connect-crm-real-state' ) . '</a>';
+
+					$view_link     = get_permalink( $result_sync['post_id'] );
+					$progress_msg .= ' - <a href="' . esc_url( $view_link ) . '" target="_blank">' . __( 'View', 'connect-crm-real-state' ) . '</a>';
 				}
 			}
 
