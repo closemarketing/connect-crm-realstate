@@ -594,8 +594,8 @@ class API {
 
 				if ( null === $data ) {
 					return array(
-						'status'  => 'error',
-						'message' => __( 'Invalid JSON response from Inmovilla Procesos API', 'connect-crm-real-state' ),
+						'status'  => 'ok',
+						'message' => __( 'This property is not available', 'connect-crm-real-state' ),
 						'data'    => array(),
 					);
 				}
@@ -787,7 +787,14 @@ class API {
 
 			$result = self::request_inmovilla_procesos( 'propiedades/?cod_ofer=' . $property_id );
 
-			if ( 'ok' === $result['status'] && isset( $result['data'] ) ) {
+			if ( 'ok' === $result['status'] && empty( $result['data'] ) ) {
+				return array(
+					'status'  => 'error',
+					'message' => __( 'This property is not available in API', 'connect-crm-real-state' ),
+				);
+			}
+
+			if ( 'ok' === $result['status'] ) {
 				$result['data']['fotos'] = self::get_property_photos( $result['data'] );
 
 				return $result;

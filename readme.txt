@@ -91,6 +91,9 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 4. Property gallery frontend display
 
 == Changelog ==
+= 1.2.0 =
+* Major refactor. Created the free version of the plugin.
+* Error in property API does not stop the import.
 
 = 1.0.0 =
 * Initial release on WordPress.org.
