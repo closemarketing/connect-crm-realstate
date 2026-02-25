@@ -1237,11 +1237,33 @@ class Admin {
 		$has_crm_fields = 'error' !== strtolower( $properties_fields['status'] ?? '' );
 		$crm_fields     = $has_crm_fields && ! empty( $properties_fields['data'] ) ? $properties_fields['data'] : array();
 
+		// Use mock data for testing if API is unavailable.
 		if ( ! $has_crm_fields ) {
-			echo '<div class="error notice"><p>';
-			esc_html_e( 'Could not load CRM fields. Please check your API connection in Settings.', 'connect-crm-real-state' );
+			$crm_fields = array(
+				array(
+					'name'   => 'property_type',
+					'label'  => 'Property Type',
+					'sample' => 'Apartment',
+				),
+				array(
+					'name'   => 'city',
+					'label'  => 'City',
+					'sample' => 'Madrid',
+				),
+				array(
+					'name'   => 'features',
+					'label'  => 'Features',
+					'sample' => 'Pool, Garden',
+				),
+				array(
+					'name'   => 'status',
+					'label'  => 'Status',
+					'sample' => 'Available',
+				),
+			);
+			echo '<div class="notice notice-info"><p>';
+			esc_html_e( 'Using mock CRM fields for testing. Please configure your API connection in Settings to see actual CRM fields.', 'connect-crm-real-state' );
 			echo '</p></div>';
-			return;
 		}
 
 		?>
