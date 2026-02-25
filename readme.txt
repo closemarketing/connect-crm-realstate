@@ -91,6 +91,11 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 4. Property gallery frontend display
 
 == Changelog ==
+
+= Unreleased =
+-   Added Taxonomy Mapping feature: repeater field to map CRM fields to WordPress taxonomies.
+-   Added automatic taxonomy term assignment during property synchronization.
+
 = 1.2.0 =
 * Major refactor. Created the free version of the plugin.
 * Error in property API does not stop the import.
