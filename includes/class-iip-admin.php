@@ -856,11 +856,16 @@ class Admin {
 
 			<div class="import-button-wrapper">
 				<select id="import-mode" class="import-mode-select">
-					<option value="updated"><?php esc_html_e( 'Properties to update', 'connect-crm-real-state' ); ?></option>
-					<option value="all"><?php esc_html_e( 'All properties', 'connect-crm-real-state' ); ?></option>
-					<option value="modified_3h"><?php esc_html_e( 'Properties modified last 3 hours', 'connect-crm-real-state' ); ?></option>
-					<option value="modified_24h"><?php esc_html_e( 'Properties modified last 24 hours', 'connect-crm-real-state' ); ?></option>
-					<option value="modified_7d"><?php esc_html_e( 'Properties modified last 7 days', 'connect-crm-real-state' ); ?></option>
+					<?php
+					$import_mode_options = array(
+						'updated' => __( 'Properties to update', 'connect-crm-real-state' ),
+						'all'     => __( 'All properties', 'connect-crm-real-state' ),
+					);
+					$import_mode_options = apply_filters( 'ccrmre_import_mode_options', $import_mode_options );
+					foreach ( $import_mode_options as $value => $label ) {
+						echo '<option value="' . esc_attr( $value ) . '">' . esc_html( $label ) . '</option>';
+					}
+					?>
 				</select>
 				<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
 					<?php esc_html_e( 'Start Import', 'connect-crm-real-state' ); ?>
