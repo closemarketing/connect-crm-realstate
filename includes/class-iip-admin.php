@@ -72,6 +72,21 @@ class Admin {
 			echo '</p>';
 			echo '</div>';
 		}
+
+		if ( 'iip-taxonomy' === $active_tab ) {
+			$taxonomy_mappings = get_option( 'conncrmreal_taxonomy_mappings', array() );
+			$count             = is_array( $taxonomy_mappings ) ? count( $taxonomy_mappings ) : 0;
+
+			echo '<div class="notice notice-success is-dismissible">';
+			echo '<p><strong>' . esc_html__( 'Taxonomy mappings saved successfully!', 'connect-crm-real-state' ) . '</strong> ';
+			printf(
+				/* translators: %d: number of mappings */
+				esc_html( _n( '%d taxonomy mapping saved.', '%d taxonomy mappings saved.', $count, 'connect-crm-real-state' ) ),
+				(int) $count
+			);
+			echo '</p>';
+			echo '</div>';
+		}
 	}
 
 	/**
@@ -157,6 +172,33 @@ class Admin {
 				array( 'jquery' ),
 				CCRMRE_VERSION,
 				true
+			);
+		}
+
+		// Enqueue taxonomy mapping scripts on taxonomy tab.
+		if ( 'iip-taxonomy' === $active_tab ) {
+			wp_enqueue_style(
+				'ccrmre-taxonomy-mapping',
+				CCRMRE_PLUGIN_URL . 'includes/assets/iip-taxonomy-mapping.css',
+				array(),
+				CCRMRE_VERSION
+			);
+			wp_enqueue_script(
+				'ccrmre-taxonomy-mapping',
+				CCRMRE_PLUGIN_URL . 'includes/assets/iip-taxonomy-mapping.js',
+				array(),
+				CCRMRE_VERSION,
+				true
+			);
+			wp_localize_script(
+				'ccrmre-taxonomy-mapping',
+				'ccrmreTaxonomyMapping',
+				array(
+					'selectCrmField'  => __( '-- Select CRM Field --', 'connect-crm-real-state' ),
+					'selectTaxonomy'  => __( '-- Select Taxonomy --', 'connect-crm-real-state' ),
+					'confirmRemove'   => __( 'Remove this mapping row?', 'connect-crm-real-state' ),
+					'noFieldSelected' => __( 'Please select both a CRM field and a taxonomy for each row.', 'connect-crm-real-state' ),
+				)
 			);
 		}
 
@@ -253,6 +295,11 @@ class Admin {
 		echo ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Merge variables', 'connect-crm-real-state' ) . '</a>';
 
+		// Taxonomy mapping tab.
+		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-taxonomy' ) . '" class="nav-tab ';
+		echo ( 'iip-taxonomy' === $active_tab ? 'nav-tab-active' : '' );
+		echo '">' . esc_html__( 'Taxonomy Mapping', 'connect-crm-real-state' ) . '</a>';
+
 		/**
 		 * Allow PRO or add-ons to inject extra admin tabs.
 		 *
@@ -287,6 +334,22 @@ class Admin {
 				<?php settings_fields( 'iip_plugin_merge_group' ); ?>
 				<?php do_settings_sections( 'conncrmreal_merge_fields' ); ?>
 				<?php submit_button(); ?>
+			</form>
+			<?php
+		}
+
+		if ( 'iip-taxonomy' === $active_tab ) {
+			?>
+			<h1><?php esc_html_e( 'Taxonomy Mapping', 'connect-crm-real-state' ); ?></h1>
+			<div class="notice notice-info inline">
+				<p>
+					<?php esc_html_e( 'Map CRM fields to WordPress taxonomies. During synchronization, the value of each CRM field will be used to assign taxonomy terms to the imported properties.', 'connect-crm-real-state' ); ?>
+				</p>
+			</div>
+			<form method="post" action="options.php" id="ccrmre-taxonomy-form">
+				<?php settings_fields( 'iip_plugin_taxonomy_group' ); ?>
+				<?php $this->taxonomy_mapping_callback(); ?>
+				<?php submit_button( esc_html__( 'Save Taxonomy Mappings', 'connect-crm-real-state' ) ); ?>
 			</form>
 			<?php
 		}
@@ -434,6 +497,13 @@ class Admin {
 			array( $this, 'merge_fields_callback' ),
 			'conncrmreal_merge_fields',
 			'iip_plugin_merge_group'
+		);
+
+		// Taxonomy mapping settings.
+		register_setting(
+			'iip_plugin_taxonomy_group',
+			'conncrmreal_taxonomy_mappings',
+			array( $this, 'sanitize_taxonomy_mappings' )
 		);
 	}
 
@@ -788,6 +858,9 @@ class Admin {
 				<select id="import-mode" class="import-mode-select">
 					<option value="updated"><?php esc_html_e( 'Properties to update', 'connect-crm-real-state' ); ?></option>
 					<option value="all"><?php esc_html_e( 'All properties', 'connect-crm-real-state' ); ?></option>
+					<option value="modified_3h"><?php esc_html_e( 'Properties modified last 3 hours', 'connect-crm-real-state' ); ?></option>
+					<option value="modified_24h"><?php esc_html_e( 'Properties modified last 24 hours', 'connect-crm-real-state' ); ?></option>
+					<option value="modified_7d"><?php esc_html_e( 'Properties modified last 7 days', 'connect-crm-real-state' ); ?></option>
 				</select>
 				<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
 					<?php esc_html_e( 'Start Import', 'connect-crm-real-state' ); ?>
@@ -1142,5 +1215,159 @@ class Admin {
 		$wp_field_name = 'crm_' . $wp_field_name;
 
 		return $wp_field_name;
+	}
+
+	/**
+	 * Renders the taxonomy mapping repeater UI.
+	 *
+	 * @return void
+	 */
+	public function taxonomy_mapping_callback() {
+		$crm_type          = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
+		$properties_fields = API::get_properties_fields( $crm_type );
+		$saved_mappings    = get_option( 'conncrmreal_taxonomy_mappings', array() );
+
+		if ( ! is_array( $saved_mappings ) ) {
+			$saved_mappings = array();
+		}
+
+		// Get available taxonomies.
+		$taxonomies = get_taxonomies(
+			array( 'public' => true ),
+			'objects'
+		);
+
+		$has_crm_fields = 'error' !== strtolower( $properties_fields['status'] ?? '' );
+		$crm_fields     = $has_crm_fields && ! empty( $properties_fields['data'] ) ? $properties_fields['data'] : array();
+
+		if ( ! $has_crm_fields ) {
+			echo '<div class="error notice"><p>';
+			esc_html_e( 'Could not load CRM fields. Please check your API connection in Settings.', 'connect-crm-real-state' );
+			echo '</p></div>';
+			return;
+		}
+
+		?>
+		<div id="ccrmre-taxonomy-mapping-wrapper">
+			<table class="ccrmre-taxonomy-mapping-table" id="ccrmre-taxonomy-mapping-table">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'CRM Field', 'connect-crm-real-state' ); ?></th>
+						<th><?php esc_html_e( 'WordPress Taxonomy', 'connect-crm-real-state' ); ?></th>
+						<th class="ccrmre-actions-col"><?php esc_html_e( 'Actions', 'connect-crm-real-state' ); ?></th>
+					</tr>
+				</thead>
+				<tbody id="ccrmre-taxonomy-mapping-body">
+					<?php
+					if ( ! empty( $saved_mappings ) ) {
+						foreach ( $saved_mappings as $index => $mapping ) {
+							$this->render_taxonomy_row( $index, $crm_fields, $taxonomies, $mapping );
+						}
+					} else {
+						$this->render_taxonomy_row( 0, $crm_fields, $taxonomies );
+					}
+					?>
+				</tbody>
+			</table>
+
+			<p>
+				<button type="button" id="ccrmre-add-taxonomy-row" class="button button-secondary">
+					<span class="dashicons dashicons-plus-alt" style="margin-top: 4px;"></span>
+					<?php esc_html_e( 'Add Mapping', 'connect-crm-real-state' ); ?>
+				</button>
+			</p>
+		</div>
+
+		<script type="text/html" id="tmpl-ccrmre-taxonomy-row">
+			<?php $this->render_taxonomy_row( '{{INDEX}}', $crm_fields, $taxonomies ); ?>
+		</script>
+		<?php
+	}
+
+	/**
+	 * Renders a single taxonomy mapping row.
+	 *
+	 * @param int|string $index      Row index or placeholder.
+	 * @param array      $crm_fields Available CRM fields.
+	 * @param array      $taxonomies Available WordPress taxonomies.
+	 * @param array      $mapping    Saved mapping data (optional).
+	 * @return void
+	 */
+	private function render_taxonomy_row( $index, $crm_fields, $taxonomies, $mapping = array() ) {
+		$selected_crm      = isset( $mapping['crm_field'] ) ? $mapping['crm_field'] : '';
+		$selected_taxonomy = isset( $mapping['taxonomy'] ) ? $mapping['taxonomy'] : '';
+		?>
+		<tr class="ccrmre-taxonomy-row" data-index="<?php echo esc_attr( $index ); ?>">
+			<td>
+				<select name="conncrmreal_taxonomy_mappings[<?php echo esc_attr( $index ); ?>][crm_field]" class="ccrmre-crm-field-select">
+					<option value=""><?php esc_html_e( '-- Select CRM Field --', 'connect-crm-real-state' ); ?></option>
+					<?php foreach ( $crm_fields as $field ) : ?>
+						<option value="<?php echo esc_attr( $field['name'] ); ?>" <?php selected( $selected_crm, $field['name'] ); ?>>
+							<?php echo esc_html( $field['label'] ); ?>
+							<small>(<?php echo esc_html( $field['name'] ); ?>)</small>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			</td>
+			<td>
+				<select name="conncrmreal_taxonomy_mappings[<?php echo esc_attr( $index ); ?>][taxonomy]" class="ccrmre-taxonomy-select">
+					<option value=""><?php esc_html_e( '-- Select Taxonomy --', 'connect-crm-real-state' ); ?></option>
+					<?php foreach ( $taxonomies as $taxonomy ) : ?>
+						<option value="<?php echo esc_attr( $taxonomy->name ); ?>" <?php selected( $selected_taxonomy, $taxonomy->name ); ?>>
+							<?php echo esc_html( $taxonomy->labels->name ); ?>
+							<small>(<?php echo esc_html( $taxonomy->name ); ?>)</small>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			</td>
+			<td class="ccrmre-actions-col">
+				<button type="button" class="button ccrmre-remove-taxonomy-row" title="<?php esc_attr_e( 'Remove', 'connect-crm-real-state' ); ?>">
+					<span class="dashicons dashicons-trash" style="margin-top: 4px;"></span>
+				</button>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Sanitize taxonomy mapping data before saving.
+	 *
+	 * @param array $input Raw input from the form.
+	 * @return array Sanitized mappings.
+	 */
+	public function sanitize_taxonomy_mappings( $input ) {
+		if ( ! is_array( $input ) ) {
+			return array();
+		}
+
+		$sanitized = array();
+		$index     = 0;
+
+		foreach ( $input as $mapping ) {
+			if ( ! is_array( $mapping ) ) {
+				continue;
+			}
+
+			$crm_field = isset( $mapping['crm_field'] ) ? sanitize_text_field( $mapping['crm_field'] ) : '';
+			$taxonomy  = isset( $mapping['taxonomy'] ) ? sanitize_text_field( $mapping['taxonomy'] ) : '';
+
+			// Skip empty rows.
+			if ( empty( $crm_field ) || empty( $taxonomy ) ) {
+				continue;
+			}
+
+			// Validate that the taxonomy exists.
+			if ( ! taxonomy_exists( $taxonomy ) ) {
+				continue;
+			}
+
+			$sanitized[ $index ] = array(
+				'crm_field' => $crm_field,
+				'taxonomy'  => $taxonomy,
+			);
+			++$index;
+		}
+
+		return $sanitized;
 	}
 }

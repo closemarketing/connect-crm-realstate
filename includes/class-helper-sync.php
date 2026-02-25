@@ -59,10 +59,15 @@ class SYNC {
 			$reference = self::get_reference_from_item( $item, $crm );
 			$message   = __( 'NOT Imported', 'connect-crm-real-state' );
 			$message  .= self::add_end_message( $property_id, $property_title, $property_city, $reference );
+			$status    = isset( $property_info_early['status'] ) ? $property_info_early['status'] : '';
 
 			return array(
 				'property_id' => $property_id,
 				'message'     => $message,
+				'reference'   => null !== $reference && '' !== $reference ? $reference : (string) $property_id,
+				'status'      => $status,
+				'title'       => $property_title,
+				'city'        => $property_city,
 			);
 		}
 
@@ -111,9 +116,7 @@ class SYNC {
 			$property_info['post_name']    = sanitize_title( $property_title );
 			$property_info['post_content'] = $property_description;
 			$property_post_id              = wp_insert_post( $property_info );
-			$message                      .= __( 'Created', 'connect-crm-real-state' );
 		} else {
-			$message            .= __( 'Updated', 'connect-crm-real-state' );
 			$property_info['ID'] = $property_post_id;
 			wp_update_post( $property_info );
 		}
@@ -121,6 +124,9 @@ class SYNC {
 		$message  .= self::add_end_message( $property_id, $property_title, $property_city, $reference );
 
 		if ( ! empty( $property_post_id ) ) {
+			// Assign taxonomy terms based on taxonomy mappings.
+			self::assign_taxonomy_terms( $property_post_id, $item, $crm );
+
 			update_post_meta( $property_post_id, 'property_synced', true );
 			delete_post_meta( $property_post_id, 'property_description' );
 			delete_post_meta( $property_post_id, 'property_name' );
@@ -133,6 +139,9 @@ class SYNC {
 			}
 			if ( isset( $property_info_meta['status'] ) ) {
 				update_post_meta( $property_post_id, 'ccrmre_status', $property_info_meta['status'] );
+			}
+			if ( isset( $property_info_meta['reference'] ) && '' !== $property_info_meta['reference'] ) {
+				update_post_meta( $property_post_id, 'ccrmre_reference', $property_info_meta['reference'] );
 			}
 
 			// Save photo URLs and optionally download images.
@@ -158,11 +167,17 @@ class SYNC {
 			delete_transient( 'ccrmre_wp_properties_' . $crm );
 		}
 
+		$status_value = isset( $property_info_meta['status'] ) ? $property_info_meta['status'] : ( isset( $property_info_meta['ccrmre_status'] ) ? $property_info_meta['ccrmre_status'] : '' );
+
 		return array(
 			'property_id' => $property_id,
 			'post_id'     => $property_post_id,
 			'message'     => $message,
 			'is_new'      => $is_new_property,
+			'reference'   => null !== $reference && '' !== $reference ? $reference : (string) $property_id,
+			'status'      => $status_value,
+			'title'       => $property_title,
+			'city'        => $property_city,
 		);
 	}
 
@@ -193,8 +208,8 @@ class SYNC {
 					}
 					return $item_meta;
 				default:
-					if ( ! empty( $enums[ $key ] ) ) {
-						$item_meta = $enums[ $key ];
+					if ( ! empty( $enums[ $key ][ $item_meta ] ) ) {
+						$item_meta = $enums[ $key ][ $item_meta ];
 					}
 					return $item_meta;
 			}
@@ -260,6 +275,34 @@ class SYNC {
 			return $item['referencia'];
 		}
 		return null;
+	}
+
+	/**
+	 * Gets title and city from API item by CRM type.
+	 *
+	 * @param array  $item API item.
+	 * @param string $crm  CRM type.
+	 * @return array Keys 'title' and 'city'.
+	 */
+	private static function get_title_and_city_from_item( $item, $crm ) {
+		$default_title = __( 'Property', 'connect-crm-real-state' );
+		if ( 'inmovilla_procesos' === $crm ) {
+			return array(
+				'title' => isset( $item['tituloes'] ) ? $item['tituloes'] : $default_title,
+				'city'  => isset( $item['ciudad'] ) ? $item['ciudad'] : '',
+			);
+		}
+		if ( 'inmovilla' === $crm ) {
+			$descripciones = isset( $item['descripciones'] ) ? $item['descripciones'] : array();
+			return array(
+				'title' => isset( $descripciones['titulo'] ) ? $descripciones['titulo'] : $default_title,
+				'city'  => isset( $item['ciudad'] ) ? $item['ciudad'] : '',
+			);
+		}
+		return array(
+			'title' => isset( $item['name'] ) ? $item['name'] : $default_title,
+			'city'  => isset( $item['city'] ) ? $item['city'] : '',
+		);
 	}
 
 	/**
@@ -402,14 +445,21 @@ class SYNC {
 		$property_info_h  = API::get_property_info( $property, $crm );
 		$property_id      = $property_info_h['id'];
 		$property_post_id = self::find_property( $property_id, $post_type );
+		$title_city       = self::get_title_and_city_from_item( $property, $crm );
 
 		if ( empty( $property_post_id ) ) {
 			// Property doesn't exist in WordPress, skip it.
-			$reason = self::get_unavailable_reason( $property, $crm );
+			$reason   = self::get_unavailable_reason( $property, $crm );
+			$ref_disp = isset( $property_info_h['reference'] ) && '' !== $property_info_h['reference'] ? $property_info_h['reference'] : (string) $property_id;
+			$status   = isset( $property_info_h['status'] ) ? $property_info_h['status'] : '';
 
 			return array(
 				'property_id' => $property_id,
 				'message'     => __( 'Skipped (Not Available in CRM)', 'connect-crm-real-state' ) . $reason,
+				'reference'   => $ref_disp,
+				'status'      => $status,
+				'title'       => $title_city['title'],
+				'city'        => $title_city['city'],
 			);
 		}
 
@@ -440,10 +490,17 @@ class SYNC {
 				break;
 		}
 
+		$ref_disp = isset( $property_info_h['reference'] ) && '' !== $property_info_h['reference'] ? $property_info_h['reference'] : (string) $property_id;
+		$status   = isset( $property_info_h['status'] ) ? $property_info_h['status'] : '';
+
 		return array(
 			'property_id' => $property_id,
 			'post_id'     => $property_post_id,
 			'message'     => $message,
+			'reference'   => $ref_disp,
+			'status'      => $status,
+			'title'       => $title_city['title'],
+			'city'        => $title_city['city'],
 		);
 	}
 
@@ -853,6 +910,78 @@ class SYNC {
 		}
 
 		return $filtered;
+	}
+
+	/**
+	 * Assigns taxonomy terms to a property based on saved taxonomy mappings.
+	 *
+	 * Each mapping defines a CRM field whose value becomes the term name
+	 * for the configured taxonomy. Terms are created automatically if they
+	 * do not exist yet.
+	 *
+	 * @param int    $post_id WordPress post ID.
+	 * @param array  $item    API item data.
+	 * @param string $crm     CRM type.
+	 * @return void
+	 */
+	public static function assign_taxonomy_terms( $post_id, $item, $crm ) {
+		$taxonomy_mappings = get_option( 'conncrmreal_taxonomy_mappings', array() );
+
+		if ( empty( $taxonomy_mappings ) || ! is_array( $taxonomy_mappings ) ) {
+			return;
+		}
+
+		foreach ( $taxonomy_mappings as $mapping ) {
+			$crm_field = isset( $mapping['crm_field'] ) ? $mapping['crm_field'] : '';
+			$taxonomy  = isset( $mapping['taxonomy'] ) ? $mapping['taxonomy'] : '';
+
+			if ( empty( $crm_field ) || empty( $taxonomy ) ) {
+				continue;
+			}
+
+			if ( ! taxonomy_exists( $taxonomy ) ) {
+				continue;
+			}
+
+			// Get the raw value from the API item.
+			$raw_value = isset( $item[ $crm_field ] ) ? $item[ $crm_field ] : '';
+
+			// Apply enum resolution for Inmovilla Procesos.
+			$raw_value = self::format_item_meta( $crm, $raw_value, $crm_field );
+
+			if ( '' === $raw_value || null === $raw_value || false === $raw_value ) {
+				continue;
+			}
+
+			// Handle comma-separated values as multiple terms.
+			if ( is_string( $raw_value ) && false !== strpos( $raw_value, ',' ) ) {
+				$term_names = array_map( 'trim', explode( ',', $raw_value ) );
+			} else {
+				$term_names = array( trim( (string) $raw_value ) );
+			}
+
+			$term_names = array_filter( $term_names );
+			if ( empty( $term_names ) ) {
+				continue;
+			}
+
+			$term_ids = array();
+			foreach ( $term_names as $term_name ) {
+				$existing = term_exists( $term_name, $taxonomy );
+				if ( $existing ) {
+					$term_ids[] = (int) ( is_array( $existing ) ? $existing['term_id'] : $existing );
+				} else {
+					$new_term = wp_insert_term( $term_name, $taxonomy );
+					if ( ! is_wp_error( $new_term ) ) {
+						$term_ids[] = (int) $new_term['term_id'];
+					}
+				}
+			}
+
+			if ( ! empty( $term_ids ) ) {
+				wp_set_object_terms( $post_id, $term_ids, $taxonomy );
+			}
+		}
 	}
 
 	/**

@@ -115,7 +115,17 @@ class Import {
 		$loop_page = $loop % $pagination;
 		$page      = floor( $loop / $pagination ) + 1;
 
-		// First step: remove properties not in API before syncing.
+		// Date filter for "modified last X" modes (API returns only properties modified since this date).
+		$changed_from = '';
+		if ( 'modified_3h' === $mode ) {
+			$changed_from = gmdate( 'Y-m-d H:i:s', strtotime( '-3 hours' ) );
+		} elseif ( 'modified_24h' === $mode ) {
+			$changed_from = gmdate( 'Y-m-d H:i:s', strtotime( '-24 hours' ) );
+		} elseif ( 'modified_7d' === $mode ) {
+			$changed_from = gmdate( 'Y-m-d H:i:s', strtotime( '-7 days' ) );
+		}
+
+		// Remove properties not in API before syncing.
 		if ( 0 === $loop ) {
 			SYNC::clear_property_meta();
 
@@ -137,9 +147,11 @@ class Import {
 
 		// When starting a new page, fetch from API.
 		if ( ( 0 === $loop_page && 0 < $pagination ) || ( 0 === $loop && -1 === $pagination ) ) {
-			$result_api   = API::get_properties( $crm, $page );
-			$properties   = 'ok' === $result_api['status'] ? $result_api['data'] : array();
-			$progress_msg = '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-real-state' ) . '<br/>';
+			// For date-filtered modes use page 0 so API returns all modified since $changed_from.
+			$request_page  = ! empty( $changed_from ) ? 0 : $page;
+			$result_api    = API::get_properties( $request_page, $changed_from );
+			$properties    = 'ok' === $result_api['status'] ? $result_api['data'] : array();
+			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-real-state' ) . '<br/>';
 
 			if ( 'updated' === $mode && ! empty( $properties ) ) {
 				$api_properties = count( $properties );
@@ -207,8 +219,9 @@ class Import {
 
 			// Transient expired - re-fetch the page.
 			if ( false === $property && $loop < $totalprop ) {
-				$page       = floor( $loop / $pagination ) + 1;
-				$result_api = API::get_properties( $crm, $page );
+				$page         = floor( $loop / $pagination ) + 1;
+				$request_page = ! empty( $changed_from ) ? 0 : $page;
+				$result_api   = API::get_properties( $request_page, $changed_from );
 
 				if ( 'ok' === $result_api['status'] && ! empty( $result_api['data'] ) ) {
 					$properties = $result_api['data'];
@@ -225,6 +238,8 @@ class Import {
 
 		$finish = false;
 		$is_new = false;
+
+		$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . __( 'Property', 'connect-crm-real-state' ) . ' ';
 		if ( ! empty( $property ) ) {
 			$is_available = SYNC::is_property_available( $property, $crm );
 
@@ -234,11 +249,12 @@ class Import {
 			} elseif ( isset( $property['id'] ) ) {
 				$id_display = $property['id'];
 			}
-
-			/* translators: %s: property ID (internal) from the CRM. */
-			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . sprintf( __( 'Property ID: %s', 'connect-crm-real-state' ), esc_html( $id_display ) ) . ' — ';
 			if ( ! $is_available ) {
 				$result_sync   = SYNC::handle_unavailable_property( $property, $this->settings, $this->settings_fields, $crm );
+				$ref_display   = isset( $result_sync['reference'] ) ? $result_sync['reference'] : $id_display;
+				$title_display = isset( $result_sync['title'] ) ? substr( $result_sync['title'], 0, 50 ) : '';
+				$city_display  = isset( $result_sync['city'] ) ? $result_sync['city'] : '';
+				$progress_msg .= esc_html( $ref_display ) . ' NOT IMP' . $this->format_title_city_suffix( $title_display, $city_display ) . ' ';
 				$progress_msg .= $result_sync['message'];
 			} else {
 				$result_get_property = API::get_property( $property, $crm );
@@ -261,9 +277,7 @@ class Import {
 						);
 					}
 
-					$progress_msg .= ' ' . __( 'Property ID:', 'connect-crm-real-state' ) . ' ';
-					$progress_msg .= $property['id'];
-					$progress_msg .= ' ' . __( 'Error:', 'connect-crm-real-state' ) . ' ';
+					$progress_msg .= esc_html( $id_display ) . ' ERR - ';
 					$progress_msg .= '<strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-real-state' ) . '</strong> ' . $result_get_property['message'] . '<br/>';
 					wp_send_json_success(
 						array(
@@ -278,7 +292,11 @@ class Import {
 				}
 				$property_complete = $result_get_property['data'];
 				$result_sync       = SYNC::sync_property( $property_complete, $this->settings, $this->settings_fields );
-				$progress_msg     .= $result_sync['message'];
+				$ref_display       = isset( $result_sync['reference'] ) ? $result_sync['reference'] : $id_display;
+				$title_display     = isset( $result_sync['title'] ) ? substr( $result_sync['title'], 0, 50 ) : '';
+				$city_display      = isset( $result_sync['city'] ) ? $result_sync['city'] : '';
+				$action            = ! empty( $result_sync['is_new'] ) ? __( 'NEW', 'connect-crm-real-state' ) : __( 'UPD', 'connect-crm-real-state' );
+				$progress_msg     .= esc_html( $ref_display ) . ' ' . $action . $this->format_title_city_suffix( $title_display, $city_display ) . ' ';
 				$is_new            = ! empty( $result_sync['is_new'] ) ? true : false;
 
 				if ( ! empty( $result_sync['post_id'] ) ) {
@@ -430,5 +448,24 @@ class Import {
 			'import_count'   => $import_count,
 			'delete_count'   => $delete_count,
 		);
+	}
+
+	/**
+	 * Returns " — Title - City" for progress message when title or city present.
+	 *
+	 * @param string $title Property title (e.g. first 50 chars).
+	 * @param string $city  Property city.
+	 * @return string
+	 */
+	private function format_title_city_suffix( $title, $city ) {
+		$title = '' !== $title ? esc_html( $title ) : '';
+		$city  = '' !== $city ? esc_html( $city ) : '';
+		if ( '' === $title && '' === $city ) {
+			return '';
+		}
+		if ( '' !== $title && '' !== $city ) {
+			return ' — ' . $title . ' - ' . $city;
+		}
+		return ' — ' . ( '' !== $title ? $title : $city );
 	}
 }
