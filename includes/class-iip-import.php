@@ -402,10 +402,10 @@ class Import {
 		$outdated_count = 0;
 		foreach ( $wp_properties as $wp_id => $wp_data ) {
 			if ( isset( $available_properties[ $wp_id ] ) ) {
-				$api_data      = $available_properties[ $wp_id ];
-				$api_date      = isset( $api_data['last_updated'] ) ? $api_data['last_updated'] : null;
-				$wp_date       = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
-				$needs_update  = false;
+				$api_data     = $available_properties[ $wp_id ];
+				$api_date     = isset( $api_data['last_updated'] ) ? $api_data['last_updated'] : null;
+				$wp_date      = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
+				$needs_update = false;
 
 				if ( ! empty( $api_date ) && ! empty( $wp_date ) ) {
 					$api_timestamp = strtotime( $api_date );
@@ -421,8 +421,8 @@ class Import {
 			}
 		}
 
-		$import_count  = $new_count + $outdated_count;
-		$delete_count  = count( array_diff( $wp_ids, $api_ids ) );
+		$import_count = $new_count + $outdated_count;
+		$delete_count = count( array_diff( $wp_ids, $api_ids ) );
 
 		return array(
 			'new_count'      => $new_count,
