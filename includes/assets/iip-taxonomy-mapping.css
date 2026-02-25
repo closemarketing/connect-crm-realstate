@@ -1,0 +1,71 @@
+/**
+ * Taxonomy Mapping Styles
+ *
+ * @package Connect CRM Real State
+ */
+
+#ccrmre-taxonomy-mapping-wrapper {
+	margin-top: 20px;
+}
+
+.ccrmre-taxonomy-mapping-table {
+	width: 100%;
+	max-width: 900px;
+	border-collapse: collapse;
+}
+
+.ccrmre-taxonomy-mapping-table thead th {
+	background: #f0f0f1;
+	padding: 12px 10px;
+	text-align: left;
+	border-bottom: 2px solid #c3c4c7;
+	font-weight: 600;
+}
+
+.ccrmre-taxonomy-mapping-table tbody tr {
+	border-bottom: 1px solid #c3c4c7;
+}
+
+.ccrmre-taxonomy-mapping-table tbody tr:hover {
+	background: #f6f7f7;
+}
+
+.ccrmre-taxonomy-mapping-table td {
+	padding: 12px 10px;
+	vertical-align: middle;
+}
+
+.ccrmre-taxonomy-mapping-table select {
+	width: 100%;
+	max-width: 350px;
+	min-width: 200px;
+}
+
+.ccrmre-actions-col {
+	width: 60px;
+	text-align: center;
+}
+
+.ccrmre-remove-taxonomy-row .dashicons {
+	color: #b32d2e;
+}
+
+.ccrmre-remove-taxonomy-row:hover .dashicons {
+	color: #a00;
+}
+
+.ccrmre-row-error {
+	background: #fcf0f1 !important;
+}
+
+.ccrmre-row-error select {
+	border-color: #d63638;
+}
+
+#ccrmre-add-taxonomy-row {
+	margin-top: 10px;
+}
+
+#ccrmre-add-taxonomy-row .dashicons {
+	color: #2271b1;
+}

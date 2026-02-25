@@ -121,6 +121,9 @@ class SYNC {
 		$message  .= self::add_end_message( $property_id, $property_title, $property_city, $reference );
 
 		if ( ! empty( $property_post_id ) ) {
+			// Assign taxonomy terms based on taxonomy mappings.
+			self::assign_taxonomy_terms( $property_post_id, $item, $crm );
+
 			update_post_meta( $property_post_id, 'property_synced', true );
 			delete_post_meta( $property_post_id, 'property_description' );
 			delete_post_meta( $property_post_id, 'property_name' );
@@ -853,6 +856,78 @@ class SYNC {
 		}
 
 		return $filtered;
+	}
+
+	/**
+	 * Assigns taxonomy terms to a property based on saved taxonomy mappings.
+	 *
+	 * Each mapping defines a CRM field whose value becomes the term name
+	 * for the configured taxonomy. Terms are created automatically if they
+	 * do not exist yet.
+	 *
+	 * @param int    $post_id WordPress post ID.
+	 * @param array  $item    API item data.
+	 * @param string $crm     CRM type.
+	 * @return void
+	 */
+	public static function assign_taxonomy_terms( $post_id, $item, $crm ) {
+		$taxonomy_mappings = get_option( 'conncrmreal_taxonomy_mappings', array() );
+
+		if ( empty( $taxonomy_mappings ) || ! is_array( $taxonomy_mappings ) ) {
+			return;
+		}
+
+		foreach ( $taxonomy_mappings as $mapping ) {
+			$crm_field = isset( $mapping['crm_field'] ) ? $mapping['crm_field'] : '';
+			$taxonomy  = isset( $mapping['taxonomy'] ) ? $mapping['taxonomy'] : '';
+
+			if ( empty( $crm_field ) || empty( $taxonomy ) ) {
+				continue;
+			}
+
+			if ( ! taxonomy_exists( $taxonomy ) ) {
+				continue;
+			}
+
+			// Get the raw value from the API item.
+			$raw_value = isset( $item[ $crm_field ] ) ? $item[ $crm_field ] : '';
+
+			// Apply enum resolution for Inmovilla Procesos.
+			$raw_value = self::format_item_meta( $crm, $raw_value, $crm_field );
+
+			if ( '' === $raw_value || null === $raw_value || false === $raw_value ) {
+				continue;
+			}
+
+			// Handle comma-separated values as multiple terms.
+			if ( is_string( $raw_value ) && false !== strpos( $raw_value, ',' ) ) {
+				$term_names = array_map( 'trim', explode( ',', $raw_value ) );
+			} else {
+				$term_names = array( trim( (string) $raw_value ) );
+			}
+
+			$term_names = array_filter( $term_names );
+			if ( empty( $term_names ) ) {
+				continue;
+			}
+
+			$term_ids = array();
+			foreach ( $term_names as $term_name ) {
+				$existing = term_exists( $term_name, $taxonomy );
+				if ( $existing ) {
+					$term_ids[] = (int) ( is_array( $existing ) ? $existing['term_id'] : $existing );
+				} else {
+					$new_term = wp_insert_term( $term_name, $taxonomy );
+					if ( ! is_wp_error( $new_term ) ) {
+						$term_ids[] = (int) $new_term['term_id'];
+					}
+				}
+			}
+
+			if ( ! empty( $term_ids ) ) {
+				wp_set_object_terms( $post_id, $term_ids, $taxonomy );
+			}
+		}
 	}
 
 	/**
