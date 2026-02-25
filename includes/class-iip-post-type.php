@@ -193,6 +193,8 @@ class PostType {
 	 */
 	public function metabox_show_property_info( $post ) {
 		$property_id  = get_post_meta( $post->ID, 'ccrmre_property_id', true );
+		$reference    = get_post_meta( $post->ID, 'ccrmre_reference', true );
+		$status       = get_post_meta( $post->ID, 'ccrmre_status', true );
 		$last_updated = get_post_meta( $post->ID, 'ccrmre_last_updated', true );
 		?>
 		<table class="ccrmre-property-info-table">
@@ -204,6 +206,31 @@ class PostType {
 					<?php else : ?>
 						<em><?php esc_html_e( 'Not synced', 'connect-crm-real-state' ); ?></em>
 					<?php endif; ?>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Reference', 'connect-crm-real-state' ); ?></th>
+				<td>
+					<?php if ( '' !== $reference ) : ?>
+						<code><?php echo esc_html( $reference ); ?></code>
+					<?php else : ?>
+						<em><?php esc_html_e( 'Not synced', 'connect-crm-real-state' ); ?></em>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Status', 'connect-crm-real-state' ); ?></th>
+				<td>
+					<?php
+					if ( '' !== $status && null !== $status ) {
+						$is_active = ! empty( $status ) && '0' !== $status && false !== $status;
+						echo $is_active
+							? esc_html__( 'Available', 'connect-crm-real-state' )
+							: esc_html__( 'Unavailable', 'connect-crm-real-state' );
+					} else {
+						echo '<em>' . esc_html__( 'Not synced', 'connect-crm-real-state' ) . '</em>';
+					}
+					?>
 				</td>
 			</tr>
 			<tr>

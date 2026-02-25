@@ -137,6 +137,9 @@ class SYNC {
 			if ( isset( $property_info_meta['status'] ) ) {
 				update_post_meta( $property_post_id, 'ccrmre_status', $property_info_meta['status'] );
 			}
+			if ( isset( $property_info_meta['reference'] ) && '' !== $property_info_meta['reference'] ) {
+				update_post_meta( $property_post_id, 'ccrmre_reference', $property_info_meta['reference'] );
+			}
 
 			// Save photo URLs and optionally download images.
 			if ( isset( $item['fotos'] ) && is_array( $item['fotos'] ) && ! empty( $item['fotos'] ) ) {
