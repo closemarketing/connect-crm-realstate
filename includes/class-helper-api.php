@@ -1418,8 +1418,8 @@ class API {
 			'keytecho',        // Tipo de techo.
 			'keyvista',        // Tipo de vista.
 			'key_loca',        // Código de la localidad/ciudad. (Véase: Enums - Ciudades).
-		// 'key_tipo',        // Tipo de propiedad. (Véase: Enums - Tipo Propiedades).
-		// 'key_zona',        // Código de la zona. (Véase: Enums - Zonas).
+			'key_tipo',        // Tipo de propiedad. (Véase: Enums - Tipo Propiedades).
+			'key_zona',        // Código de la zona. (Véase: Enums - Zonas).
 			'tgascom',         // Periodicidad de la comunidad.
 			'tipovpo',         // Tipo de régimen.
 			'todoext',         // Todo exterior.
@@ -1439,9 +1439,9 @@ class API {
 				$ciudades      = self::get_inmovilla_procesos_ciudades();
 				$enums[ $key ] = $ciudades;
 			} else {
-				$result = self::request_inmovilla_procesos( 'enums/?tipos={' . $key . '}' );
+				$result = self::request_inmovilla_procesos( 'enums/?tipos' );
 				if ( 'ok' === $result['status'] && isset( $result['data'] ) ) {
-					$enums[ $key ] = $result['data'];
+					$enums = self::flat_values( $enums, $result['data'] );
 				}
 			}
 			set_transient( 'ccrmre_query_enums_inmovilla_procesos', $enums, DAY_IN_SECONDS * 3 );
@@ -1610,5 +1610,30 @@ class API {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Flat values from Inmovilla
+	 *
+	 * @param array $actual Actual values.
+	 * @param array $values Values.
+	 * @return array
+	 */
+	public static function flat_values( $actual, $values ) {
+		if ( ! is_array( $values ) ) {
+			return array();
+		}
+		$actual = is_array( $actual ) ? $actual : array();
+		foreach ( $values as $key => $value ) {
+			if ( ! is_array( $value ) ) {
+				continue;
+			}
+			foreach ( $value as $value_value ) {
+				if ( isset( $value_value['valor'] ) && isset( $value_value['nombre'] ) ) {
+					$actual[ $key ][ $value_value['valor'] ] = $value_value['nombre'];
+				}
+			}
+		}
+		return $actual;
 	}
 }

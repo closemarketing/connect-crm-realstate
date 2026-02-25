@@ -196,8 +196,8 @@ class SYNC {
 					}
 					return $item_meta;
 				default:
-					if ( ! empty( $enums[ $key ] ) ) {
-						$item_meta = $enums[ $key ];
+					if ( ! empty( $enums[ $key ][ $item_meta ] ) ) {
+						$item_meta = $enums[ $key ][ $item_meta ];
 					}
 					return $item_meta;
 			}
