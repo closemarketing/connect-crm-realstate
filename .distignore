@@ -17,5 +17,6 @@ docs/
 *.tar.gz
 *.zip
 .DS_Store
+AGENTS.md
 
 languages/
