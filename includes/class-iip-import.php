@@ -65,7 +65,7 @@ class Import {
 		wp_enqueue_script(
 			'ccrmre-manual-sync',
 			CCRMRE_PLUGIN_URL . 'includes/assets/iip-manual-sync.js',
-			array( 'ccrmre-admin-import-stats' ),
+			array( 'jquery' ),
 			CCRMRE_VERSION,
 			true
 		);

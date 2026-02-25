@@ -1,5 +1,6 @@
 .distignore
 .editorconfig
+.wordpress-org
 .git
 .gitignore
 .cursor
