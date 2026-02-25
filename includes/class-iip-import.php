@@ -368,33 +368,51 @@ class Import {
 
 		$wp_properties = SYNC::get_wordpress_property_data( $crm_type );
 		$wp_count      = count( $wp_properties );
+
+		$counts = self::compute_import_stats( $available_properties, $wp_properties, $api_ids );
+
+		wp_send_json_success(
+			array_merge(
+				array(
+					'api_count'       => $api_count,
+					'available_count' => count( $available_properties ),
+					'wp_count'        => $wp_count,
+				),
+				$counts
+			)
+		);
+	}
+
+	/**
+	 * Compute import stats (new, outdated, import_count, delete_count) from available and WP data.
+	 * Used by get_import_stats() and by unit tests.
+	 *
+	 * @param array $available_properties Map of property_id => array( last_updated?, ... ) from API (available only).
+	 * @param array $wp_properties       Map of property_id => array( last_updated? ) from WordPress.
+	 * @param array $api_ids             All property IDs from API (for delete count).
+	 * @return array{new_count: int, outdated_count: int, import_count: int, delete_count: int}
+	 */
+	public static function compute_import_stats( array $available_properties, array $wp_properties, array $api_ids ) {
+		$available_ids = array_keys( $available_properties );
 		$wp_ids        = array_keys( $wp_properties );
 
-		$new_properties = array_diff( $available_ids, $wp_ids );
-		$new_count      = count( $new_properties );
+		$new_count = count( array_diff( $available_ids, $wp_ids ) );
 
+		// Outdated: in WP and API but API has a newer last_updated (we no longer store status in WP).
 		$outdated_count = 0;
 		foreach ( $wp_properties as $wp_id => $wp_data ) {
 			if ( isset( $available_properties[ $wp_id ] ) ) {
 				$api_data     = $available_properties[ $wp_id ];
+				$api_date     = isset( $api_data['last_updated'] ) ? $api_data['last_updated'] : null;
+				$wp_date      = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
 				$needs_update = false;
-
-				$api_date   = isset( $api_data['last_updated'] ) ? $api_data['last_updated'] : null;
-				$wp_date    = isset( $wp_data['last_updated'] ) ? $wp_data['last_updated'] : null;
-				$api_status = isset( $api_data['status'] ) ? $api_data['status'] : null;
-				$wp_status  = isset( $wp_data['status'] ) ? $wp_data['status'] : null;
 
 				if ( ! empty( $api_date ) && ! empty( $wp_date ) ) {
 					$api_timestamp = strtotime( $api_date );
 					$wp_timestamp  = strtotime( $wp_date );
-
 					if ( $api_timestamp > $wp_timestamp ) {
 						$needs_update = true;
 					}
-				}
-
-				if ( $api_status !== $wp_status ) {
-					$needs_update = true;
 				}
 
 				if ( $needs_update ) {
@@ -404,19 +422,13 @@ class Import {
 		}
 
 		$import_count = $new_count + $outdated_count;
-		$to_delete    = array_diff( $wp_ids, $api_ids );
-		$delete_count = count( $to_delete );
+		$delete_count = count( array_diff( $wp_ids, $api_ids ) );
 
-		wp_send_json_success(
-			array(
-				'api_count'       => $api_count,
-				'available_count' => count( $available_properties ),
-				'wp_count'        => $wp_count,
-				'import_count'    => $import_count,
-				'new_count'       => $new_count,
-				'outdated_count'  => $outdated_count,
-				'delete_count'    => $delete_count,
-			)
+		return array(
+			'new_count'      => $new_count,
+			'outdated_count' => $outdated_count,
+			'import_count'   => $import_count,
+			'delete_count'   => $delete_count,
 		);
 	}
 }
