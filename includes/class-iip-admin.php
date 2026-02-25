@@ -858,6 +858,9 @@ class Admin {
 				<select id="import-mode" class="import-mode-select">
 					<option value="updated"><?php esc_html_e( 'Properties to update', 'connect-crm-real-state' ); ?></option>
 					<option value="all"><?php esc_html_e( 'All properties', 'connect-crm-real-state' ); ?></option>
+					<option value="modified_3h"><?php esc_html_e( 'Properties modified last 3 hours', 'connect-crm-real-state' ); ?></option>
+					<option value="modified_24h"><?php esc_html_e( 'Properties modified last 24 hours', 'connect-crm-real-state' ); ?></option>
+					<option value="modified_7d"><?php esc_html_e( 'Properties modified last 7 days', 'connect-crm-real-state' ); ?></option>
 				</select>
 				<button type="button" id="manual_import" name="manual_import" class="button button-large button-primary" onclick="syncManualProperties(this, 0, <?php echo (int) $pagination; ?>);" >
 					<?php esc_html_e( 'Start Import', 'connect-crm-real-state' ); ?>
