@@ -32,24 +32,15 @@ class API {
 	 * @return array Array with status and list of property IDs/references (with metadata if requested)
 	 */
 	public static function get_all_property_ids( $crm_type, $with_metadata = true ) {
-		$property_ids = array();
-		$page         = 1;
-		$has_more     = true;
-		$pagination   = self::get_pagination_size( $crm_type );
-
-		while ( $has_more ) {
-			$result = self::get_properties( $page );
+		$property_ids = get_transient( 'ccrmre_query_property_ids' );
+		if ( ! $property_ids ) {
+			$result = self::get_properties();
 
 			if ( 'error' === $result['status'] ) {
 				return $result;
 			}
 
 			$properties = isset( $result['data'] ) ? $result['data'] : array();
-
-			if ( empty( $properties ) ) {
-				$has_more = false;
-				break;
-			}
 
 			// Extract IDs, dates and status for each property.
 			foreach ( $properties as $property ) {
@@ -70,18 +61,7 @@ class API {
 					$property_ids[] = $list_key;
 				}
 			}
-
-			// Check if there are more pages.
-			if ( count( $properties ) < $pagination || -1 === $pagination ) {
-				$has_more = false;
-			} else {
-				++$page;
-			}
-
-			// Safety limit to prevent infinite loops.
-			if ( $page > 1000 ) {
-				$has_more = false;
-			}
+			set_transient( 'ccrmre_query_property_ids', $property_ids, MINUTE_IN_SECONDS * 3 );
 		}
 
 		return array(
@@ -201,16 +181,9 @@ class API {
 		$body .= '&ib=' . self::get_forwarded_ip();
 
 		// Add domain to the request, matching the official Inmovilla client order.
-		// SERVER_NAME and HTTP_HOST are empty in WP cron/CLI, so fall back to site URL.
-		if ( ! empty( $_SERVER['SERVER_NAME'] ) ) {
-			$hostname = sanitize_text_field( wp_unslash( $_SERVER['SERVER_NAME'] ) );
-		} elseif ( ! empty( $_SERVER['HTTP_HOST'] ) ) {
-			$hostname = sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) );
-		} else {
-			$parsed_url = wp_parse_url( get_site_url() );
-			$hostname   = isset( $parsed_url['host'] ) ? $parsed_url['host'] : '';
-		}
-		$body .= '&elDominio=' . $hostname;
+		$parsed_url = wp_parse_url( get_site_url() );
+		$hostname   = isset( $parsed_url['host'] ) ? $parsed_url['host'] : '';
+		$body      .= '&elDominio=' . $hostname;
 
 		// Prepare request arguments.
 		$api_config = self::get_api_config( 'inmovilla' );
@@ -232,58 +205,58 @@ class API {
 			'timeout'    => $api_config['timeout'],
 		);
 
-		// Make API request.
-		$url      = 'https://apiweb.inmovilla.com/apiweb/apiweb.php';
-		$response = wp_remote_post( $url, $args );
+		$url = 'https://apiweb.inmovilla.com/apiweb/apiweb.php';
 
-		// Persist cookies from response for next request.
-		self::save_inmovilla_cookies( $response );
+		return self::execute_with_retry(
+			function () use ( $url, $args ) {
+				$response = wp_remote_post( $url, $args );
 
-		// Check for errors.
-		if ( is_wp_error( $response ) ) {
-			return array(
-				'status'     => 'error',
-				'message'    => $response->get_error_message(),
-				'data'       => array(),
-				'error_type' => self::detect_error_type( $response, 0 ),
-			);
-		}
+				self::save_inmovilla_cookies( $response );
 
-		// Get response body.
-		$body = wp_remote_retrieve_body( $response );
-		$code = wp_remote_retrieve_response_code( $response );
+				if ( is_wp_error( $response ) ) {
+					return array(
+						'status'     => 'error',
+						'message'    => $response->get_error_message(),
+						'data'       => array(),
+						'error_type' => self::detect_error_type( $response, 0 ),
+					);
+				}
 
-		// Check response code.
-		if ( 200 !== $code ) {
-			return array(
-				'status'     => 'error',
-				'message'    => sprintf(
-					/* translators: %d: HTTP response code */
-					__( 'Inmovilla API returned error code: %d', 'connect-crm-real-state' ),
-					$code
-				),
-				'data'       => array(),
-				'error_type' => self::detect_error_type( $response, $code ),
-			);
-		}
+				$body = wp_remote_retrieve_body( $response );
+				$code = wp_remote_retrieve_response_code( $response );
 
-		// Decode JSON response.
-		$data = json_decode( $body, true );
+				if ( 200 !== $code || 'Se ha superado el numero de peticiones por minuto' === $body ) {
+					return array(
+						'status'     => 'error',
+						'message'    => sprintf(
+							/* translators: %d: HTTP response code */
+							__( 'Inmovilla API returned error code: %d', 'connect-crm-real-state' ),
+							$code
+						),
+						'data'       => array(),
+						'error_type' => self::detect_error_type( $response, $code ),
+					);
+				}
 
-		if ( json_last_error() !== JSON_ERROR_NONE ) {
-			$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-real-state' );
-			$message .= is_string( $body ) ? ' - ' . $body : '';
-			return array(
-				'status'  => 'error',
-				'message' => $message,
-				'data'    => array(),
-			);
-		}
+				$data = json_decode( $body, true );
 
-		// Return successful response.
-		return array(
-			'status' => 'ok',
-			'data'   => $data,
+				if ( json_last_error() !== JSON_ERROR_NONE ) {
+					$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-real-state' );
+					$message .= is_string( $body ) ? ' - ' . $body : '';
+					return array(
+						'status'     => 'error',
+						'message'    => $message,
+						'data'       => array(),
+						'error_type' => 'default',
+					);
+				}
+
+				return array(
+					'status' => 'ok',
+					'data'   => $data,
+				);
+			},
+			'Inmovilla API Web'
 		);
 	}
 
@@ -528,7 +501,6 @@ class API {
 	public static function get_properties( $page = 0, $changed_from = '' ) {
 		$settings     = get_option( 'conncrmreal_settings' );
 		$settings_crm = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
-		$pagination   = self::get_pagination_size( $settings_crm );
 
 		if ( 'anaconda' === $settings_crm ) {
 			if ( ! empty( $page ) ) {
@@ -568,50 +540,75 @@ class API {
 
 			return $result;
 		} elseif ( 'inmovilla' === $settings_crm ) {
-			// For Inmovilla, use pagination type to get properties.
-			$pos_inicial   = $page > 0 ? ( ( $page - 1 ) * $pagination ) + 1 : 1;
-			$num_elementos = $pagination;
-			$where         = '';
-			$orden         = 'fecha desc'; // Order by date descending.
-
-			// If we have a changed_from date, filter by date.
-			if ( ! empty( $changed_from ) ) {
-				// Convert date to format YYYY-MM-DD.
-				$changed_timestamp = strtotime( $changed_from );
-				if ( $changed_timestamp ) {
-					$date_filter = gmdate( 'Y-m-d', $changed_timestamp );
-					$where       = "fechaact>='{$date_filter}'";
-				}
-			}
-
-			$result = self::request_inmovilla( 'paginacion', $pos_inicial, $num_elementos, $where, $orden );
-
-			// Process the response to match expected format.
-			if ( 'ok' === $result['status'] && isset( $result['data']['paginacion'] ) ) {
-				$properties = array();
-				$total      = count( $result['data']['paginacion'] );
-
-				// Skip first element (metadata) and get properties.
-				for ( $i = 1; $i < $total; $i++ ) {
-					if ( isset( $result['data']['paginacion'][ $i ] ) ) {
-						$properties[] = $result['data']['paginacion'][ $i ];
-					}
-				}
-
-				return array(
-					'status' => 'ok',
-					'data'   => $properties,
-					'meta'   => isset( $result['data']['paginacion'][0] ) ? $result['data']['paginacion'][0] : array(),
-				);
-			}
-
-			return $result;
+			return self::request_inmovilla_all_properties( $changed_from );
 		}
 
 		return array(
 			'status'  => 'error',
 			'message' => __( 'CRM type not configured', 'connect-crm-real-state' ),
 			'data'    => array(),
+		);
+	}
+
+	/**
+	 * Fetch all properties from Inmovilla API iterating through all pages.
+	 *
+	 * Requests page 1 first, reads the total from the metadata element (index 0),
+	 * then fetches remaining pages and merges all properties into a single array.
+	 *
+	 * @param string $changed_from ISO date string to filter by last-updated date (fechaact).
+	 * @return array
+	 */
+	public static function request_inmovilla_all_properties( $changed_from = '' ) {
+		$where      = '';
+		$orden      = 'fecha desc';
+		$pagination = self::get_pagination_size( 'inmovilla' );
+
+		// Build date filter when provided.
+		if ( ! empty( $changed_from ) ) {
+			$changed_timestamp = strtotime( $changed_from );
+			if ( $changed_timestamp ) {
+				$where = "fechaact>='" . gmdate( 'Y-m-d', $changed_timestamp ) . "'";
+			}
+		}
+
+		$all_properties = array();
+		$pos_inicial    = 1;
+		$total_records  = null;
+
+		do {
+			$result = self::request_inmovilla( 'paginacion', $pos_inicial, $pagination, $where, $orden );
+
+			if ( 'ok' !== $result['status'] || ! isset( $result['data']['paginacion'] ) ) {
+				// Return error on first page; stop silently on subsequent pages.
+				if ( 1 === $pos_inicial ) {
+					return $result;
+				}
+				break;
+			}
+
+			$raw = $result['data']['paginacion'];
+
+			// Index 0 is metadata: posicion, elementos, total.
+			if ( null === $total_records && isset( $raw[0]['total'] ) ) {
+				$total_records = (int) $raw[0]['total'];
+			}
+
+			// Collect properties (index 1 onwards).
+			$count = count( $raw );
+			for ( $i = 1; $i < $count; $i++ ) {
+				if ( isset( $raw[ $i ] ) ) {
+					$all_properties[] = $raw[ $i ];
+				}
+			}
+
+			$pos_inicial += $pagination;
+		} while ( null !== $total_records && $pos_inicial <= $total_records );
+
+		return array(
+			'status' => 'ok',
+			'data'   => $all_properties,
+			'meta'   => array( 'total' => $total_records ?? count( $all_properties ) ),
 		);
 	}
 

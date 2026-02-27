@@ -75,17 +75,24 @@ function geturl($url,$campospost)
             'HTTP_CF_CONNECTING_IP'
         );
 
+        $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
+
         foreach ($proxy_headers as $key) {
             if (isset($_SERVER[$key])) {
                 $ips = explode(',', $_SERVER[$key]);
                 $ip = trim($ips[0]); // Tomamos la primera IP de la lista
-                if ($ip != $_SERVER['REMOTE_ADDR']) {
+                if ($ip != $remote_addr) {
                     return $ip;
                 }
             }
         }
 
-        return $_SERVER['REMOTE_ADDR'];
+        // Fall back to server IP when running from CLI (no REMOTE_ADDR).
+        if (empty($remote_addr)) {
+            return defined('EXTERNAL_IP') ? EXTERNAL_IP : gethostbyname(gethostname());
+        }
+
+        return $remote_addr;
     }
 
     $header[0] = "Accept: text/xml,application/xml,application/xhtml+xml,";
@@ -96,6 +103,8 @@ function geturl($url,$campospost)
     $header[] = "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7";
     $header[] = "Accept-Language: en-us,en;q=0.5";
     $header[] = "Pragma: ";
+
+    $cookie = sys_get_temp_dir() . '/inmovilla_cookies.txt';
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
