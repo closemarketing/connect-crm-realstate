@@ -37,23 +37,11 @@ class SYNC {
 		$property_id         = $property_info_early['id'];
 		$property_post_id    = self::find_property( $property_id, $post_type );
 
-		if ( 'inmovilla_procesos' === $crm ) {
-			// Inmovilla Procesos: descripciones and tituloes are direct strings.
-			$property_title       = isset( $item['tituloes'] ) ? $item['tituloes'] : __( 'Property', 'connect-crm-real-state' );
-			$property_description = isset( $item['descripciones'] ) ? $item['descripciones'] : '';
-			$property_city        = isset( $item['ciudad'] ) ? $item['ciudad'] : '';
-		} elseif ( 'inmovilla' === $crm ) {
-			// Inmovilla APIWEB: descripciones is an array with titulo and descrip.
-			$descripciones        = isset( $item['descripciones'] ) ? $item['descripciones'] : array();
-			$property_title       = isset( $descripciones['titulo'] ) ? $descripciones['titulo'] : __( 'Property', 'connect-crm-real-state' );
-			$property_description = isset( $descripciones['descrip'] ) ? $descripciones['descrip'] : '';
-			$property_city        = isset( $item['ciudad'] ) ? $item['ciudad'] : '';
-		} else {
-			// Anaconda.
-			$property_title       = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-real-state' );
-			$property_description = isset( $item['description'] ) ? $item['description'] : '';
-			$property_city        = isset( $item['city'] ) ? $item['city'] : '';
-		}
+		// Get property content.
+		$property_content     = self::get_property_content( $item, $crm );
+		$property_title       = $property_content['title'];
+		$property_description = $property_content['description'];
+		$property_city        = $property_content['city'];
 
 		if ( self::cannot_import( $item, $filter_postal_code ) ) {
 			$reference = self::get_reference_from_item( $item, $crm );
@@ -178,6 +166,41 @@ class SYNC {
 			'status'      => $status_value,
 			'title'       => $property_title,
 			'city'        => $property_city,
+		);
+	}
+
+	/**
+	 * Returns title, description, and city extracted from a raw CRM item.
+	 *
+	 * @param array  $item Raw item from the CRM API.
+	 * @param string $crm  CRM type (inmovilla_procesos|inmovilla|anaconda).
+	 * @return array{title: string, description: string, city: string}
+	 */
+	public static function get_property_content( array $item, string $crm ): array {
+		if ( 'inmovilla_procesos' === $crm ) {
+			// Inmovilla Procesos: title and description are direct string fields.
+			return array(
+				'title'       => isset( $item['tituloes'] ) ? $item['tituloes'] : __( 'Property', 'connect-crm-real-state' ),
+				'description' => isset( $item['descripciones'] ) ? $item['descripciones'] : '',
+				'city'        => isset( $item['ciudad'] ) ? $item['ciudad'] : '',
+			);
+		}
+
+		if ( 'inmovilla' === $crm ) {
+			// Inmovilla APIWEB: descripciones is an array with titulo and descrip keys.
+			$descripciones = isset( $item['descripciones'] ) ? $item['descripciones'] : array();
+			return array(
+				'title'       => isset( $descripciones['titulo'] ) ? $descripciones['titulo'] : __( 'Property', 'connect-crm-real-state' ),
+				'description' => isset( $descripciones['descrip'] ) ? $descripciones['descrip'] : '',
+				'city'        => isset( $item['ciudad'] ) ? $item['ciudad'] : '',
+			);
+		}
+
+		// Anaconda.
+		return array(
+			'title'       => isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-real-state' ),
+			'description' => isset( $item['description'] ) ? $item['description'] : '',
+			'city'        => isset( $item['city'] ) ? $item['city'] : '',
 		);
 	}
 

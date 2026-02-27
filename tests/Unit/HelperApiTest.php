@@ -936,5 +936,141 @@ class HelperApiTest extends WP_UnitTestCase {
 		$this->assertCount( 2, $filtered, 'Should return non-empty string status values' );
 		$this->assertEquals( array( 'PROP001', 'PROP002' ), $filtered );
 	}
+
+	// -------------------------------------------------------------------------
+	// Tests: SYNC::get_property_content
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Inmovilla Procesos: all fields present.
+	 */
+	public function test_get_property_content_inmovilla_procesos_all_fields() {
+		$item = array(
+			'tituloes'     => 'Casa en la playa',
+			'descripciones' => 'Amplia casa con vistas al mar.',
+			'ciudad'       => 'Barcelona',
+		);
+
+		$result = SYNC::get_property_content( $item, 'inmovilla_procesos' );
+
+		$this->assertIsArray( $result );
+		$this->assertEquals( 'Casa en la playa', $result['title'] );
+		$this->assertEquals( 'Amplia casa con vistas al mar.', $result['description'] );
+		$this->assertEquals( 'Barcelona', $result['city'] );
+	}
+
+	/**
+	 * Inmovilla Procesos: missing all optional fields uses defaults.
+	 */
+	public function test_get_property_content_inmovilla_procesos_missing_fields() {
+		$result = SYNC::get_property_content( array(), 'inmovilla_procesos' );
+
+		$this->assertEquals( 'Property', $result['title'] );
+		$this->assertEquals( '', $result['description'] );
+		$this->assertEquals( '', $result['city'] );
+	}
+
+	/**
+	 * Inmovilla APIWEB: all fields present inside the descripciones array.
+	 */
+	public function test_get_property_content_inmovilla_all_fields() {
+		$item = array(
+			'descripciones' => array(
+				'titulo' => 'Piso moderno',
+				'descrip' => 'Piso reformado en el centro.',
+			),
+			'ciudad' => 'Madrid',
+		);
+
+		$result = SYNC::get_property_content( $item, 'inmovilla' );
+
+		$this->assertEquals( 'Piso moderno', $result['title'] );
+		$this->assertEquals( 'Piso reformado en el centro.', $result['description'] );
+		$this->assertEquals( 'Madrid', $result['city'] );
+	}
+
+	/**
+	 * Inmovilla APIWEB: descripciones is empty array, title falls back to default.
+	 */
+	public function test_get_property_content_inmovilla_empty_descripciones() {
+		$item = array(
+			'descripciones' => array(),
+			'ciudad'        => 'Sevilla',
+		);
+
+		$result = SYNC::get_property_content( $item, 'inmovilla' );
+
+		$this->assertEquals( 'Property', $result['title'] );
+		$this->assertEquals( '', $result['description'] );
+		$this->assertEquals( 'Sevilla', $result['city'] );
+	}
+
+	/**
+	 * Inmovilla APIWEB: descripciones key is absent.
+	 */
+	public function test_get_property_content_inmovilla_missing_descripciones() {
+		$result = SYNC::get_property_content( array(), 'inmovilla' );
+
+		$this->assertEquals( 'Property', $result['title'] );
+		$this->assertEquals( '', $result['description'] );
+		$this->assertEquals( '', $result['city'] );
+	}
+
+	/**
+	 * Anaconda: all fields present.
+	 */
+	public function test_get_property_content_anaconda_all_fields() {
+		$item = array(
+			'name'        => 'Villa con piscina',
+			'description' => 'Amplia villa con piscina privada.',
+			'city'        => 'Marbella',
+		);
+
+		$result = SYNC::get_property_content( $item, 'anaconda' );
+
+		$this->assertEquals( 'Villa con piscina', $result['title'] );
+		$this->assertEquals( 'Amplia villa con piscina privada.', $result['description'] );
+		$this->assertEquals( 'Marbella', $result['city'] );
+	}
+
+	/**
+	 * Anaconda: missing fields use defaults.
+	 */
+	public function test_get_property_content_anaconda_missing_fields() {
+		$result = SYNC::get_property_content( array(), 'anaconda' );
+
+		$this->assertEquals( 'Property', $result['title'] );
+		$this->assertEquals( '', $result['description'] );
+		$this->assertEquals( '', $result['city'] );
+	}
+
+	/**
+	 * Unknown CRM type falls through to Anaconda defaults.
+	 */
+	public function test_get_property_content_unknown_crm_uses_anaconda_defaults() {
+		$item = array(
+			'name' => 'Any property',
+			'city' => 'Valencia',
+		);
+
+		$result = SYNC::get_property_content( $item, 'unknown_crm' );
+
+		$this->assertEquals( 'Any property', $result['title'] );
+		$this->assertEquals( '', $result['description'] );
+		$this->assertEquals( 'Valencia', $result['city'] );
+	}
+
+	/**
+	 * Return value always contains the three expected keys.
+	 */
+	public function test_get_property_content_always_has_required_keys() {
+		foreach ( array( 'inmovilla_procesos', 'inmovilla', 'anaconda' ) as $crm ) {
+			$result = SYNC::get_property_content( array(), $crm );
+
+			$this->assertArrayHasKey( 'title', $result, "Missing 'title' for CRM: $crm" );
+			$this->assertArrayHasKey( 'description', $result, "Missing 'description' for CRM: $crm" );
+			$this->assertArrayHasKey( 'city', $result, "Missing 'city' for CRM: $crm" );
+		}
+	}
 }
 

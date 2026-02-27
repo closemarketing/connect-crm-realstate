@@ -570,7 +570,7 @@ class Admin {
 		?>
 		<select name="conncrmreal_settings[type]" id="type">
 			<option value="anaconda" <?php selected( $type_option, 'anaconda' ); ?>><?php esc_html_e( 'Anaconda', 'connect-crm-real-state' ); ?></option>
-			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?> disabled><?php esc_html_e( 'Inmovilla APIWEB', 'connect-crm-real-state' ); ?></option>
+			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?>><?php esc_html_e( 'Inmovilla APIWEB', 'connect-crm-real-state' ); ?></option>
 			<option value="inmovilla_procesos" <?php selected( $type_option, 'inmovilla_procesos' ); ?>><?php esc_html_e( 'Inmovilla Procesos', 'connect-crm-real-state' ); ?></option>
 		</select>
 		<?php
@@ -601,7 +601,7 @@ class Admin {
 		printf(
 			'<input class="regular-text" type="text" name="conncrmreal_settings[numagencia]" id="numagencia" value="%s"><br><small>%s</small>',
 			isset( $this->settings['numagencia'] ) ? esc_attr( $this->settings['numagencia'] ) : '',
-			esc_html__( 'Agency number from Inmovilla. Example: 2', 'connect-crm-real-state' )
+			esc_html__( 'API Username', 'connect-crm-real-state' )
 		);
 	}
 
