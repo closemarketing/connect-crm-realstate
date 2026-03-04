@@ -43,12 +43,12 @@ class Import {
 	 * Construct and intialize
 	 */
 	public function __construct() {
-		$this->settings        = get_option( 'conncrmreal_settings' );
-		$this->settings_fields = get_option( 'conncrmreal_merge_fields' );
+		$this->settings        = get_option( 'ccrmre_settings' );
+		$this->settings_fields = get_option( 'ccrmre_merge_fields' );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_manual_import' ) );
-		add_action( 'wp_ajax_manual_import', array( $this, 'manual_import' ) );
-		add_action( 'wp_ajax_get_import_stats', array( $this, 'get_import_stats' ) );
+		add_action( 'wp_ajax_ccrmre_manual_import', array( $this, 'manual_import' ) );
+		add_action( 'wp_ajax_ccrmre_get_import_stats', array( $this, 'get_import_stats' ) );
 	}
 
 	/**
@@ -58,7 +58,7 @@ class Import {
 	 * @return void
 	 */
 	public function scripts_manual_import( $hook ) {
-		if ( 'toplevel_page_iip-options' !== $hook ) {
+		if ( 'toplevel_page_ccrmre_options' !== $hook ) {
 			return;
 		}
 
@@ -72,7 +72,7 @@ class Import {
 
 		wp_localize_script(
 			'ccrmre-manual-sync',
-			'ajaxAction',
+			'ccrmre_ajax_action',
 			array(
 				'url'                 => admin_url( 'admin-ajax.php' ),
 				'label_sync'          => __( 'Sync', 'connect-crm-real-state' ),
@@ -208,14 +208,14 @@ class Import {
 			} else {
 				$i = 0;
 				foreach ( $properties as $property_api ) {
-					set_transient( 'connreal_query_property_loop_' . $i, $property_api, 30 * MINUTE_IN_SECONDS );
+					set_transient( 'ccrmre_query_property_loop_' . $i, $property_api, 30 * MINUTE_IN_SECONDS );
 					++$i;
 				}
 
 				$property = isset( $properties[0] ) ? $properties[0] : null;
 			}
 		} else {
-			$property = get_transient( 'connreal_query_property_loop_' . $loop );
+			$property = get_transient( 'ccrmre_query_property_loop_' . $loop );
 
 			// Transient expired - re-fetch the page.
 			if ( false === $property && $loop < $totalprop ) {
@@ -227,7 +227,7 @@ class Import {
 					$properties = $result_api['data'];
 					$i          = 0;
 					foreach ( $properties as $property_api ) {
-						set_transient( 'connreal_query_property_loop_' . $i, $property_api, 30 * MINUTE_IN_SECONDS );
+						set_transient( 'ccrmre_query_property_loop_' . $i, $property_api, 30 * MINUTE_IN_SECONDS );
 						++$i;
 					}
 					$loop_page = $loop % $pagination;
@@ -326,7 +326,7 @@ class Import {
 
 			$size_clean = -1 === $pagination ? $totalprop : $pagination;
 			for ( $i = 0; $i < $size_clean; $i++ ) {
-				delete_transient( 'connreal_query_property_loop_' . $i );
+				delete_transient( 'ccrmre_query_property_loop_' . $i );
 			}
 		}
 

@@ -52,14 +52,14 @@ class Admin {
 	 * @return void
 	 */
 	public function show_admin_notices() {
-		if ( ! isset( $_GET['settings-updated'] ) || ! isset( $_GET['page'] ) || 'iip-options' !== $_GET['page'] ) {
+		if ( ! isset( $_GET['settings-updated'] ) || ! isset( $_GET['page'] ) || 'ccrmre_options' !== $_GET['page'] ) {
 			return;
 		}
 
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
 
 		if ( 'iip-merge' === $active_tab ) {
-			$merge_fields = get_option( 'conncrmreal_merge_fields' );
+			$merge_fields = get_option( 'ccrmre_merge_fields' );
 			$count        = is_array( $merge_fields ) ? count( $merge_fields ) : 0;
 
 			echo '<div class="notice notice-success is-dismissible">';
@@ -74,7 +74,7 @@ class Admin {
 		}
 
 		if ( 'iip-taxonomy' === $active_tab ) {
-			$taxonomy_mappings = get_option( 'conncrmreal_taxonomy_mappings', array() );
+			$taxonomy_mappings = get_option( 'ccrmre_taxonomy_mappings', array() );
 			$count             = is_array( $taxonomy_mappings ) ? count( $taxonomy_mappings ) : 0;
 
 			echo '<div class="notice notice-success is-dismissible">';
@@ -107,7 +107,7 @@ class Admin {
 			__( 'Connect CRM RealState', 'connect-crm-real-state' ),
 			__( 'Connect CRM RealState', 'connect-crm-real-state' ),
 			'manage_options',
-			'iip-options',
+			'ccrmre_options',
 			array( $this, 'plugin_options_page' ),
 			'dashicons-rest-api'
 		);
@@ -123,7 +123,7 @@ class Admin {
 	 * @return void
 	 */
 	public function enqueue_admin_scripts( $hook ) {
-		if ( 'toplevel_page_iip-options' !== $hook ) {
+		if ( 'toplevel_page_ccrmre_options' !== $hook ) {
 			return;
 		}
 
@@ -271,8 +271,8 @@ class Admin {
 	 * @return void
 	 */
 	public function plugin_options_page() {
-		$this->settings        = get_option( 'conncrmreal_settings' );
-		$this->settings_fields = get_option( 'conncrmreal_merge_fields' );
+		$this->settings        = get_option( 'ccrmre_settings' );
+		$this->settings_fields = get_option( 'ccrmre_merge_fields' );
 
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
 
@@ -281,22 +281,22 @@ class Admin {
 		echo '<h2 class="nav-tab-wrapper">';
 
 		// Import Properties tab.
-		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-import' ) . '" class="nav-tab ';
+		echo '<a href="' . esc_url( '?page=ccrmre_options&tab=iip-import' ) . '" class="nav-tab ';
 		echo ( 'iip-import' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Import Properties', 'connect-crm-real-state' ) . '</a>';
 
 		// Settings tab.
-		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-settings' ) . '" class="nav-tab ';
+		echo '<a href="' . esc_url( '?page=ccrmre_options&tab=iip-settings' ) . '" class="nav-tab ';
 		echo ( 'iip-settings' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Settings', 'connect-crm-real-state' ) . '</a>';
 
 		// Merge variables tab.
-		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-merge' ) . '" class="nav-tab ';
+		echo '<a href="' . esc_url( '?page=ccrmre_options&tab=iip-merge' ) . '" class="nav-tab ';
 		echo ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Merge variables', 'connect-crm-real-state' ) . '</a>';
 
 		// Taxonomy mapping tab.
-		echo '<a href="' . esc_url( '?page=iip-options&tab=iip-taxonomy' ) . '" class="nav-tab ';
+		echo '<a href="' . esc_url( '?page=ccrmre_options&tab=iip-taxonomy' ) . '" class="nav-tab ';
 		echo ( 'iip-taxonomy' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Taxonomy Mapping', 'connect-crm-real-state' ) . '</a>';
 
@@ -315,8 +315,8 @@ class Admin {
 
 		if ( 'iip-settings' === $active_tab ) {
 			echo '<form method="post" action="options.php">';
-			settings_fields( 'admin_conncrmreal_settings' );
-			do_settings_sections( 'conncrmreal_settings' );
+			settings_fields( 'ccrmre_admin_settings' );
+			do_settings_sections( 'ccrmre_settings' );
 			submit_button( esc_html__( 'Save changes', 'connect-crm-real-state' ) );
 			echo '</form>';
 		}
@@ -331,8 +331,8 @@ class Admin {
 				</p>
 			</div>
 			<form method="post" action="options.php" id="ccrmre-merge-form">
-				<?php settings_fields( 'iip_plugin_merge_group' ); ?>
-				<?php do_settings_sections( 'conncrmreal_merge_fields' ); ?>
+				<?php settings_fields( 'ccrmre_merge_group' ); ?>
+				<?php do_settings_sections( 'ccrmre_merge_fields' ); ?>
 				<?php submit_button(); ?>
 			</form>
 			<?php
@@ -347,7 +347,7 @@ class Admin {
 				</p>
 			</div>
 			<form method="post" action="options.php" id="ccrmre-taxonomy-form">
-				<?php settings_fields( 'iip_plugin_taxonomy_group' ); ?>
+				<?php settings_fields( 'ccrmre_taxonomy_group' ); ?>
 				<?php $this->taxonomy_mapping_callback(); ?>
 				<?php submit_button( esc_html__( 'Save Taxonomy Mappings', 'connect-crm-real-state' ) ); ?>
 			</form>
@@ -370,80 +370,80 @@ class Admin {
 	 * @return void
 	 */
 	public function register_plugin_settings() {
-		$this->settings = get_option( 'conncrmreal_settings' );
+		$this->settings = get_option( 'ccrmre_settings' );
 
 		register_setting(
-			'admin_conncrmreal_settings',
-			'conncrmreal_settings',
+			'ccrmre_admin_settings',
+			'ccrmre_settings',
 			array( $this, 'sanitize_fields_settings' )
 		);
 
 		add_settings_section(
-			'admin_conncrmreal_settings',
+			'ccrmre_admin_settings',
 			__( 'Settings for Integration with CRM Real State', 'connect-crm-real-state' ),
 			array( $this, 'admin_section_settings_info' ),
-			'conncrmreal_settings'
+			'ccrmre_settings'
 		);
 
 		add_settings_field(
-			'conncrmreal_type',
+			'ccrmre_type',
 			__( 'Type', 'connect-crm-real-state' ),
 			array( $this, 'type_callback' ),
-			'conncrmreal_settings',
-			'admin_conncrmreal_settings'
+			'ccrmre_settings',
+			'ccrmre_admin_settings'
 		);
 
 		add_settings_field(
-			'conncrmreal_apipassword',
+			'ccrmre_apipassword',
 			__( 'API Password / Token', 'connect-crm-real-state' ),
 			array( $this, 'apipassword_callback' ),
-			'conncrmreal_settings',
-			'admin_conncrmreal_settings'
+			'ccrmre_settings',
+			'ccrmre_admin_settings'
 		);
 
 		// Inmovilla specific fields.
 		if ( isset( $this->settings['type'] ) && 'inmovilla' === $this->settings['type'] ) {
 			add_settings_field(
-				'conncrmreal_numagencia',
+				'ccrmre_numagencia',
 				__( 'Agency Number', 'connect-crm-real-state' ),
 				array( $this, 'numagencia_callback' ),
-				'conncrmreal_settings',
-				'admin_conncrmreal_settings'
+				'ccrmre_settings',
+				'ccrmre_admin_settings'
 			);
 		}
 
 		add_settings_field(
-			'conncrmreal_post_type',
+			'ccrmre_post_type',
 			__( 'Post Type', 'connect-crm-real-state' ),
 			array( $this, 'post_type_callback' ),
-			'conncrmreal_settings',
-			'admin_conncrmreal_settings'
+			'ccrmre_settings',
+			'ccrmre_admin_settings'
 		);
 
 		if ( isset( $this->settings['post_type'] ) && 'property' === $this->settings['post_type'] ) {
 			add_settings_field(
-				'conncrmreal_post_type_slug',
+				'ccrmre_post_type_slug',
 				__( 'Post Type SLUG', 'connect-crm-real-state' ),
 				array( $this, 'post_type_slug_callback' ),
-				'conncrmreal_settings',
-				'admin_conncrmreal_settings'
+				'ccrmre_settings',
+				'ccrmre_admin_settings'
 			);
 		}
 
 		add_settings_field(
-			'conncrmreal_postal_code',
+			'ccrmre_postal_code',
 			__( 'Include Properties by Postal Code', 'connect-crm-real-state' ),
 			array( $this, 'postal_code_callback' ),
-			'conncrmreal_settings',
-			'admin_conncrmreal_settings'
+			'ccrmre_settings',
+			'ccrmre_admin_settings'
 		);
 
 		add_settings_field(
-			'conncrmreal_sold_action',
+			'ccrmre_sold_action',
 			__( 'Action for Sold/Unavailable Properties', 'connect-crm-real-state' ),
 			array( $this, 'sold_action_callback' ),
-			'conncrmreal_settings',
-			'admin_conncrmreal_settings'
+			'ccrmre_settings',
+			'ccrmre_admin_settings'
 		);
 
 		/**
@@ -454,55 +454,55 @@ class Admin {
 		do_action( 'ccrmre_register_settings', $this->settings );
 
 		add_settings_field(
-			'conncrmreal_download_images',
+			'ccrmre_download_images',
 			__( 'Download Images Locally', 'connect-crm-real-state' ),
 			array( $this, 'download_images_callback' ),
-			'conncrmreal_settings',
-			'admin_conncrmreal_settings'
+			'ccrmre_settings',
+			'ccrmre_admin_settings'
 		);
 
 		add_settings_field(
-			'conncrmreal_show_gallery',
+			'ccrmre_show_gallery',
 			__( 'Auto Display Photo Gallery', 'connect-crm-real-state' ),
 			array( $this, 'show_gallery_callback' ),
-			'conncrmreal_settings',
-			'admin_conncrmreal_settings'
+			'ccrmre_settings',
+			'ccrmre_admin_settings'
 		);
 
 		add_settings_field(
-			'conncrmreal_show_property_info',
+			'ccrmre_show_property_info',
 			__( 'Auto Display Property Info Box', 'connect-crm-real-state' ),
 			array( $this, 'show_property_info_callback' ),
-			'conncrmreal_settings',
-			'admin_conncrmreal_settings'
+			'ccrmre_settings',
+			'ccrmre_admin_settings'
 		);
 
 		// Merge fields settings.
 		register_setting(
-			'iip_plugin_merge_group',
-			'conncrmreal_merge_fields',
+			'ccrmre_merge_group',
+			'ccrmre_merge_fields',
 			array( $this, 'sanitize_fields_settings_merge' )
 		);
 
 		add_settings_section(
-			'iip_plugin_merge_group',
+			'ccrmre_merge_group',
 			__( 'Settings for Integration with CRM Real State', 'connect-crm-real-state' ),
 			array( $this, 'admin_section_settings_info_merge' ),
-			'conncrmreal_merge_fields'
+			'ccrmre_merge_fields'
 		);
 
 		add_settings_field(
-			'conncrmreal_merge_fields',
+			'ccrmre_merge_fields',
 			__( 'Merge Fields', 'connect-crm-real-state' ),
 			array( $this, 'merge_fields_callback' ),
-			'conncrmreal_merge_fields',
-			'iip_plugin_merge_group'
+			'ccrmre_merge_fields',
+			'ccrmre_merge_group'
 		);
 
 		// Taxonomy mapping settings.
 		register_setting(
-			'iip_plugin_taxonomy_group',
-			'conncrmreal_taxonomy_mappings',
+			'ccrmre_taxonomy_group',
+			'ccrmre_taxonomy_mappings',
 			array( $this, 'sanitize_taxonomy_mappings' )
 		);
 	}
@@ -548,7 +548,7 @@ class Admin {
 		self::invalidate_api_cache();
 
 		add_settings_error(
-			'conncrmreal_settings',
+			'ccrmre_settings',
 			'settings_saved',
 			__( 'Settings saved successfully.', 'connect-crm-real-state' ),
 			'success'
@@ -565,10 +565,10 @@ class Admin {
 	public function type_callback() {
 		$type_option = isset( $this->settings['type'] ) ? $this->settings['type'] : 'show';
 		if ( 'inmovilla' === $type_option ) {
-			echo '<input type="hidden" name="conncrmreal_settings[type]" value="inmovilla">';
+			echo '<input type="hidden" name="ccrmre_settings[type]" value="inmovilla">';
 		}
 		?>
-		<select name="conncrmreal_settings[type]" id="type">
+		<select name="ccrmre_settings[type]" id="type">
 			<option value="anaconda" <?php selected( $type_option, 'anaconda' ); ?>><?php esc_html_e( 'Anaconda', 'connect-crm-real-state' ); ?></option>
 			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?>><?php esc_html_e( 'Inmovilla APIWEB', 'connect-crm-real-state' ); ?></option>
 			<option value="inmovilla_procesos" <?php selected( $type_option, 'inmovilla_procesos' ); ?>><?php esc_html_e( 'Inmovilla Procesos', 'connect-crm-real-state' ); ?></option>
@@ -586,7 +586,7 @@ class Admin {
 		$label       = in_array( $type_option, array( 'inmovilla', 'inmovilla_procesos' ), true ) ? __( 'API Password', 'connect-crm-real-state' ) : __( 'API Token', 'connect-crm-real-state' );
 
 		printf(
-			'<input class="regular-text" type="password" name="conncrmreal_settings[apipassword]" id="apipassword" value="%s"><br><small>%s</small>',
+			'<input class="regular-text" type="password" name="ccrmre_settings[apipassword]" id="apipassword" value="%s"><br><small>%s</small>',
 			isset( $this->settings['apipassword'] ) ? esc_attr( $this->settings['apipassword'] ) : '',
 			esc_html( $label )
 		);
@@ -599,7 +599,7 @@ class Admin {
 	 */
 	public function numagencia_callback() {
 		printf(
-			'<input class="regular-text" type="text" name="conncrmreal_settings[numagencia]" id="numagencia" value="%s"><br><small>%s</small>',
+			'<input class="regular-text" type="text" name="ccrmre_settings[numagencia]" id="numagencia" value="%s"><br><small>%s</small>',
 			isset( $this->settings['numagencia'] ) ? esc_attr( $this->settings['numagencia'] ) : '',
 			esc_html__( 'API Username', 'connect-crm-real-state' )
 		);
@@ -619,7 +619,7 @@ class Admin {
 		$post_types = get_post_types( $args );
 		unset( $post_types['attachment'] );
 		?>
-		<select name="conncrmreal_settings[post_type]" id="post_type">
+		<select name="ccrmre_settings[post_type]" id="post_type">
 			<option value="property" <?php selected( $post_type_option, 'property' ); ?>><?php esc_html_e( 'Created by this plugin', 'connect-crm-real-state' ); ?></option>
 			<?php
 			foreach ( $post_types as $post_type ) {
@@ -639,7 +639,7 @@ class Admin {
 	 */
 	public function post_type_slug_callback() {
 		printf(
-			'<input class="regular-text" type="text" name="conncrmreal_settings[post_type_slug]" id="post_type_slug" value="%s">',
+			'<input class="regular-text" type="text" name="ccrmre_settings[post_type_slug]" id="post_type_slug" value="%s">',
 			isset( $this->settings['post_type_slug'] ) ? esc_attr( $this->settings['post_type_slug'] ) : ''
 		);
 		printf(
@@ -655,7 +655,7 @@ class Admin {
 	 */
 	public function postal_code_callback() {
 		printf(
-			'<input class="regular-text" type="text" name="conncrmreal_settings[postal_code]" id="postal_code" value="%s">',
+			'<input class="regular-text" type="text" name="ccrmre_settings[postal_code]" id="postal_code" value="%s">',
 			isset( $this->settings['postal_code'] ) ? esc_attr( $this->settings['postal_code'] ) : ''
 		);
 		printf(
@@ -672,7 +672,7 @@ class Admin {
 	public function sold_action_callback() {
 		$sold_action = isset( $this->settings['sold_action'] ) ? $this->settings['sold_action'] : 'draft';
 		?>
-		<select name="conncrmreal_settings[sold_action]" id="sold_action">
+		<select name="ccrmre_settings[sold_action]" id="sold_action">
 			<option value="draft" <?php selected( $sold_action, 'draft' ); ?>><?php esc_html_e( 'Unpublish (Set to Draft)', 'connect-crm-real-state' ); ?></option>
 			<option value="keep" <?php selected( $sold_action, 'keep' ); ?>><?php esc_html_e( 'Keep Published', 'connect-crm-real-state' ); ?></option>
 			<option value="trash" <?php selected( $sold_action, 'trash' ); ?>><?php esc_html_e( 'Move to Trash', 'connect-crm-real-state' ); ?></option>
@@ -692,7 +692,7 @@ class Admin {
 	public function download_images_callback() {
 		$download_images = isset( $this->settings['download_images'] ) ? $this->settings['download_images'] : 'no';
 		?>
-		<select name="conncrmreal_settings[download_images]" id="download_images">
+		<select name="ccrmre_settings[download_images]" id="download_images">
 			<option value="no" <?php selected( $download_images, 'no' ); ?>><?php esc_html_e( 'No - Use external image links', 'connect-crm-real-state' ); ?></option>
 			<option value="featured" <?php selected( $download_images, 'featured' ); ?>><?php esc_html_e( 'Featured image only', 'connect-crm-real-state' ); ?></option>
 			<option value="all" <?php selected( $download_images, 'all' ); ?>><?php esc_html_e( 'Yes - All images (featured + gallery)', 'connect-crm-real-state' ); ?></option>
@@ -716,13 +716,13 @@ class Admin {
 	public function show_gallery_callback() {
 		$show_gallery = isset( $this->settings['show_gallery'] ) ? $this->settings['show_gallery'] : 'no';
 		?>
-		<select name="conncrmreal_settings[show_gallery]" id="show_gallery">
+		<select name="ccrmre_settings[ccrmre_show_gallery]" id="show_gallery">
 			<option value="no" <?php selected( $show_gallery, 'no' ); ?>><?php esc_html_e( 'No - Use shortcode only', 'connect-crm-real-state' ); ?></option>
 			<option value="yes" <?php selected( $show_gallery, 'yes' ); ?>><?php esc_html_e( 'Yes - Auto display after title', 'connect-crm-real-state' ); ?></option>
 		</select>
 		<?php
 		printf(
-			'<p class="description">%s <code>[property_gallery]</code></p>',
+			'<p class="description">%s <code>[ccrmre_property_gallery]</code></p>',
 			esc_html__( 'Enable automatic display of photo gallery carousel after the property title, or use the shortcode manually:', 'connect-crm-real-state' )
 		);
 	}
@@ -735,13 +735,13 @@ class Admin {
 	public function show_property_info_callback() {
 		$show_property_info = isset( $this->settings['show_property_info'] ) ? $this->settings['show_property_info'] : 'no';
 		?>
-		<select name="conncrmreal_settings[show_property_info]" id="show_property_info">
+		<select name="ccrmre_settings[show_property_info]" id="show_property_info">
 			<option value="no" <?php selected( $show_property_info, 'no' ); ?>><?php esc_html_e( 'No - Use shortcode only', 'connect-crm-real-state' ); ?></option>
 			<option value="yes" <?php selected( $show_property_info, 'yes' ); ?>><?php esc_html_e( 'Yes - Auto display after content', 'connect-crm-real-state' ); ?></option>
 		</select>
 		<?php
 		printf(
-			'<p class="description">%s <code>[property_info]</code></p>',
+			'<p class="description">%s <code>[ccrmre_property_info]</code></p>',
 			esc_html__( 'Enable automatic display of property information box with icons and price, or use the shortcode manually:', 'connect-crm-real-state' )
 		);
 	}
@@ -752,7 +752,7 @@ class Admin {
 	 * @return void
 	 */
 	public function plugin_import_page() {
-		$settings   = get_option( 'conncrmreal_settings' );
+		$settings   = get_option( 'ccrmre_settings' );
 		$crm_type   = isset( $settings['type'] ) ? $settings['type'] : '';
 		$pagination = API::get_pagination_size( $crm_type );
 
@@ -1052,7 +1052,7 @@ class Admin {
 			}
 			echo '</td>';
 
-			echo '<td class="ccrmre-wp-field"><select name="conncrmreal_merge_fields[' . esc_attr( $property_field['name'] ) . ']" class="ccrmre-select2-field" style="width: 100%;">';
+			echo '<td class="ccrmre-wp-field"><select name="ccrmre_merge_fields[' . esc_attr( $property_field['name'] ) . ']" class="ccrmre-select2-field" style="width: 100%;">';
 			echo '<option value=""';
 			selected( $value, '' );
 			echo '>' . esc_html__( '-- Select WordPress Field --', 'connect-crm-real-state' ) . '</option>';
@@ -1165,7 +1165,7 @@ class Admin {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions', 'connect-crm-real-state' ) ) );
 		}
 
-		$settings = get_option( 'conncrmreal_settings' );
+		$settings = get_option( 'ccrmre_settings' );
 		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 
 		$properties_fields = API::get_properties_fields( $crm_type );
@@ -1174,7 +1174,7 @@ class Admin {
 			wp_send_json_error( array( 'message' => $properties_fields['data'] ) );
 		}
 
-		$current_mappings = get_option( 'conncrmreal_merge_fields', array() );
+		$current_mappings = get_option( 'ccrmre_merge_fields', array() );
 		$new_mappings     = array();
 		$auto_mapped      = 0;
 
@@ -1191,7 +1191,7 @@ class Admin {
 			++$auto_mapped;
 		}
 
-		update_option( 'conncrmreal_merge_fields', $new_mappings );
+		update_option( 'ccrmre_merge_fields', $new_mappings );
 
 		wp_send_json_success(
 			array(
@@ -1230,7 +1230,7 @@ class Admin {
 	public function taxonomy_mapping_callback() {
 		$crm_type          = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
 		$properties_fields = API::get_properties_fields( $crm_type );
-		$saved_mappings    = get_option( 'conncrmreal_taxonomy_mappings', array() );
+		$saved_mappings    = get_option( 'ccrmre_taxonomy_mappings', array() );
 
 		if ( ! is_array( $saved_mappings ) ) {
 			$saved_mappings = array();
@@ -1304,7 +1304,7 @@ class Admin {
 		?>
 		<tr class="ccrmre-taxonomy-row" data-index="<?php echo esc_attr( $index ); ?>">
 			<td>
-				<select name="conncrmreal_taxonomy_mappings[<?php echo esc_attr( $index ); ?>][crm_field]" class="ccrmre-crm-field-select">
+				<select name="ccrmre_taxonomy_mappings[<?php echo esc_attr( $index ); ?>][crm_field]" class="ccrmre-crm-field-select">
 					<option value=""><?php esc_html_e( '-- Select CRM Field --', 'connect-crm-real-state' ); ?></option>
 					<?php foreach ( $crm_fields as $field ) : ?>
 						<option value="<?php echo esc_attr( $field['name'] ); ?>" <?php selected( $selected_crm, $field['name'] ); ?>>
@@ -1315,7 +1315,7 @@ class Admin {
 				</select>
 			</td>
 			<td>
-				<select name="conncrmreal_taxonomy_mappings[<?php echo esc_attr( $index ); ?>][taxonomy]" class="ccrmre-taxonomy-select">
+				<select name="ccrmre_taxonomy_mappings[<?php echo esc_attr( $index ); ?>][taxonomy]" class="ccrmre-taxonomy-select">
 					<option value=""><?php esc_html_e( '-- Select Taxonomy --', 'connect-crm-real-state' ); ?></option>
 					<?php foreach ( $taxonomies as $taxonomy ) : ?>
 						<option value="<?php echo esc_attr( $taxonomy->name ); ?>" <?php selected( $selected_taxonomy, $taxonomy->name ); ?>>

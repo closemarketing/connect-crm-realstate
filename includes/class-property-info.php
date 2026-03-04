@@ -34,10 +34,11 @@ class PropertyInfo {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->settings = get_option( 'conncrmreal_settings' );
+		$this->settings = get_option( 'ccrmre_settings' );
 
-		// Register shortcode.
-		add_shortcode( 'property_info', array( $this, 'shortcode_property_info' ) );
+		// Register shortcode (prefixed for Plugin Directory guidelines).
+		add_shortcode( 'ccrmre_property_info', array( $this, 'shortcode_property_info' ) );
+		add_shortcode( 'property_info', array( $this, 'shortcode_property_info' ) ); // Backward compatibility.
 
 		// Auto display property info if enabled.
 		// Priority 30 ensures it appears after gallery (priority 20).
@@ -123,7 +124,7 @@ class PropertyInfo {
 		}
 
 		// Get merge fields configuration.
-		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
+		$merge_fields = get_option( 'ccrmre_merge_fields', array() );
 
 		if ( empty( $merge_fields ) ) {
 			return '';

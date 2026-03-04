@@ -28,9 +28,9 @@ class SYNC {
 	 */
 	public static function sync_property( $item, $settings = array(), $settings_fields = array() ) {
 		$message             = '';
-		$settings            = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
+		$settings            = empty( $settings ) ? get_option( 'ccrmre_settings' ) : $settings;
 		$crm                 = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
-		$settings_fields     = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
+		$settings_fields     = empty( $settings_fields ) ? get_option( 'ccrmre_merge_fields' ) : $settings_fields;
 		$post_type           = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 		$filter_postal_code  = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
 		$property_info_early = API::get_property_info( $item, $crm );
@@ -461,8 +461,8 @@ class SYNC {
 	 * @return array
 	 */
 	public static function handle_unavailable_property( $property, $settings = array(), $settings_fields = array(), $crm = 'anaconda' ) {
-		$settings         = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
-		$settings_fields  = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
+		$settings         = empty( $settings ) ? get_option( 'ccrmre_settings' ) : $settings;
+		$settings_fields  = empty( $settings_fields ) ? get_option( 'ccrmre_merge_fields' ) : $settings_fields;
 		$post_type        = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 		$sold_action      = isset( $settings['sold_action'] ) ? $settings['sold_action'] : 'draft';
 		$property_info_h  = API::get_property_info( $property, $crm );
@@ -562,7 +562,7 @@ class SYNC {
 	 * @return array Array with count and detailed info of removed properties.
 	 */
 	public static function remove_properties_not_in_api( $crm_type ) {
-		$settings  = get_option( 'conncrmreal_settings' );
+		$settings  = get_option( 'ccrmre_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 
 		// Get all property IDs from API.
@@ -622,7 +622,7 @@ class SYNC {
 	 */
 	public static function get_wordpress_property_data( $crm_type ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		global $wpdb;
-		$settings  = get_option( 'conncrmreal_settings' );
+		$settings  = get_option( 'ccrmre_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'ccrmre_property';
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -948,7 +948,7 @@ class SYNC {
 	 * @return void
 	 */
 	public static function assign_taxonomy_terms( $post_id, $item, $crm ) {
-		$taxonomy_mappings = get_option( 'conncrmreal_taxonomy_mappings', array() );
+		$taxonomy_mappings = get_option( 'ccrmre_taxonomy_mappings', array() );
 
 		if ( empty( $taxonomy_mappings ) || ! is_array( $taxonomy_mappings ) ) {
 			return;

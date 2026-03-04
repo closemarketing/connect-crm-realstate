@@ -38,7 +38,7 @@ class PostType {
 	 * Construct and intialize
 	 */
 	public function __construct() {
-		$this->settings     = get_option( 'conncrmreal_settings' );
+		$this->settings     = get_option( 'ccrmre_settings' );
 		$settings_post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
 
 		if ( 'property' === $settings_post_type ) {
@@ -133,14 +133,14 @@ class PostType {
 	 * @return void
 	 */
 	public function metabox_show_property( $post ) {
-		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
+		$merge_fields = get_option( 'ccrmre_merge_fields', array() );
 
 		if ( empty( $merge_fields ) ) {
 			echo '<p>' . esc_html__( 'No merge fields configured. Please configure merge fields in the plugin settings.', 'connect-crm-real-state' ) . '</p>';
 			return;
 		}
 
-		$settings = get_option( 'conncrmreal_settings', array() );
+		$settings = get_option( 'ccrmre_settings', array() );
 		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 
 		$api_fields   = API::get_properties_fields( $crm_type );
@@ -343,7 +343,7 @@ class PostType {
 	 * @return void
 	 */
 	private function render_property_data_column( $post_id ) {
-		$settings = get_option( 'conncrmreal_settings' );
+		$settings = get_option( 'ccrmre_settings' );
 		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 
 		$property_id = $this->get_property_meta_value( $post_id, 'id', $crm_type );
@@ -377,7 +377,7 @@ class PostType {
 	 * @return mixed Meta value or empty string.
 	 */
 	private function get_property_meta_value( $post_id, $crm_field, $crm_type = 'anaconda' ) {
-		$merge_fields = get_option( 'conncrmreal_merge_fields', array() );
+		$merge_fields = get_option( 'ccrmre_merge_fields', array() );
 
 		$field_map = array(
 			'anaconda'  => array(

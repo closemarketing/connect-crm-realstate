@@ -44,14 +44,14 @@ class HelperApiTest extends WP_UnitTestCase {
 		$this->cleanup_properties();
 
 		update_option(
-			'conncrmreal_settings',
+			'ccrmre_settings',
 			array(
 				'type'        => 'inmovilla_procesos',
 				'apipassword' => 'test',
 				'post_type'   => 'property',
 			)
 		);
-		update_option( 'conncrmreal_merge_fields', array() );
+		update_option( 'ccrmre_merge_fields', array() );
 		delete_transient( 'ccrmre_query_inmovilla_procesos_ciudades' );
 
 		add_filter( 'pre_http_request', array( $this, 'mock_http_request' ), 10, 3 );
@@ -654,7 +654,7 @@ class HelperApiTest extends WP_UnitTestCase {
 	 */
 	public function test_returns_error_when_api_key_missing() {
 		update_option(
-			'conncrmreal_settings',
+			'ccrmre_settings',
 			array(
 				'type'      => 'inmovilla_procesos',
 				'post_type' => 'property',

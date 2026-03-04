@@ -45,13 +45,13 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (!content.classList.contains('loaded')) {
 					const filename = item.getAttribute('data-filename');
 					
-					fetch(ajaxAction.url, {
+					fetch(ccrmre_ajax_action.url, {
 						method: 'POST',
 						credentials: 'same-origin',
 						headers: {
 							'Content-Type': 'application/x-www-form-urlencoded',
 						},
-						body: 'action=ccrmre_load_log_content&nonce=' + ajaxAction.nonce + '&filename=' + encodeURIComponent(filename),
+						body: 'action=ccrmre_load_log_content&nonce=' + ccrmre_ajax_action.nonce + '&filename=' + encodeURIComponent(filename),
 					})
 					.then( function( resp ) { return resp.text(); } )
 					.then( function( text ) {
@@ -126,9 +126,9 @@ function startWaitCountdown( element, totalSeconds, callback ) {
 		const remaining = Math.max( 0, Math.ceil( ( endTime - Date.now() ) / 1000 ) );
 
 		if ( remaining <= 0 ) {
-			const resumeLabel = ajaxAction.label_resuming || 'Resuming import...';
+			const resumeLabel = ccrmre_ajax_action.label_resuming || 'Resuming import...';
 			countdownEl.innerHTML = '[' + new Date().toLocaleTimeString() + '] <strong style="color:green;">&#10003; ' + resumeLabel + '</strong>';
-			element.textContent = ajaxAction.label_syncing;
+			element.textContent = ccrmre_ajax_action.label_syncing;
 			if ( loglist ) {
 				loglist.scrollTo({ top: loglist.scrollHeight, behavior: 'smooth' });
 			}
@@ -136,12 +136,12 @@ function startWaitCountdown( element, totalSeconds, callback ) {
 			return;
 		}
 
-		const label = ajaxAction.label_rate_limit
-			? ajaxAction.label_rate_limit.replace( '%s', remaining )
+		const label = ccrmre_ajax_action.label_rate_limit
+			? ccrmre_ajax_action.label_rate_limit.replace( '%s', remaining )
 			: 'Waiting ' + remaining + ' seconds...';
 
 		countdownEl.innerHTML = '<span class="dashicons dashicons-clock" style="margin-right: 5px;"></span>' + label;
-		element.textContent = ajaxAction.label_waiting + ' (' + remaining + 's)';
+		element.textContent = ccrmre_ajax_action.label_waiting + ' (' + remaining + 's)';
 
 		if ( loglist ) {
 			loglist.scrollTo({ top: loglist.scrollHeight, behavior: 'smooth' });
@@ -177,7 +177,7 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0, isR
 
 	// Add disabled state and show spinner.
 	element.disabled = true;
-	element.textContent = ajaxAction.label_syncing;
+	element.textContent = ccrmre_ajax_action.label_syncing;
 	if ( importMode ) {
 		importMode.disabled = true;
 	}
@@ -192,14 +192,14 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0, isR
 	const classTask = isOdd(loop) ? 'odd' : 'even';
 
 	// AJAX request.
-	fetch( ajaxAction.url, {
+	fetch( ccrmre_ajax_action.url, {
 		method: 'POST',
 		credentials: 'same-origin',
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded',
 			'Cache-Control': 'no-cache',
 		},
-		body: 'action=manual_import&nonce=' + ajaxAction.nonce + '&loop=' + loop + '&pagination=' + pagination + '&totalprop=' + totalprop + '&mode=' + mode,
+		body: 'action=ccrmre_manual_import&nonce=' + ccrmre_ajax_action.nonce + '&loop=' + loop + '&pagination=' + pagination + '&totalprop=' + totalprop + '&mode=' + mode,
 	})
 	.then( function( resp ) { return resp.text(); } )
 	.then( function( text ) {
@@ -236,7 +236,7 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0, isR
 				syncManualProperties(element, results.data.loop, results.data.pagination, results.data.totalprop );
 			} else {
 				element.disabled = false;
-				element.textContent = ajaxAction.label_sync;
+				element.textContent = ccrmre_ajax_action.label_sync;
 				if ( importMode ) {
 					importMode.disabled = false;
 				}
@@ -254,7 +254,7 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0, isR
 		} else {
 			// Error - show error message and stop
 			element.disabled = false;
-			element.textContent = ajaxAction.label_sync;
+			element.textContent = ccrmre_ajax_action.label_sync;
 			if ( importMode ) {
 				importMode.disabled = false;
 			}
@@ -284,7 +284,7 @@ function syncManualProperties( element, loop = 0, pagination, totalprop = 0, isR
 	.catch(err => {
 		console.error('Import error:', err);
 		element.disabled = false;
-		element.textContent = ajaxAction.label_sync;
+		element.textContent = ccrmre_ajax_action.label_sync;
 		if ( importMode ) {
 			importMode.disabled = false;
 		}

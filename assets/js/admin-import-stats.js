@@ -23,7 +23,7 @@ var loadImportStats;
 			url: typeof ajaxurl !== 'undefined' ? ajaxurl : '',
 			type: 'POST',
 			data: {
-				action: 'get_import_stats',
+				action: 'ccrmre_get_import_stats',
 				security: typeof ccrmreImportStats !== 'undefined' ? ccrmreImportStats.nonce : ''
 			},
 			success: function(response) {

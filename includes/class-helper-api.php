@@ -80,7 +80,7 @@ class API {
 	 * @return array
 	 */
 	public static function request_anaconda( $endpoint, $method = 'GET', $query = array() ) {
-		$settings    = get_option( 'conncrmreal_settings' );
+		$settings    = get_option( 'ccrmre_settings' );
 		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
 
 		if ( empty( $apipassword ) ) {
@@ -146,7 +146,7 @@ class API {
 	 * @return array
 	 */
 	public static function request_inmovilla( $tipo = 'paginacion', $pos_inicial = 1, $num_elementos = 50, $where = '', $orden = '', $idioma = 1 ) {
-		$settings    = get_option( 'conncrmreal_settings' );
+		$settings    = get_option( 'ccrmre_settings' );
 		$numagencia  = isset( $settings['numagencia'] ) ? $settings['numagencia'] : '';
 		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
 
@@ -310,7 +310,7 @@ class API {
 	 * @return string Absolute path to cookie file.
 	 */
 	private static function get_inmovilla_cookie_jar_path() {
-		return get_temp_dir() . 'conncrmreal-inmovilla-cookies.txt';
+		return get_temp_dir() . 'ccrmre-inmovilla-cookies.txt';
 	}
 
 	/**
@@ -386,7 +386,7 @@ class API {
 	 */
 	public static function get_pagination_size( $crm = '' ) {
 		if ( empty( $crm ) ) {
-			$settings = get_option( 'conncrmreal_settings' );
+			$settings = get_option( 'ccrmre_settings' );
 			$crm      = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 		}
 
@@ -410,7 +410,7 @@ class API {
 	 * @return array
 	 */
 	public static function request_inmovilla_procesos( $endpoint, $method = 'GET', $body = array() ) {
-		$settings    = get_option( 'conncrmreal_settings' );
+		$settings    = get_option( 'ccrmre_settings' );
 		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
 
 		// Validate required settings.
@@ -499,7 +499,7 @@ class API {
 	 * @return array
 	 */
 	public static function get_properties( $page = 0, $changed_from = '' ) {
-		$settings     = get_option( 'conncrmreal_settings' );
+		$settings     = get_option( 'ccrmre_settings' );
 		$settings_crm = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 
 		if ( 'anaconda' === $settings_crm ) {
@@ -621,7 +621,7 @@ class API {
 	 */
 	public static function get_property( $item, $crm = '' ) {
 		if ( empty( $crm ) ) {
-			$settings = get_option( 'conncrmreal_settings' );
+			$settings = get_option( 'ccrmre_settings' );
 			$crm      = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 		}
 		$property_info = null;

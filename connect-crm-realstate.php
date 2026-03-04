@@ -1,15 +1,15 @@
 <?php
 /**
- * Plugin Name: Connect CRM Real State
+ * Plugin Name: Connect CRM RealState
  * Plugin URI: https://close.technology/wordpress-plugins/conecta-crm-realstate/
  * Description: Connect Properties from Inmovilla/Anaconda to a Custom Post Type.
  * Author: closetechnology
  * Author URI: https://close.technology/
- * Version: 1.2.0-beta.7
+ * Version: 1.2.0
  *
  * @package WordPress
- * Text Domain: connect-crm-real-state
- * Domain Path: /languages
+ * Text Domain: connect-crm-realstate
+ *
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Requires at least: 5.8
@@ -19,11 +19,39 @@
 
 defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
 
-define( 'CCRMRE_VERSION', '1.2.0-beta.7' );
+define( 'CCRMRE_VERSION', '1.2.0' );
 define( 'CCRMRE_PLUGIN', __FILE__ );
 define( 'CCRMRE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'CCRMRE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CCRMRE_POST_TYPE', 'ccrmre_property' );
+
+/**
+ * One-time migration from old option/transient names to ccrmre-prefixed names.
+ *
+ * @return void
+ */
+function ccrmre_migrate_options_to_prefix() {
+	if ( get_option( 'ccrmre_options_migrated', false ) ) {
+		return;
+	}
+
+	$old_settings = get_option( 'conncrmreal_settings', null );
+	if ( null !== $old_settings ) {
+		update_option( 'ccrmre_settings', $old_settings );
+	}
+	$old_merge = get_option( 'conncrmreal_merge_fields', null );
+	if ( null !== $old_merge ) {
+		update_option( 'ccrmre_merge_fields', $old_merge );
+	}
+	$old_tax = get_option( 'conncrmreal_taxonomy_mappings', null );
+	if ( null !== $old_tax ) {
+		update_option( 'ccrmre_taxonomy_mappings', $old_tax );
+	}
+
+	update_option( 'ccrmre_options_migrated', true );
+}
+
+add_action( 'plugins_loaded', 'ccrmre_migrate_options_to_prefix', 1 );
 
 /**
  * Initialize plugin functionality.

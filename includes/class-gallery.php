@@ -34,10 +34,11 @@ class Gallery {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->settings = get_option( 'conncrmreal_settings' );
+		$this->settings = get_option( 'ccrmre_settings' );
 
-		// Register shortcode.
-		add_shortcode( 'property_gallery', array( $this, 'shortcode_gallery' ) );
+		// Register shortcode (prefixed for Plugin Directory guidelines).
+		add_shortcode( 'ccrmre_property_gallery', array( $this, 'shortcode_gallery' ) );
+		add_shortcode( 'property_gallery', array( $this, 'shortcode_gallery' ) ); // Backward compatibility.
 
 		// Auto display gallery if enabled.
 		if ( isset( $this->settings['show_gallery'] ) && 'yes' === $this->settings['show_gallery'] ) {
