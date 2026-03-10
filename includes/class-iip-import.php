@@ -239,8 +239,8 @@ class Import {
 		$finish = false;
 		$is_new = false;
 
-		$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . __( 'Property', 'connect-crm-real-state' ) . ' ';
 		if ( ! empty( $property ) ) {
+			$line_prefix = '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . __( 'Property', 'connect-crm-real-state' ) . ' ';
 			$is_available = SYNC::is_property_available( $property, $crm );
 
 			$id_display = '?';
@@ -254,7 +254,7 @@ class Import {
 				$ref_display   = isset( $result_sync['reference'] ) ? $result_sync['reference'] : $id_display;
 				$title_display = isset( $result_sync['title'] ) ? substr( $result_sync['title'], 0, 50 ) : '';
 				$city_display  = isset( $result_sync['city'] ) ? $result_sync['city'] : '';
-				$progress_msg .= esc_html( $ref_display ) . ' NOT IMP' . $this->format_title_city_suffix( $title_display, $city_display ) . ' ';
+				$progress_msg .= self::format_sync_progress_line( $loop + 1, esc_html( $ref_display ), __( 'NOT IMP', 'connect-crm-real-state' ), $title_display, $city_display ) . ' ';
 				$progress_msg .= $result_sync['message'];
 			} else {
 				$result_get_property = API::get_property( $property, $crm );
@@ -277,7 +277,7 @@ class Import {
 						);
 					}
 
-					$progress_msg .= esc_html( $id_display ) . ' ERR - ';
+					$progress_msg .= $line_prefix . esc_html( $id_display ) . ' ERR - ';
 					$progress_msg .= '<strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-real-state' ) . '</strong> ' . $result_get_property['message'] . '<br/>';
 					wp_send_json_success(
 						array(
@@ -296,7 +296,7 @@ class Import {
 				$title_display     = isset( $result_sync['title'] ) ? substr( $result_sync['title'], 0, 50 ) : '';
 				$city_display      = isset( $result_sync['city'] ) ? $result_sync['city'] : '';
 				$action            = ! empty( $result_sync['is_new'] ) ? __( 'NEW', 'connect-crm-real-state' ) : __( 'UPD', 'connect-crm-real-state' );
-				$progress_msg     .= esc_html( $ref_display ) . ' ' . $action . $this->format_title_city_suffix( $title_display, $city_display ) . ' ';
+				$progress_msg     .= self::format_sync_progress_line( $loop + 1, esc_html( $ref_display ), $action, $title_display, $city_display ) . ' ';
 				$is_new            = ! empty( $result_sync['is_new'] ) ? true : false;
 
 				if ( ! empty( $result_sync['post_id'] ) ) {
@@ -458,6 +458,17 @@ class Import {
 	 * @return string
 	 */
 	private function format_title_city_suffix( $title, $city ) {
+		return self::format_title_city_suffix_static( $title, $city );
+	}
+
+	/**
+	 * Returns " — Title - City" for progress message (shared with WP-CLI).
+	 *
+	 * @param string $title Property title (e.g. first 50 chars).
+	 * @param string $city  Property city.
+	 * @return string
+	 */
+	public static function format_title_city_suffix_static( $title, $city ) {
 		$title = '' !== $title ? esc_html( $title ) : '';
 		$city  = '' !== $city ? esc_html( $city ) : '';
 		if ( '' === $title && '' === $city ) {
@@ -467,5 +478,24 @@ class Import {
 			return ' — ' . $title . ' - ' . $city;
 		}
 		return ' — ' . ( '' !== $title ? $title : $city );
+	}
+
+	/**
+	 * Formats a single property progress line (shared with WP-CLI).
+	 *
+	 * Example: [10:31:57] 12 - Property 27759997 NEW — Amplia finca... - Fuente Vaqueros
+	 *
+	 * @param int    $index   One-based position (e.g. loop + 1).
+	 * @param string $ref     Reference or property ID.
+	 * @param string $action  Action label: NEW, UPD, or NOT IMP (already translated).
+	 * @param string $title   Property title (e.g. substr 0, 50).
+	 * @param string $city    Property city.
+	 * @return string
+	 */
+	public static function format_sync_progress_line( $index, $ref, $action, $title, $city ) {
+		$time   = date_i18n( 'H:i:s' );
+		$label  = __( 'Property', 'connect-crm-real-state' );
+		$suffix = self::format_title_city_suffix_static( $title, $city );
+		return '[' . $time . '] ' . (int) $index . ' - ' . $label . ' ' . (string) $ref . ' ' . $action . $suffix;
 	}
 }

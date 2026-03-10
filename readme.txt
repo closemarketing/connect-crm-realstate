@@ -43,6 +43,7 @@ Connect CRM RealState imports properties from popular real estate CRM systems (I
 **PRO Features (via [Connect CRM RealState PRO](https://close.technology/wordpress-plugins/conecta-crm-realstate/) add-on):**
 
 * Automatic background synchronization via cron
+* WPCLI for long-running tasks
 * SEO-optimized property content *(coming soon)*
 * AI-powered property descriptions with LLM *(coming soon)*
 
