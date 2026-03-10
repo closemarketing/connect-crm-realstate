@@ -33,8 +33,9 @@ class API {
 	 */
 	public static function get_all_property_ids( $crm_type, $with_metadata = true ) {
 		$property_ids = get_transient( 'ccrmre_query_property_ids' );
-		if ( ! $property_ids ) {
-			$result = self::get_properties();
+		if ( false === $property_ids || ! is_array( $property_ids ) ) {
+			$property_ids = array();
+			$result       = self::get_properties();
 
 			if ( 'error' === $result['status'] ) {
 				return $result;
