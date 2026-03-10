@@ -24,17 +24,17 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 		// Clean up any existing properties first
 		$this->cleanup_properties();
 		
-		// Initialize settings
+		// Initialize settings (plugin uses ccrmre_settings for get_wordpress_property_data).
 		update_option(
-			'conncrmreal_settings',
+			'ccrmre_settings',
 			array(
 				'type'      => 'anaconda',
 				'post_type' => 'property',
 			)
 		);
-		
+
 		update_option(
-			'conncrmreal_merge_fields',
+			'ccrmre_merge_fields',
 			array(
 				'id'   => 'property_id',
 				'name' => 'property_name',
@@ -264,9 +264,9 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 	 * Test filtering with Inmovilla CRM type
 	 */
 	public function test_filter_with_inmovilla_crm() {
-		// Update settings for Inmovilla
+		// Update settings for Inmovilla (plugin uses ccrmre_settings).
 		update_option(
-			'conncrmreal_settings',
+			'ccrmre_settings',
 			array(
 				'type'      => 'inmovilla',
 				'post_type' => 'property',
@@ -274,7 +274,7 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 		);
 
 		update_option(
-			'conncrmreal_merge_fields',
+			'ccrmre_merge_fields',
 			array(
 				'cod_ofer'   => 'property_id',
 				'referencia' => 'property_reference',

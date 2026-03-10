@@ -37,12 +37,13 @@ Connect CRM RealState imports properties from popular real estate CRM systems (I
 
 **Shortcodes:**
 
-* `[property_gallery]` - Display property photo gallery
-* `[property_info]` - Display property information box with price, bedrooms, bathrooms, area, and location
+* `[ccrmre_property_gallery]` - Display property photo gallery
+* `[ccrmre_property_info]` - Display property information box with price, bedrooms, bathrooms, area, and location
 
 **PRO Features (via [Connect CRM RealState PRO](https://close.technology/wordpress-plugins/conecta-crm-realstate/) add-on):**
 
 * Automatic background synchronization via cron
+* WPCLI for long-running tasks
 * SEO-optimized property content *(coming soon)*
 * AI-powered property descriptions with LLM *(coming soon)*
 
@@ -77,7 +78,7 @@ Yes, in Settings you can choose to use the built-in "Property" post type or any 
 
 = How do I display the photo gallery? =
 
-Either enable auto-display in Settings or use the `[property_gallery]` shortcode in your templates.
+Either enable auto-display in Settings or use the `[ccrmre_property_gallery]` shortcode in your templates.
 
 = Can I filter which properties are imported? =
 

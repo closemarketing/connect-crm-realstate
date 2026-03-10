@@ -34,10 +34,11 @@ class Gallery {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->settings = get_option( 'conncrmreal_settings' );
+		$this->settings = get_option( 'ccrmre_settings' );
 
-		// Register shortcode.
-		add_shortcode( 'property_gallery', array( $this, 'shortcode_gallery' ) );
+		// Register shortcode (prefixed for Plugin Directory guidelines).
+		add_shortcode( 'ccrmre_property_gallery', array( $this, 'shortcode_gallery' ) );
+		add_shortcode( 'property_gallery', array( $this, 'shortcode_gallery' ) ); // Backward compatibility.
 
 		// Auto display gallery if enabled.
 		if ( isset( $this->settings['show_gallery'] ) && 'yes' === $this->settings['show_gallery'] ) {
@@ -141,7 +142,7 @@ class Gallery {
 		?>
 		<div class="ccrmre-property-gallery">
 			<div class="ccrmre-gallery-main">
-				<button class="ccrmre-gallery-prev" aria-label="<?php esc_attr_e( 'Previous photo', 'connect-crm-real-state' ); ?>">
+				<button class="ccrmre-gallery-prev" aria-label="<?php esc_attr_e( 'Previous photo', 'connect-crm-realstate' ); ?>">
 					<span>&lsaquo;</span>
 				</button>
 				<div class="ccrmre-gallery-slider">
@@ -151,7 +152,7 @@ class Gallery {
 						</div>
 					<?php endforeach; ?>
 				</div>
-				<button class="ccrmre-gallery-next" aria-label="<?php esc_attr_e( 'Next photo', 'connect-crm-real-state' ); ?>">
+				<button class="ccrmre-gallery-next" aria-label="<?php esc_attr_e( 'Next photo', 'connect-crm-realstate' ); ?>">
 					<span>&rsaquo;</span>
 				</button>
 				<div class="ccrmre-gallery-counter">

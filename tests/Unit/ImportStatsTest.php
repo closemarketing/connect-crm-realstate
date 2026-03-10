@@ -21,7 +21,7 @@ class ImportStatsTest extends WP_UnitTestCase {
 	public function setUp(): void {
 		parent::setUp();
 		update_option(
-			'conncrmreal_settings',
+			'ccrmre_settings',
 			array(
 				'type'      => 'anaconda',
 				'post_type' => 'property',

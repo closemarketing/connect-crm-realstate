@@ -26,7 +26,6 @@
 				<element value="CCRMRE"/>
 				<element value="ccrmre"/>
 				<element value="connect_crm_realstate"/>
-				<element value="conncrmreal"/>
 				<element value="inmovilla"/>
 				<element value="Close\ConnectCRM"/>
 			</property>
@@ -41,9 +40,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="connect-crm-real-state"/>
-				<element value="wordpress-seo"/>
-				<element value="rankmath"/>
+				<element value="connect-crm-realstate"/>
 			</property>
 		</properties>
 	</rule>

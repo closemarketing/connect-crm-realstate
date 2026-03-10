@@ -43,15 +43,18 @@ class HelperApiTest extends WP_UnitTestCase {
 		$this->mock_api_error      = false;
 		$this->cleanup_properties();
 
+		// Avoid sleep() in execute_with_retry when mock returns error (test_propagates_api_http_error, etc.).
+		API::set_skip_retry( true );
+
 		update_option(
-			'conncrmreal_settings',
+			'ccrmre_settings',
 			array(
 				'type'        => 'inmovilla_procesos',
 				'apipassword' => 'test',
 				'post_type'   => 'property',
 			)
 		);
-		update_option( 'conncrmreal_merge_fields', array() );
+		update_option( 'ccrmre_merge_fields', array() );
 		delete_transient( 'ccrmre_query_inmovilla_procesos_ciudades' );
 
 		add_filter( 'pre_http_request', array( $this, 'mock_http_request' ), 10, 3 );
@@ -62,14 +65,18 @@ class HelperApiTest extends WP_UnitTestCase {
 	 */
 	public function tearDown(): void {
 		remove_filter( 'pre_http_request', array( $this, 'mock_http_request' ), 10 );
+		API::set_skip_retry( false );
 		$this->cleanup_properties();
 		parent::tearDown();
 	}
 
 	/**
-	 * HTTP mock: intercepts every Inmovilla Procesos API request.
+	 * HTTP mock: intercepts all HTTP requests so no external calls are made.
 	 *
-	 * Priority (checked in order):
+	 * Only Inmovilla Procesos API URLs are handled with real mock data; any other URL
+	 * gets a generic error response so the request is never sent.
+	 *
+	 * Priority for Inmovilla URLs (checked in order):
 	 *  1. If mock_api_error is true → always return 500.
 	 *  2. If mock_api_properties is set → return that JSON for any propiedades endpoint.
 	 *  3. Fall through to file-based mock (used by the original get_property_info / get_enums tests).
@@ -80,8 +87,12 @@ class HelperApiTest extends WP_UnitTestCase {
 	 * @return mixed
 	 */
 	public function mock_http_request( $pre, $args, $url ) {
+		// Block all external requests: unknown URLs get a safe error response.
 		if ( 0 !== strpos( $url, 'https://procesos.inmovilla.com/api/v1/' ) ) {
-			return $pre;
+			return array(
+				'body'     => '',
+				'response' => array( 'code' => 500, 'message' => 'Mock: no external HTTP in tests' ),
+			);
 		}
 
 		if ( $this->mock_api_error ) {
@@ -170,10 +181,10 @@ class HelperApiTest extends WP_UnitTestCase {
 	 */
 	public function test_get_property_info_inmovilla_all_fields() {
 		$property = array(
-			'cod_ofer'   => 'INM-2024-001',
-			'referencia' => 'REF-INM-001',
-			'fechaact'   => '2024-01-20',
-			'titulo'     => 'Inmovilla Property',
+			'cod_ofer' => 'INM-2024-001',
+			'ref'      => 'REF-INM-001',
+			'fechaact' => '2024-01-20',
+			'titulo'   => 'Inmovilla Property',
 		);
 
 		$result = API::get_property_info( $property, 'inmovilla' );
@@ -206,8 +217,8 @@ class HelperApiTest extends WP_UnitTestCase {
 	 */
 	public function test_get_property_info_inmovilla_missing_date() {
 		$property = array(
-			'cod_ofer'   => 'INM-2024-001',
-			'referencia' => 'REF-INM-001',
+			'cod_ofer' => 'INM-2024-001',
+			'ref'      => 'REF-INM-001',
 		);
 
 		$result = API::get_property_info( $property, 'inmovilla' );
@@ -654,7 +665,7 @@ class HelperApiTest extends WP_UnitTestCase {
 	 */
 	public function test_returns_error_when_api_key_missing() {
 		update_option(
-			'conncrmreal_settings',
+			'ccrmre_settings',
 			array(
 				'type'      => 'inmovilla_procesos',
 				'post_type' => 'property',
@@ -935,6 +946,142 @@ class HelperApiTest extends WP_UnitTestCase {
 
 		$this->assertCount( 2, $filtered, 'Should return non-empty string status values' );
 		$this->assertEquals( array( 'PROP001', 'PROP002' ), $filtered );
+	}
+
+	// -------------------------------------------------------------------------
+	// Tests: SYNC::get_property_content
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Inmovilla Procesos: all fields present.
+	 */
+	public function test_get_property_content_inmovilla_procesos_all_fields() {
+		$item = array(
+			'tituloes'     => 'Casa en la playa',
+			'descripciones' => 'Amplia casa con vistas al mar.',
+			'ciudad'       => 'Barcelona',
+		);
+
+		$result = SYNC::get_property_content( $item, 'inmovilla_procesos' );
+
+		$this->assertIsArray( $result );
+		$this->assertEquals( 'Casa en la playa', $result['title'] );
+		$this->assertEquals( 'Amplia casa con vistas al mar.', $result['description'] );
+		$this->assertEquals( 'Barcelona', $result['city'] );
+	}
+
+	/**
+	 * Inmovilla Procesos: missing all optional fields uses defaults.
+	 */
+	public function test_get_property_content_inmovilla_procesos_missing_fields() {
+		$result = SYNC::get_property_content( array(), 'inmovilla_procesos' );
+
+		$this->assertEquals( 'Property', $result['title'] );
+		$this->assertEquals( '', $result['description'] );
+		$this->assertEquals( '', $result['city'] );
+	}
+
+	/**
+	 * Inmovilla APIWEB: all fields present inside the descripciones array.
+	 */
+	public function test_get_property_content_inmovilla_all_fields() {
+		$item = array(
+			'descripciones' => array(
+				'titulo' => 'Piso moderno',
+				'descrip' => 'Piso reformado en el centro.',
+			),
+			'ciudad' => 'Madrid',
+		);
+
+		$result = SYNC::get_property_content( $item, 'inmovilla' );
+
+		$this->assertEquals( 'Piso moderno', $result['title'] );
+		$this->assertEquals( 'Piso reformado en el centro.', $result['description'] );
+		$this->assertEquals( 'Madrid', $result['city'] );
+	}
+
+	/**
+	 * Inmovilla APIWEB: descripciones is empty array, title falls back to default.
+	 */
+	public function test_get_property_content_inmovilla_empty_descripciones() {
+		$item = array(
+			'descripciones' => array(),
+			'ciudad'        => 'Sevilla',
+		);
+
+		$result = SYNC::get_property_content( $item, 'inmovilla' );
+
+		$this->assertEquals( 'Property', $result['title'] );
+		$this->assertEquals( '', $result['description'] );
+		$this->assertEquals( 'Sevilla', $result['city'] );
+	}
+
+	/**
+	 * Inmovilla APIWEB: descripciones key is absent.
+	 */
+	public function test_get_property_content_inmovilla_missing_descripciones() {
+		$result = SYNC::get_property_content( array(), 'inmovilla' );
+
+		$this->assertEquals( 'Property', $result['title'] );
+		$this->assertEquals( '', $result['description'] );
+		$this->assertEquals( '', $result['city'] );
+	}
+
+	/**
+	 * Anaconda: all fields present.
+	 */
+	public function test_get_property_content_anaconda_all_fields() {
+		$item = array(
+			'name'        => 'Villa con piscina',
+			'description' => 'Amplia villa con piscina privada.',
+			'city'        => 'Marbella',
+		);
+
+		$result = SYNC::get_property_content( $item, 'anaconda' );
+
+		$this->assertEquals( 'Villa con piscina', $result['title'] );
+		$this->assertEquals( 'Amplia villa con piscina privada.', $result['description'] );
+		$this->assertEquals( 'Marbella', $result['city'] );
+	}
+
+	/**
+	 * Anaconda: missing fields use defaults.
+	 */
+	public function test_get_property_content_anaconda_missing_fields() {
+		$result = SYNC::get_property_content( array(), 'anaconda' );
+
+		$this->assertEquals( 'Property', $result['title'] );
+		$this->assertEquals( '', $result['description'] );
+		$this->assertEquals( '', $result['city'] );
+	}
+
+	/**
+	 * Unknown CRM type falls through to Anaconda defaults.
+	 */
+	public function test_get_property_content_unknown_crm_uses_anaconda_defaults() {
+		$item = array(
+			'name' => 'Any property',
+			'city' => 'Valencia',
+		);
+
+		$result = SYNC::get_property_content( $item, 'unknown_crm' );
+
+		$this->assertEquals( 'Any property', $result['title'] );
+		$this->assertEquals( '', $result['description'] );
+		$this->assertEquals( 'Valencia', $result['city'] );
+	}
+
+	/**
+	 * Return value always contains the three expected keys.
+	 */
+	public function test_get_property_content_always_has_required_keys() {
+		foreach ( array( 'inmovilla_procesos', 'inmovilla', 'anaconda' ) as $crm ) {
+			$result = SYNC::get_property_content( array(), $crm );
+
+			$this->assertArrayHasKey( 'title', $result, "Missing 'title' for CRM: $crm" );
+			$this->assertArrayHasKey( 'description', $result, "Missing 'description' for CRM: $crm" );
+			$this->assertArrayHasKey( 'city', $result, "Missing 'city' for CRM: $crm" );
+		}
 	}
 }
 

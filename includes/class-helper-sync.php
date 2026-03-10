@@ -28,36 +28,24 @@ class SYNC {
 	 */
 	public static function sync_property( $item, $settings = array(), $settings_fields = array() ) {
 		$message             = '';
-		$settings            = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
+		$settings            = empty( $settings ) ? get_option( 'ccrmre_settings' ) : $settings;
 		$crm                 = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
-		$settings_fields     = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
+		$settings_fields     = empty( $settings_fields ) ? get_option( 'ccrmre_merge_fields' ) : $settings_fields;
 		$post_type           = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 		$filter_postal_code  = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
 		$property_info_early = API::get_property_info( $item, $crm );
 		$property_id         = $property_info_early['id'];
 		$property_post_id    = self::find_property( $property_id, $post_type );
 
-		if ( 'inmovilla_procesos' === $crm ) {
-			// Inmovilla Procesos: descripciones and tituloes are direct strings.
-			$property_title       = isset( $item['tituloes'] ) ? $item['tituloes'] : __( 'Property', 'connect-crm-real-state' );
-			$property_description = isset( $item['descripciones'] ) ? $item['descripciones'] : '';
-			$property_city        = isset( $item['ciudad'] ) ? $item['ciudad'] : '';
-		} elseif ( 'inmovilla' === $crm ) {
-			// Inmovilla APIWEB: descripciones is an array with titulo and descrip.
-			$descripciones        = isset( $item['descripciones'] ) ? $item['descripciones'] : array();
-			$property_title       = isset( $descripciones['titulo'] ) ? $descripciones['titulo'] : __( 'Property', 'connect-crm-real-state' );
-			$property_description = isset( $descripciones['descrip'] ) ? $descripciones['descrip'] : '';
-			$property_city        = isset( $item['ciudad'] ) ? $item['ciudad'] : '';
-		} else {
-			// Anaconda.
-			$property_title       = isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-real-state' );
-			$property_description = isset( $item['description'] ) ? $item['description'] : '';
-			$property_city        = isset( $item['city'] ) ? $item['city'] : '';
-		}
+		// Get property content.
+		$property_content     = self::get_property_content( $item, $crm );
+		$property_title       = $property_content['title'];
+		$property_description = $property_content['description'];
+		$property_city        = $property_content['city'];
 
 		if ( self::cannot_import( $item, $filter_postal_code ) ) {
 			$reference = self::get_reference_from_item( $item, $crm );
-			$message   = __( 'NOT Imported', 'connect-crm-real-state' );
+			$message   = __( 'NOT Imported', 'connect-crm-realstate' );
 			$message  .= self::add_end_message( $property_id, $property_title, $property_city, $reference );
 			$status    = isset( $property_info_early['status'] ) ? $property_info_early['status'] : '';
 
@@ -182,6 +170,41 @@ class SYNC {
 	}
 
 	/**
+	 * Returns title, description, and city extracted from a raw CRM item.
+	 *
+	 * @param array  $item Raw item from the CRM API.
+	 * @param string $crm  CRM type (inmovilla_procesos|inmovilla|anaconda).
+	 * @return array{title: string, description: string, city: string}
+	 */
+	public static function get_property_content( array $item, string $crm ): array {
+		if ( 'inmovilla_procesos' === $crm ) {
+			// Inmovilla Procesos: title and description are direct string fields.
+			return array(
+				'title'       => isset( $item['tituloes'] ) ? $item['tituloes'] : __( 'Property', 'connect-crm-realstate' ),
+				'description' => isset( $item['descripciones'] ) ? $item['descripciones'] : '',
+				'city'        => isset( $item['ciudad'] ) ? $item['ciudad'] : '',
+			);
+		}
+
+		if ( 'inmovilla' === $crm ) {
+			// Inmovilla APIWEB: descripciones is an array with titulo and descrip keys.
+			$descripciones = isset( $item['descripciones'] ) ? $item['descripciones'] : array();
+			return array(
+				'title'       => isset( $descripciones['titulo'] ) ? $descripciones['titulo'] : __( 'Property', 'connect-crm-realstate' ),
+				'description' => isset( $descripciones['descrip'] ) ? $descripciones['descrip'] : '',
+				'city'        => isset( $item['ciudad'] ) ? $item['ciudad'] : '',
+			);
+		}
+
+		// Anaconda.
+		return array(
+			'title'       => isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' ),
+			'description' => isset( $item['description'] ) ? $item['description'] : '',
+			'city'        => isset( $item['city'] ) ? $item['city'] : '',
+		);
+	}
+
+	/**
 	 * Formats the item meta.
 	 *
 	 * @param string $crm CRM type.
@@ -285,7 +308,7 @@ class SYNC {
 	 * @return array Keys 'title' and 'city'.
 	 */
 	private static function get_title_and_city_from_item( $item, $crm ) {
-		$default_title = __( 'Property', 'connect-crm-real-state' );
+		$default_title = __( 'Property', 'connect-crm-realstate' );
 		if ( 'inmovilla_procesos' === $crm ) {
 			return array(
 				'title' => isset( $item['tituloes'] ) ? $item['tituloes'] : $default_title,
@@ -316,10 +339,10 @@ class SYNC {
 	 */
 	private static function add_end_message( $property_id, $property_title, $property_city = '', $reference = null ) {
 		if ( null !== $reference && '' !== $reference ) {
-			$message  = ' ' . __( 'Reference:', 'connect-crm-real-state' ) . ' ';
+			$message  = ' ' . __( 'Reference:', 'connect-crm-realstate' ) . ' ';
 			$message .= $reference;
 		} else {
-			$message  = ' ' . __( 'Property ID:', 'connect-crm-real-state' ) . ' ';
+			$message  = ' ' . __( 'Property ID:', 'connect-crm-realstate' ) . ' ';
 			$message .= $property_id;
 		}
 		$message .= ' ' . substr( $property_title, 0, 50 ) . ' - ' . $property_city;
@@ -438,8 +461,8 @@ class SYNC {
 	 * @return array
 	 */
 	public static function handle_unavailable_property( $property, $settings = array(), $settings_fields = array(), $crm = 'anaconda' ) {
-		$settings         = empty( $settings ) ? get_option( 'conncrmreal_settings' ) : $settings;
-		$settings_fields  = empty( $settings_fields ) ? get_option( 'conncrmreal_merge_fields' ) : $settings_fields;
+		$settings         = empty( $settings ) ? get_option( 'ccrmre_settings' ) : $settings;
+		$settings_fields  = empty( $settings_fields ) ? get_option( 'ccrmre_merge_fields' ) : $settings_fields;
 		$post_type        = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 		$sold_action      = isset( $settings['sold_action'] ) ? $settings['sold_action'] : 'draft';
 		$property_info_h  = API::get_property_info( $property, $crm );
@@ -455,7 +478,7 @@ class SYNC {
 
 			return array(
 				'property_id' => $property_id,
-				'message'     => __( 'Skipped (Not Available in CRM)', 'connect-crm-real-state' ) . $reason,
+				'message'     => __( 'Skipped (Not Available in CRM)', 'connect-crm-realstate' ) . $reason,
 				'reference'   => $ref_disp,
 				'status'      => $status,
 				'title'       => $title_city['title'],
@@ -476,17 +499,17 @@ class SYNC {
 						'post_status' => 'draft',
 					)
 				);
-				$message = __( 'Unpublished (Set to Draft)', 'connect-crm-real-state' ) . $reason;
+				$message = __( 'Unpublished (Set to Draft)', 'connect-crm-realstate' ) . $reason;
 				break;
 
 			case 'trash':
 				wp_trash_post( $property_post_id );
-				$message = __( 'Moved to Trash', 'connect-crm-real-state' ) . $reason;
+				$message = __( 'Moved to Trash', 'connect-crm-realstate' ) . $reason;
 				break;
 
 			case 'keep':
 			default:
-				$message = __( 'Kept Published (Not Available)', 'connect-crm-real-state' ) . $reason;
+				$message = __( 'Kept Published (Not Available)', 'connect-crm-realstate' ) . $reason;
 				break;
 		}
 
@@ -514,19 +537,19 @@ class SYNC {
 	private static function get_unavailable_reason( $property, $crm ) {
 		if ( isset( $property['status'] ) && ! (bool) $property['status'] ) {
 			/* translators: %s: status field value from the API. */
-			return ' — ' . sprintf( __( 'Reason: status = %s', 'connect-crm-real-state' ), esc_html( $property['status'] ) );
+			return ' — ' . sprintf( __( 'Reason: status = %s', 'connect-crm-realstate' ), esc_html( $property['status'] ) );
 		}
 
 		if ( 'inmovilla_procesos' === $crm && isset( $property['nodisponible'] ) && 1 === (int) $property['nodisponible'] ) {
-			return ' — ' . __( 'Reason: nodisponible = 1', 'connect-crm-real-state' );
+			return ' — ' . __( 'Reason: nodisponible = 1', 'connect-crm-realstate' );
 		}
 
 		if ( 'inmovilla' === $crm && isset( $property['estado'] ) && 'V' === $property['estado'] ) {
-			return ' — ' . __( 'Reason: estado = V (Sold)', 'connect-crm-real-state' );
+			return ' — ' . __( 'Reason: estado = V (Sold)', 'connect-crm-realstate' );
 		}
 
 		if ( 'anaconda' === $crm && isset( $property['operation_status'] ) && 'Vendido' === $property['operation_status'] ) {
-			return ' — ' . __( 'Reason: operation_status = Sold', 'connect-crm-real-state' );
+			return ' — ' . __( 'Reason: operation_status = Sold', 'connect-crm-realstate' );
 		}
 
 		return '';
@@ -539,7 +562,7 @@ class SYNC {
 	 * @return array Array with count and detailed info of removed properties.
 	 */
 	public static function remove_properties_not_in_api( $crm_type ) {
-		$settings  = get_option( 'conncrmreal_settings' );
+		$settings  = get_option( 'ccrmre_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 
 		// Get all property IDs from API.
@@ -599,7 +622,7 @@ class SYNC {
 	 */
 	public static function get_wordpress_property_data( $crm_type ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		global $wpdb;
-		$settings  = get_option( 'conncrmreal_settings' );
+		$settings  = get_option( 'ccrmre_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : 'ccrmre_property';
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -925,7 +948,7 @@ class SYNC {
 	 * @return void
 	 */
 	public static function assign_taxonomy_terms( $post_id, $item, $crm ) {
-		$taxonomy_mappings = get_option( 'conncrmreal_taxonomy_mappings', array() );
+		$taxonomy_mappings = get_option( 'ccrmre_taxonomy_mappings', array() );
 
 		if ( empty( $taxonomy_mappings ) || ! is_array( $taxonomy_mappings ) ) {
 			return;

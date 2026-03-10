@@ -95,7 +95,7 @@
 					if (response.success) {
 						// Update select2 fields with new mappings.
 						$.each(response.data.mappings, function(crmField, wpField) {
-							var $select = $('select[name="conncrmreal_merge_fields[' + crmField + ']"]');
+							var $select = $('select[name="ccrmre_merge_fields[' + crmField + ']"]');
 							if ($select.length) {
 								// Check if option exists, if not create it.
 								if ($select.find('option[value="' + wpField + '"]').length === 0) {
