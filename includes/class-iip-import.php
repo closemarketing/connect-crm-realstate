@@ -240,7 +240,7 @@ class Import {
 		$is_new = false;
 
 		if ( ! empty( $property ) ) {
-			$line_prefix = '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . __( 'Property', 'connect-crm-realstate' ) . ' ';
+			$line_prefix  = '[' . date_i18n( 'H:i:s' ) . '] ' . ( $loop + 1 ) . ' - ' . __( 'Property', 'connect-crm-realstate' ) . ' ';
 			$is_available = SYNC::is_property_available( $property, $crm );
 
 			$id_display = '?';
