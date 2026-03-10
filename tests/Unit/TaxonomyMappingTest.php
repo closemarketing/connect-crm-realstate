@@ -40,7 +40,7 @@ class TaxonomyMappingTest extends WP_UnitTestCase {
 		register_taxonomy( $this->test_taxonomy_2, 'post', array( 'public' => true ) );
 
 		update_option(
-			'conncrmreal_settings',
+			'ccrmre_settings',
 			array(
 				'type'      => 'anaconda',
 				'post_type' => 'post',
@@ -53,7 +53,7 @@ class TaxonomyMappingTest extends WP_UnitTestCase {
 	 */
 	public function test_assign_single_taxonomy_term() {
 		update_option(
-			'conncrmreal_taxonomy_mappings',
+			'ccrmre_taxonomy_mappings',
 			array(
 				array(
 					'crm_field' => 'property_type',
@@ -87,7 +87,7 @@ class TaxonomyMappingTest extends WP_UnitTestCase {
 	 */
 	public function test_assign_multiple_taxonomy_mappings() {
 		update_option(
-			'conncrmreal_taxonomy_mappings',
+			'ccrmre_taxonomy_mappings',
 			array(
 				array(
 					'crm_field' => 'property_type',
@@ -129,7 +129,7 @@ class TaxonomyMappingTest extends WP_UnitTestCase {
 	 */
 	public function test_assign_comma_separated_values() {
 		update_option(
-			'conncrmreal_taxonomy_mappings',
+			'ccrmre_taxonomy_mappings',
 			array(
 				array(
 					'crm_field' => 'features',
@@ -166,7 +166,7 @@ class TaxonomyMappingTest extends WP_UnitTestCase {
 	 */
 	public function test_empty_crm_value_skips_assignment() {
 		update_option(
-			'conncrmreal_taxonomy_mappings',
+			'ccrmre_taxonomy_mappings',
 			array(
 				array(
 					'crm_field' => 'property_type',
@@ -200,7 +200,7 @@ class TaxonomyMappingTest extends WP_UnitTestCase {
 	 */
 	public function test_missing_crm_field_skips_assignment() {
 		update_option(
-			'conncrmreal_taxonomy_mappings',
+			'ccrmre_taxonomy_mappings',
 			array(
 				array(
 					'crm_field' => 'nonexistent_field',
@@ -232,7 +232,7 @@ class TaxonomyMappingTest extends WP_UnitTestCase {
 	 * Test no mappings configured does nothing.
 	 */
 	public function test_no_mappings_does_nothing() {
-		delete_option( 'conncrmreal_taxonomy_mappings' );
+		delete_option( 'ccrmre_taxonomy_mappings' );
 
 		$post_id = wp_insert_post(
 			array(
@@ -261,7 +261,7 @@ class TaxonomyMappingTest extends WP_UnitTestCase {
 		wp_insert_term( 'Apartment', $this->test_taxonomy );
 
 		update_option(
-			'conncrmreal_taxonomy_mappings',
+			'ccrmre_taxonomy_mappings',
 			array(
 				array(
 					'crm_field' => 'property_type',
@@ -360,8 +360,8 @@ class TaxonomyMappingTest extends WP_UnitTestCase {
 	 * Cleanup after tests.
 	 */
 	public function tearDown(): void {
-		delete_option( 'conncrmreal_taxonomy_mappings' );
-		delete_option( 'conncrmreal_settings' );
+		delete_option( 'ccrmre_taxonomy_mappings' );
+		delete_option( 'ccrmre_settings' );
 
 		$terms = get_terms(
 			array(

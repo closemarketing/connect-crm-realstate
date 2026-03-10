@@ -43,6 +43,9 @@ class HelperApiTest extends WP_UnitTestCase {
 		$this->mock_api_error      = false;
 		$this->cleanup_properties();
 
+		// Avoid sleep() in execute_with_retry when mock returns error (test_propagates_api_http_error, etc.).
+		API::set_skip_retry( true );
+
 		update_option(
 			'ccrmre_settings',
 			array(
@@ -62,6 +65,7 @@ class HelperApiTest extends WP_UnitTestCase {
 	 */
 	public function tearDown(): void {
 		remove_filter( 'pre_http_request', array( $this, 'mock_http_request' ), 10 );
+		API::set_skip_retry( false );
 		$this->cleanup_properties();
 		parent::tearDown();
 	}
@@ -177,10 +181,10 @@ class HelperApiTest extends WP_UnitTestCase {
 	 */
 	public function test_get_property_info_inmovilla_all_fields() {
 		$property = array(
-			'cod_ofer'   => 'INM-2024-001',
-			'referencia' => 'REF-INM-001',
-			'fechaact'   => '2024-01-20',
-			'titulo'     => 'Inmovilla Property',
+			'cod_ofer' => 'INM-2024-001',
+			'ref'      => 'REF-INM-001',
+			'fechaact' => '2024-01-20',
+			'titulo'   => 'Inmovilla Property',
 		);
 
 		$result = API::get_property_info( $property, 'inmovilla' );
@@ -213,8 +217,8 @@ class HelperApiTest extends WP_UnitTestCase {
 	 */
 	public function test_get_property_info_inmovilla_missing_date() {
 		$property = array(
-			'cod_ofer'   => 'INM-2024-001',
-			'referencia' => 'REF-INM-001',
+			'cod_ofer' => 'INM-2024-001',
+			'ref'      => 'REF-INM-001',
 		);
 
 		$result = API::get_property_info( $property, 'inmovilla' );
