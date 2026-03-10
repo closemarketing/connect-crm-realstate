@@ -371,11 +371,10 @@ class API {
 			$safe_value = str_replace( array( "\r", "\n" ), '', $value );
 			$lines[]    = $name . '=' . $safe_value;
 		}
-		if ( ! empty( $lines ) ) {
-			wp_mkdir_p( dirname( $path ) );
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Cookie jar in temp dir for API session.
-			file_put_contents( $path, implode( "\n", $lines ) . "\n", LOCK_EX );
-		}
+		// $lines is non-empty here: we returned early if $response_cookies was empty, so $cookies has entries.
+		wp_mkdir_p( dirname( $path ) );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Cookie jar in temp dir for API session.
+		file_put_contents( $path, implode( "\n", $lines ) . "\n", LOCK_EX );
 	}
 
 	/**
