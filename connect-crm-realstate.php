@@ -64,7 +64,7 @@ add_action(
 			add_action(
 				'admin_notices',
 				function () {
-					echo '<div class="notice notice-error"><p><strong>Connect CRM RealState:</strong> ' . esc_html__( 'Composer autoloader not found. Please run "composer install".', 'connect-crm-real-state' ) . '</p></div>';
+					echo '<div class="notice notice-error"><p><strong>Connect CRM RealState:</strong> ' . esc_html__( 'Composer autoloader not found. Please run "composer install".', 'connect-crm-realstate' ) . '</p></div>';
 				}
 			);
 			return;

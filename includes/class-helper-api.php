@@ -86,7 +86,7 @@ class API {
 		if ( empty( $apipassword ) ) {
 			return array(
 				'status'  => 'error',
-				'message' => __( 'API password is empty', 'connect-crm-real-state' ),
+				'message' => __( 'API password is empty', 'connect-crm-realstate' ),
 				'data'    => array(),
 			);
 		}
@@ -115,7 +115,7 @@ class API {
 					$error_type = self::detect_error_type( $response, $code );
 					return array(
 						'status'     => 'error',
-						'message'    => isset( $data['message'] ) ? $data['message'] : __( 'Unknown API error', 'connect-crm-real-state' ),
+						'message'    => isset( $data['message'] ) ? $data['message'] : __( 'Unknown API error', 'connect-crm-realstate' ),
 						'data'       => array(),
 						'error_type' => $error_type,
 					);
@@ -123,7 +123,7 @@ class API {
 
 				return array(
 					'status'  => 'ok',
-					'message' => __( 'Request successful', 'connect-crm-real-state' ),
+					'message' => __( 'Request successful', 'connect-crm-realstate' ),
 					'data'    => $data,
 				);
 			},
@@ -154,7 +154,7 @@ class API {
 		if ( empty( $numagencia ) || empty( $apipassword ) ) {
 			return array(
 				'status'  => 'error',
-				'message' => __( 'Inmovilla API credentials are not configured', 'connect-crm-real-state' ),
+				'message' => __( 'Inmovilla API credentials are not configured', 'connect-crm-realstate' ),
 				'data'    => array(),
 			);
 		}
@@ -230,7 +230,7 @@ class API {
 						'status'     => 'error',
 						'message'    => sprintf(
 							/* translators: %d: HTTP response code */
-							__( 'Inmovilla API returned error code: %d', 'connect-crm-real-state' ),
+							__( 'Inmovilla API returned error code: %d', 'connect-crm-realstate' ),
 							$code
 						),
 						'data'       => array(),
@@ -241,7 +241,7 @@ class API {
 				$data = json_decode( $body, true );
 
 				if ( json_last_error() !== JSON_ERROR_NONE ) {
-					$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-real-state' );
+					$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' );
 					$message .= is_string( $body ) ? ' - ' . $body : '';
 					return array(
 						'status'     => 'error',
@@ -417,7 +417,7 @@ class API {
 		if ( empty( $apipassword ) ) {
 			return array(
 				'status'  => 'error',
-				'message' => __( 'Inmovilla Procesos API token is not configured', 'connect-crm-real-state' ),
+				'message' => __( 'Inmovilla Procesos API token is not configured', 'connect-crm-realstate' ),
 				'data'    => array(),
 			);
 		}
@@ -462,7 +462,7 @@ class API {
 						'status'     => 'error',
 						'message'    => sprintf(
 							/* translators: %d: HTTP error code */
-							__( 'Inmovilla Procesos API returned error code: %d', 'connect-crm-real-state' ),
+							__( 'Inmovilla Procesos API returned error code: %d', 'connect-crm-realstate' ),
 							$code
 						),
 						'data'       => array(),
@@ -476,14 +476,14 @@ class API {
 				if ( null === $data ) {
 					return array(
 						'status'  => 'ok',
-						'message' => __( 'This property is not available', 'connect-crm-real-state' ),
+						'message' => __( 'This property is not available', 'connect-crm-realstate' ),
 						'data'    => array(),
 					);
 				}
 
 				return array(
 					'status'  => 'ok',
-					'message' => __( 'Properties fetched successfully', 'connect-crm-real-state' ),
+					'message' => __( 'Properties fetched successfully', 'connect-crm-realstate' ),
 					'data'    => $data,
 				);
 			},
@@ -545,7 +545,7 @@ class API {
 
 		return array(
 			'status'  => 'error',
-			'message' => __( 'CRM type not configured', 'connect-crm-real-state' ),
+			'message' => __( 'CRM type not configured', 'connect-crm-realstate' ),
 			'data'    => array(),
 		);
 	}
@@ -634,7 +634,7 @@ class API {
 
 		$result = array(
 			'status'  => 'ok',
-			'message' => __( 'Property fetched successfully', 'connect-crm-real-state' ),
+			'message' => __( 'Property fetched successfully', 'connect-crm-realstate' ),
 			'data'    => array(),
 		);
 
@@ -647,7 +647,7 @@ class API {
 			if ( empty( $property_id ) ) {
 				return array(
 					'status'  => 'error',
-					'message' => __( 'Property ID is required', 'connect-crm-real-state' ),
+					'message' => __( 'Property ID is required', 'connect-crm-realstate' ),
 				);
 			}
 
@@ -656,7 +656,7 @@ class API {
 			if ( 'ok' === $result['status'] && empty( $result['data'] ) ) {
 				return array(
 					'status'  => 'error',
-					'message' => __( 'This property is not available in API', 'connect-crm-real-state' ),
+					'message' => __( 'This property is not available in API', 'connect-crm-realstate' ),
 				);
 			}
 
@@ -759,7 +759,7 @@ class API {
 			if ( 'ok' !== $result['status'] || empty( $result['data']['data'] ) ) {
 				return array(
 					'status'  => 'error',
-					'message' => __( 'Error getting Anaconda fields. Please check your API connection.', 'connect-crm-real-state' ),
+					'message' => __( 'Error getting Anaconda fields. Please check your API connection.', 'connect-crm-realstate' ),
 					'data'    => array(),
 				);
 			}
@@ -803,7 +803,7 @@ class API {
 			if ( 'ok' !== $result['status'] || empty( $result['data'] ) || ! is_array( $result['data'] ) ) {
 				return array(
 					'status'  => 'error',
-					'message' => __( 'Error getting Inmovilla Procesos fields. Please check your API connection.', 'connect-crm-real-state' ),
+					'message' => __( 'Error getting Inmovilla Procesos fields. Please check your API connection.', 'connect-crm-realstate' ),
 					'data'    => array(),
 				);
 			}
@@ -846,14 +846,14 @@ class API {
 				} else {
 					return array(
 						'status'  => 'error',
-						'message' => __( 'Error getting Inmovilla Procesos property details.', 'connect-crm-real-state' ),
+						'message' => __( 'Error getting Inmovilla Procesos property details.', 'connect-crm-realstate' ),
 						'data'    => array(),
 					);
 				}
 			} else {
 				return array(
 					'status'  => 'error',
-					'message' => __( 'No properties found in Inmovilla Procesos.', 'connect-crm-real-state' ),
+					'message' => __( 'No properties found in Inmovilla Procesos.', 'connect-crm-realstate' ),
 					'data'    => array(),
 				);
 			}
@@ -875,7 +875,7 @@ class API {
 			$result_properties = self::request_inmovilla( 'paginacion', 1, 1 );
 
 			if ( 'ok' !== $result_properties['status'] || ! isset( $result_properties['data']['paginacion'][1] ) ) {
-				$message  = __( 'Error getting Inmovilla fields. Please check your API connection.', 'connect-crm-real-state' );
+				$message  = __( 'Error getting Inmovilla fields. Please check your API connection.', 'connect-crm-realstate' );
 				$message .= is_string( $result_properties['data'] ) ? ' - ' . $result_properties['data'] : '';
 
 				return array(
@@ -1641,7 +1641,7 @@ class API {
 			if ( $attempt > self::MAX_RETRIES ) {
 				$result['message'] = sprintf(
 					/* translators: %s: API name */
-					__( '%s: Maximum retry attempts reached. Last error: ', 'connect-crm-real-state' ),
+					__( '%s: Maximum retry attempts reached. Last error: ', 'connect-crm-realstate' ),
 					$api_name
 				) . $result['message'];
 				return $result;
@@ -1662,7 +1662,7 @@ class API {
 			// Log retry attempt.
 			$retry_message = sprintf(
 				/* translators: 1: Attempt number, 2: Max retries, 3: Wait seconds */
-				__( 'Attempt %1$d/%2$d failed. Waiting %3$d seconds before retry...', 'connect-crm-real-state' ),
+				__( 'Attempt %1$d/%2$d failed. Waiting %3$d seconds before retry...', 'connect-crm-realstate' ),
 				$attempt,
 				self::MAX_RETRIES,
 				$wait_seconds
