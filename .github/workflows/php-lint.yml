@@ -49,7 +49,7 @@ jobs:
         run: composer validate
 
       - name: Install PHP dependencies
-        uses: ramsey/composer-install@a2636af0004d1c0499ffca16ac0b4cc94df70565
+        uses: ramsey/composer-install@a35c6ebd3d08125aaf8852dff361e686a1a67947
         with:
           composer-options: '--prefer-dist'
 
