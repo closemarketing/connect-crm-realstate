@@ -67,9 +67,12 @@ class HelperApiTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * HTTP mock: intercepts every Inmovilla Procesos API request.
+	 * HTTP mock: intercepts all HTTP requests so no external calls are made.
 	 *
-	 * Priority (checked in order):
+	 * Only Inmovilla Procesos API URLs are handled with real mock data; any other URL
+	 * gets a generic error response so the request is never sent.
+	 *
+	 * Priority for Inmovilla URLs (checked in order):
 	 *  1. If mock_api_error is true → always return 500.
 	 *  2. If mock_api_properties is set → return that JSON for any propiedades endpoint.
 	 *  3. Fall through to file-based mock (used by the original get_property_info / get_enums tests).
@@ -80,8 +83,12 @@ class HelperApiTest extends WP_UnitTestCase {
 	 * @return mixed
 	 */
 	public function mock_http_request( $pre, $args, $url ) {
+		// Block all external requests: unknown URLs get a safe error response.
 		if ( 0 !== strpos( $url, 'https://procesos.inmovilla.com/api/v1/' ) ) {
-			return $pre;
+			return array(
+				'body'     => '',
+				'response' => array( 'code' => 500, 'message' => 'Mock: no external HTTP in tests' ),
+			);
 		}
 
 		if ( $this->mock_api_error ) {
