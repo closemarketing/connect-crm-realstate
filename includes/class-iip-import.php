@@ -382,23 +382,47 @@ class Import {
 				$available_properties[ $prop_id ] = $prop_data;
 			}
 		}
-		$available_ids = array_keys( $available_properties );
+
+		/**
+		 * Filter available properties for import stats (e.g. by postal code or province in PRO).
+		 *
+		 * @param array $available_properties Map of property_id => prop_data.
+		 * @param array $api_properties      All API properties.
+		 */
+		$available_properties = apply_filters( 'ccrmre_available_properties_for_stats', $available_properties, $api_properties );
 
 		$wp_properties = SYNC::get_wordpress_property_data( $crm_type );
-		$wp_count      = count( $wp_properties );
+
+		/**
+		 * Filter WordPress properties for import stats (e.g. limit to province-filtered IDs in PRO).
+		 *
+		 * @param array $wp_properties        Map of property_id => array( last_updated ).
+		 * @param array $available_properties Already-filtered available properties from API.
+		 */
+		$wp_properties = apply_filters( 'ccrmre_wordpress_properties_for_stats', $wp_properties, $available_properties );
+
+		$wp_count = count( $wp_properties );
 
 		$counts = self::compute_import_stats( $available_properties, $wp_properties, $api_ids );
 
-		wp_send_json_success(
-			array_merge(
-				array(
-					'api_count'       => $api_count,
-					'available_count' => count( $available_properties ),
-					'wp_count'        => $wp_count,
-				),
-				$counts
-			)
+		$response = array_merge(
+			array(
+				'api_count'                  => $api_count,
+				'available_count'            => count( $available_properties ),
+				'wp_count'                   => $wp_count,
+				'filtered_by_province_count' => 0,
+			),
+			$counts
 		);
+
+		/**
+		 * Filter stats response (e.g. PRO can set api_count to filtered count when postal filter is active).
+		 *
+		 * @param array $response Keys: api_count, available_count, wp_count, new_count, outdated_count, import_count, delete_count.
+		 */
+		$response = apply_filters( 'ccrmre_import_stats_response', $response );
+
+		wp_send_json_success( $response );
 	}
 
 	/**

@@ -431,14 +431,6 @@ class Admin {
 		}
 
 		add_settings_field(
-			'ccrmre_postal_code',
-			__( 'Include Properties by Postal Code', 'connect-crm-realstate' ),
-			array( $this, 'postal_code_callback' ),
-			'ccrmre_settings',
-			'ccrmre_admin_settings'
-		);
-
-		add_settings_field(
 			'ccrmre_sold_action',
 			__( 'Action for Sold/Unavailable Properties', 'connect-crm-realstate' ),
 			array( $this, 'sold_action_callback' ),
@@ -522,7 +514,6 @@ class Admin {
 			'numagencia',
 			'post_type',
 			'post_type_slug',
-			'postal_code',
 			'sold_action',
 			'download_images',
 			'show_gallery',
@@ -649,22 +640,6 @@ class Admin {
 	}
 
 	/**
-	 * Postal code callback
-	 *
-	 * @return void
-	 */
-	public function postal_code_callback() {
-		printf(
-			'<input class="regular-text" type="text" name="ccrmre_settings[postal_code]" id="postal_code" value="%s">',
-			isset( $this->settings['postal_code'] ) ? esc_attr( $this->settings['postal_code'] ) : ''
-		);
-		printf(
-			'<p class="description">%s</p>',
-			esc_html__( 'Include all properties by Postal Code. If it is blank, will import all properties. Add Postal codes that you will like to import. For example: 18100. You can use placeholder like 18* to include all Granada. Add multiple zones by separated by comma.', 'connect-crm-realstate' )
-		);
-	}
-
-	/**
 	 * Sold action callback
 	 *
 	 * @return void
@@ -769,6 +744,9 @@ class Admin {
 					<div class="ccrmre-stat-content">
 						<div class="ccrmre-stat-value" id="stat-available-count">--</div>
 						<div class="ccrmre-stat-label"><?php esc_html_e( 'Available in API', 'connect-crm-realstate' ); ?></div>
+						<div class="ccrmre-stat-sublabel ccrmre-stat-filtered-province-wrap" id="stat-filtered-province-wrap" style="display: none;">
+							<?php esc_html_e( 'Filtered by province:', 'connect-crm-realstate' ); ?> <span id="stat-filtered-province-count">0</span>
+						</div>
 						<div class="ccrmre-stat-sublabel">
 							<?php esc_html_e( 'Total:', 'connect-crm-realstate' ); ?> <span id="stat-api-count">--</span>
 						</div>
