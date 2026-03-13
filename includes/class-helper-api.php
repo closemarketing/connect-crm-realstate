@@ -32,7 +32,9 @@ class API {
 	 * @return array Array with status and list of property IDs/references (with metadata if requested)
 	 */
 	public static function get_all_property_ids( $crm_type, $with_metadata = true ) {
-		$property_ids = get_transient( 'ccrmre_query_property_ids' );
+		$transient_key = 'ccrmre_query_property_ids_' . $crm_type;
+		$property_ids  = get_transient( $transient_key );
+
 		if ( false === $property_ids || ! is_array( $property_ids ) ) {
 			$property_ids = array();
 			$result       = self::get_properties();
@@ -54,15 +56,18 @@ class API {
 				if ( $with_metadata ) {
 					// Store as associative array with metadata.
 					$property_ids[ $list_key ] = array(
-						'last_updated' => $property_info['last_updated'],
-						'status'       => $property_info['status'],
+						'last_updated' => $property_info['last_updated'] ?? null,
+						'status'       => $property_info['status'] ?? null,
+						'state_code'   => $property_info['state_code'] ?? null,
+						'zip'          => $property_info['zip'] ?? null,
 					);
 				} else {
 					// Store as simple array of IDs.
 					$property_ids[] = $list_key;
 				}
 			}
-			set_transient( 'ccrmre_query_property_ids', $property_ids, MINUTE_IN_SECONDS * 3 );
+
+			set_transient( $transient_key, $property_ids, MINUTE_IN_SECONDS * 30 );
 		}
 
 		return array(
@@ -146,7 +151,7 @@ class API {
 	 * @param int    $idioma Language ID (1 = Spanish).
 	 * @return array
 	 */
-	public static function request_inmovilla( $tipo = 'paginacion', $pos_inicial = 1, $num_elementos = 50, $where = '', $orden = '', $idioma = 1 ) {
+	public static function request_inmovilla( $tipo = 'paginacion', $pos_inicial = 1, $num_elementos = 200, $where = '', $orden = '', $idioma = 1 ) {
 		$settings    = get_option( 'ccrmre_settings' );
 		$numagencia  = isset( $settings['numagencia'] ) ? $settings['numagencia'] : '';
 		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
@@ -230,9 +235,9 @@ class API {
 					return array(
 						'status'     => 'error',
 						'message'    => sprintf(
-							/* translators: %d: HTTP response code */
-							__( 'Inmovilla API returned error code: %d', 'connect-crm-realstate' ),
-							$code
+							/* translators: %d: HTTP response */
+							__( 'Inmovilla API returned error: %d', 'connect-crm-realstate' ),
+							$body
 						),
 						'data'       => array(),
 						'error_type' => self::detect_error_type( $response, $code ),
@@ -931,18 +936,21 @@ class API {
 				'reference'    => 'referencia',
 				'status'       => 'status',
 				'last_updated' => 'updated_at',
+				'state_code'   => 'state_code',
 			),
 			'inmovilla'          => array(
 				'id'           => 'cod_ofer',
 				'reference'    => 'ref',
 				'status'       => 'nodisponible',
 				'last_updated' => 'fechaact',
+				'state_code'   => 'keyprov',
 			),
 			'inmovilla_procesos' => array(
 				'id'           => 'cod_ofer',
 				'reference'    => 'ref',
 				'status'       => 'nodisponible',
 				'last_updated' => 'fechaact',
+				'state_code'   => 'keyprov',
 			),
 		);
 
@@ -951,6 +959,7 @@ class API {
 			$prefix . 'reference'    => null,
 			$prefix . 'status'       => null,
 			$prefix . 'last_updated' => null,
+			$prefix . 'state_code'   => null,
 		);
 		if ( isset( $match[ $crm_type ] ) ) {
 			$fields = $match[ $crm_type ];
@@ -983,8 +992,12 @@ class API {
 			if ( isset( $fields['last_updated'] ) && isset( $property[ $fields['last_updated'] ] ) ) {
 				$property_info[ $prefix . 'last_updated' ] = $property[ $fields['last_updated'] ];
 			}
-		}
 
+			// Get state_code if available.
+			if ( isset( $fields['state_code'] ) && isset( $property[ $fields['state_code'] ] ) ) {
+				$property_info[ $prefix . 'state_code' ] = $property[ $fields['state_code'] ];
+			}
+		}
 		return $property_info;
 	}
 
@@ -1377,19 +1390,22 @@ class API {
 	 * @return array
 	 */
 	public static function get_inmovilla_provincias( $only_with_properties = true ) {
-		$tipo   = $only_with_properties ? 'provinciasofertas' : 'provincias';
-		$result = self::request_inmovilla( $tipo, 1, 100 );
+		$result = get_transient( 'ccrmre_query_inmovilla_provincias' );
+		if ( false === $result || empty( $result['data'] ) || 'ok' !== $result['status'] ) {
+			$tipo   = $only_with_properties ? 'provinciasofertas' : 'provincias';
+			$result = self::request_inmovilla( $tipo, 1, 100 );
 
-		if ( 'ok' === $result['status'] && isset( $result['data'][ $tipo ] ) ) {
-			// Remove metadata row.
-			$provincias = $result['data'][ $tipo ];
-			unset( $provincias[0] );
-			return array(
-				'status' => 'ok',
-				'data'   => array_values( $provincias ),
-			);
+			if ( 'ok' === $result['status'] && isset( $result['data'][ $tipo ] ) ) {
+				// Remove metadata row.
+				$provincias = $result['data'][ $tipo ];
+				unset( $provincias[0] );
+				return array(
+					'status' => 'ok',
+					'data'   => array_values( $provincias ),
+				);
+			}
+			set_transient( 'ccrmre_query_inmovilla_provincias', $result, DAY_IN_SECONDS );
 		}
-
 		return $result;
 	}
 

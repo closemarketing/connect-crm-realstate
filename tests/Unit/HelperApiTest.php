@@ -2,7 +2,7 @@
 /**
  * Tests for API Helper class
  *
- * Command: composer test-debug -- --filter=HelperApiTest
+ * Command: composer test-debug -- --filter=HelperAPITest
  *
  * @package Connect_CRM_RealState
  */
@@ -16,7 +16,7 @@ use WP_UnitTestCase;
 /**
  * Test API Helper methods
  */
-class HelperApiTest extends WP_UnitTestCase {
+class HelperAPITest extends WP_UnitTestCase {
 
 	/**
 	 * Property list returned by the mocked API for get_unsynced tests.
@@ -87,7 +87,37 @@ class HelperApiTest extends WP_UnitTestCase {
 	 * @return mixed
 	 */
 	public function mock_http_request( $pre, $args, $url ) {
-		// Block all external requests: unknown URLs get a safe error response.
+		// Inmovilla APIWEB (apiweb.inmovilla.com): POST with param= encoded body; tipo is 5th field (index 4).
+		if ( false !== strpos( $url, 'apiweb.inmovilla.com' ) ) {
+			if ( $this->mock_api_error ) {
+				return array(
+					'body'     => '',
+					'response' => array( 'code' => 500, 'message' => 'Internal Server Error' ),
+				);
+			}
+			$tipo = 'paginacion';
+			if ( ! empty( $args['body'] ) && preg_match( '/param=([^&]+)/', $args['body'], $m ) ) {
+				$param = rawurldecode( $m[1] );
+				$parts = explode( ';', $param );
+				if ( isset( $parts[4] ) ) {
+					$tipo = $parts[4];
+				}
+			}
+			$file = 'ficha' === $tipo ? 'inmovilla-properties-single.json' : 'inmovilla-properties-one-page.json';
+			$path = UNIT_TESTS_DATA_PLUGIN_DIR . $file;
+			if ( file_exists( $path ) ) {
+				return array(
+					'body'     => file_get_contents( $path ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+					'response' => array( 'code' => 200, 'message' => 'OK' ),
+				);
+			}
+			return array(
+				'body'     => '',
+				'response' => array( 'code' => 500, 'message' => 'Mock: Inmovilla APIWEB file not found' ),
+			);
+		}
+
+		// Block all other external requests: unknown URLs get a safe error response.
 		if ( 0 !== strpos( $url, 'https://procesos.inmovilla.com/api/v1/' ) ) {
 			return array(
 				'body'     => '',
@@ -227,6 +257,130 @@ class HelperApiTest extends WP_UnitTestCase {
 		$this->assertEquals( 'INM-2024-001', $result['id'] );
 		$this->assertEquals( 'REF-INM-001', $result['reference'] );
 		$this->assertNull( $result['last_updated'] );
+	}
+
+	/**
+	 * Inmovilla API (APIWEB): missing credentials returns error.
+	 */
+	public function test_inmovilla_api_request_credentials_missing() {
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '',
+				'apipassword' => 'test',
+				'post_type'   => 'property',
+			)
+		);
+
+		$result = API::request_inmovilla( 'paginacion', 1, 10 );
+
+		$this->assertSame( 'error', $result['status'] );
+		$this->assertArrayHasKey( 'message', $result );
+		$this->assertEmpty( $result['data'] );
+	}
+
+	/**
+	 * Inmovilla API (APIWEB): get_properties returns paginated list from mock.
+	 */
+	public function test_inmovilla_api_get_properties_all() {
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '6533',
+				'apipassword' => 'test',
+				'post_type'   => 'property',
+			)
+		);
+
+		$result = API::get_properties( 0, '' );
+
+		$this->assertSame( 'ok', $result['status'] );
+		$this->assertIsArray( $result['data'] );
+		$this->assertNotEmpty( $result['data'] );
+		$first = reset( $result['data'] );
+		$this->assertArrayHasKey( 'cod_ofer', $first );
+		$this->assertArrayHasKey( 'ref', $first );
+		$this->assertArrayHasKey( 'nodisponible', $first );
+		$this->assertArrayHasKey( 'fechaact', $first );
+		$this->assertArrayHasKey( 'keyprov', $first );
+	}
+
+	/**
+	 * Inmovilla API (APIWEB): get_property returns single property (ficha) from mock.
+	 */
+	public function test_inmovilla_api_get_property_single() {
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '6533',
+				'apipassword' => 'test',
+				'post_type'   => 'property',
+			)
+		);
+
+		$result = API::get_property( '28334412', 'inmovilla' );
+
+		$this->assertSame( 'ok', $result['status'] );
+		$this->assertIsArray( $result['data'] );
+		$this->assertArrayHasKey( 'cod_ofer', $result['data'] );
+		$this->assertSame( 28334412, $result['data']['cod_ofer'] );
+		$this->assertSame( 'DN26BELICENA', $result['data']['ref'] );
+		$this->assertArrayHasKey( 'ciudad', $result['data'] );
+		$this->assertSame( 'Vegas del Genil', $result['data']['ciudad'] );
+	}
+
+	/**
+	 * Inmovilla API (APIWEB): get_all_property_ids returns cached IDs from mock paginacion.
+	 */
+	public function test_inmovilla_api_get_all_property_ids() {
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '6533',
+				'apipassword' => 'test',
+				'post_type'   => 'property',
+			)
+		);
+		delete_transient( 'ccrmre_query_property_ids_inmovilla' );
+
+		$result = API::get_all_property_ids( 'inmovilla', true );
+
+		$this->assertSame( 'ok', $result['status'] );
+		$this->assertIsArray( $result['data'] );
+		$this->assertGreaterThan( 0, $result['count'] );
+		$this->assertSame( $result['count'], count( $result['data'] ) );
+		$ids = array_keys( $result['data'] );
+		$this->assertContains( 28473973, $ids );
+		$this->assertContains( 28334412, $ids );
+		$meta = $result['data'][28473973];
+		$this->assertArrayHasKey( 'last_updated', $meta );
+		$this->assertArrayHasKey( 'status', $meta );
+	}
+
+	/**
+	 * Inmovilla API (APIWEB): HTTP error is propagated (mock_api_error).
+	 */
+	public function test_inmovilla_api_propagates_http_error() {
+		$this->mock_api_error = true;
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '6533',
+				'apipassword' => 'test',
+				'post_type'   => 'property',
+			)
+		);
+
+		$result = API::request_inmovilla( 'paginacion', 1, 10 );
+
+		$this->assertSame( 'error', $result['status'] );
+		$this->assertArrayHasKey( 'message', $result );
+		$this->assertEmpty( $result['data'] );
 	}
 
 	/**
@@ -456,11 +610,12 @@ class HelperApiTest extends WP_UnitTestCase {
 		$result = API::get_property_info( $property, 'anaconda' );
 
 		$this->assertIsArray( $result );
-		$this->assertCount( 4, $result ); // Should have id, reference, last_updated, status.
+		$this->assertCount( 5, $result ); // id, reference, last_updated, status, state_code.
 		$this->assertArrayHasKey( 'id', $result );
 		$this->assertArrayHasKey( 'reference', $result );
 		$this->assertArrayHasKey( 'last_updated', $result );
 		$this->assertArrayHasKey( 'status', $result );
+		$this->assertArrayHasKey( 'state_code', $result );
 		$this->assertArrayNotHasKey( 'titulo', $result );
 		$this->assertArrayNotHasKey( 'descripcion', $result );
 		$this->assertArrayNotHasKey( 'precio', $result );

@@ -32,7 +32,6 @@ class SYNC {
 		$crm                 = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 		$settings_fields     = empty( $settings_fields ) ? get_option( 'ccrmre_merge_fields' ) : $settings_fields;
 		$post_type           = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
-		$filter_postal_code  = isset( $settings['postal_code'] ) ? $settings['postal_code'] : '';
 		$property_info_early = API::get_property_info( $item, $crm );
 		$property_id         = $property_info_early['id'];
 		$property_post_id    = self::find_property( $property_id, $post_type );
@@ -43,7 +42,8 @@ class SYNC {
 		$property_description = $property_content['description'];
 		$property_city        = $property_content['city'];
 
-		if ( self::cannot_import( $item, $filter_postal_code ) ) {
+		$should_import = apply_filters( 'ccrmre_should_import_property', true, $item );
+		if ( ! $should_import ) {
 			$reference = self::get_reference_from_item( $item, $crm );
 			$message   = __( 'NOT Imported', 'connect-crm-realstate' );
 			$message  .= self::add_end_message( $property_id, $property_title, $property_city, $reference );
@@ -350,36 +350,6 @@ class SYNC {
 	}
 
 	/**
-	 * Filters the property depending of settings.
-	 *
-	 * @param array  $item Item from API.
-	 * @param string $filter_postal_code Postal code filter.
-	 * @return boolean
-	 */
-	private static function cannot_import( $item, $filter_postal_code ) {
-		$property_postal_code = isset( $item['postal_code'] ) ? trim( $item['postal_code'] ) : '';
-
-		if ( empty( $property_postal_code ) ) {
-			return false;
-		}
-
-		$filters = explode( ',', $filter_postal_code );
-		foreach ( $filters as $filter ) {
-			$filter = trim( $filter );
-			if ( empty( $filter ) ) {
-				continue;
-			}
-			if ( $filter === $property_postal_code ) {
-				return false;
-			} elseif ( fnmatch( $filter, $property_postal_code ) ) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	/**
 	 * Finds property by property_id.
 	 *
 	 * @param string $property_id Property ID.
@@ -432,23 +402,25 @@ class SYNC {
 	 * @return bool
 	 */
 	public static function is_property_available( $property, $crm ) {
-		if ( isset( $property['status'] ) ) {
-			return (bool) $property['status'];
-		}
+		$available = false;
 
-		if ( 'inmovilla_procesos' === $crm ) {
+		if ( isset( $property['status'] ) ) {
+			$available = (bool) $property['status'];
+		} elseif ( 'inmovilla_procesos' === $crm ) {
 			// Check nodisponible field (1 = not available, 0 = available).
-			return ! isset( $property['nodisponible'] ) || 1 !== (int) $property['nodisponible'];
+			$available = ! isset( $property['nodisponible'] ) || 1 !== (int) $property['nodisponible'];
 		} elseif ( 'inmovilla' === $crm ) {
 			// Check estado field in Inmovilla APIWEB.
-			return ! isset( $property['estado'] ) || 'V' !== $property['estado'];
+			$available = ! isset( $property['estado'] ) || 'V' !== $property['estado'];
 		} elseif ( 'anaconda' === $crm ) {
 			// Check operation_status field in Anaconda.
-			return ! isset( $property['operation_status'] ) || 'Vendido' !== $property['operation_status'];
+			$available = ! isset( $property['operation_status'] ) || 'Vendido' !== $property['operation_status'];
+		} else {
+			$available = true;
 		}
 
-		// Default: assume available.
-		return true;
+		// Let PRO (and other plugins) exclude by province or postal code.
+		return $available && apply_filters( 'ccrmre_should_import_property', true, $property );
 	}
 
 	/**

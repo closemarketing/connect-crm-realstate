@@ -145,17 +145,14 @@ class Import {
 			}
 		}
 
-		// When starting a new page, fetch from API.
+		// When starting a new page, fetch from cached property IDs.
 		if ( ( 0 === $loop_page && 0 < $pagination ) || ( 0 === $loop && -1 === $pagination ) ) {
-			// For date-filtered modes use page 0 so API returns all modified since $changed_from.
-			$request_page  = ! empty( $changed_from ) ? 0 : $page;
-			$result_api    = API::get_properties( $request_page, $changed_from );
-			$properties    = 'ok' === $result_api['status'] ? $result_api['data'] : array();
+			$result_api    = API::get_all_property_ids( $crm, true );
+			$properties    = self::build_import_list_from_cached_ids( $crm, $result_api, $changed_from, $mode );
 			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-realstate' ) . '<br/>';
 
-			if ( 'updated' === $mode && ! empty( $properties ) ) {
-				$api_properties = count( $properties );
-				$properties     = SYNC::filter_properties_to_update( $properties, $crm );
+			if ( 'updated' === $mode && 'ok' === $result_api['status'] && isset( $result_api['count'] ) && $result_api['count'] > 0 ) {
+				$api_properties = $result_api['count'];
 				$progress_msg  .= '[' . date_i18n( 'H:i:s' ) . '] ' . sprintf(
 					/* translators: %1$d: number of properties to update, %2$d: number of properties from API */
 					__( 'Filtering properties to update... Found %1$d / %2$d properties.', 'connect-crm-realstate' ),
@@ -217,15 +214,13 @@ class Import {
 		} else {
 			$property = get_transient( 'ccrmre_query_property_loop_' . $loop );
 
-			// Transient expired - re-fetch the page.
+			// Transient expired - re-fetch from cached IDs and rebuild loop transients.
 			if ( false === $property && $loop < $totalprop ) {
-				$page         = floor( $loop / $pagination ) + 1;
-				$request_page = ! empty( $changed_from ) ? 0 : $page;
-				$result_api   = API::get_properties( $request_page, $changed_from );
+				$result_api = API::get_all_property_ids( $crm, true );
+				$properties = self::build_import_list_from_cached_ids( $crm, $result_api, $changed_from, $mode );
 
-				if ( 'ok' === $result_api['status'] && ! empty( $result_api['data'] ) ) {
-					$properties = $result_api['data'];
-					$i          = 0;
+				if ( 'ok' === $result_api['status'] && ! empty( $properties ) ) {
+					$i = 0;
 					foreach ( $properties as $property_api ) {
 						set_transient( 'ccrmre_query_property_loop_' . $i, $property_api, 30 * MINUTE_IN_SECONDS );
 						++$i;
@@ -343,6 +338,74 @@ class Import {
 	}
 
 	/**
+	 * Build list of property items for import from cached get_all_property_ids result.
+	 * Applies changed_from date filter and "updated" mode filter (new/outdated only).
+	 *
+	 * @param string $crm         CRM type.
+	 * @param array  $result_api  Return from API::get_all_property_ids( $crm, true ).
+	 * @param string $changed_from Optional date string; only include properties with last_updated >= this.
+	 * @param string $mode        Import mode: 'updated' to filter to new/outdated only, else use all.
+	 * @return array List of items (minimal item + status) for the import loop.
+	 */
+	public static function build_import_list_from_cached_ids( $crm, $result_api, $changed_from = '', $mode = 'updated' ) {
+		if ( 'ok' !== ( isset( $result_api['status'] ) ? $result_api['status'] : '' ) || ! isset( $result_api['data'] ) || ! is_array( $result_api['data'] ) ) {
+			return array();
+		}
+
+		$data = $result_api['data'];
+
+		if ( ! empty( $changed_from ) ) {
+			$from_ts = strtotime( $changed_from );
+			$data    = array_filter(
+				$data,
+				function ( $meta ) use ( $from_ts ) {
+					$lu = isset( $meta['last_updated'] ) ? $meta['last_updated'] : '';
+					return '' !== $lu && strtotime( $lu ) >= $from_ts;
+				}
+			);
+		}
+
+		if ( 'updated' === $mode ) {
+			$fake_properties = array();
+			foreach ( $data as $id => $meta ) {
+				if ( 'anaconda' === $crm ) {
+					$fake_properties[] = array(
+						'id'         => $id,
+						'updated_at' => isset( $meta['last_updated'] ) ? $meta['last_updated'] : '',
+						'status'     => isset( $meta['status'] ) ? $meta['status'] : true,
+					);
+				} else {
+					$fake_properties[] = array(
+						'cod_ofer'     => $id,
+						'ref'          => $id,
+						'fechaact'     => isset( $meta['last_updated'] ) ? $meta['last_updated'] : '',
+						'nodisponible' => ( isset( $meta['status'] ) && $meta['status'] ) ? 0 : 1,
+					);
+				}
+			}
+			$filtered = SYNC::filter_properties_to_update( $fake_properties, $crm );
+			$ids      = array();
+			foreach ( $filtered as $p ) {
+				$pid = isset( $p['id'] ) ? $p['id'] : ( isset( $p['cod_ofer'] ) ? $p['cod_ofer'] : null );
+				if ( null !== $pid && isset( $data[ $pid ] ) ) {
+					$ids[] = $pid;
+				}
+			}
+		} else {
+			$ids = array_keys( $data );
+		}
+
+		$items = array();
+		foreach ( $ids as $id ) {
+			$minimal = SYNC::build_minimal_item( $id, $crm );
+			$status  = isset( $data[ $id ]['status'] ) ? $data[ $id ]['status'] : true;
+			$items[] = array_merge( $minimal, array( 'status' => $status ) );
+		}
+
+		return $items;
+	}
+
+	/**
 	 * Get import statistics
 	 *
 	 * @return void
@@ -356,22 +419,7 @@ class Import {
 			wp_send_json_error( array( 'message' => __( 'CRM type not configured', 'connect-crm-realstate' ) ) );
 		}
 
-		$transient_key = 'ccrmre_api_properties_' . $crm_type;
-		$api_result    = get_transient( $transient_key );
-
-		if ( false === $api_result ) {
-			$api_result = API::get_all_property_ids( $crm_type, true );
-
-			if ( 'error' === $api_result['status'] ) {
-				$error_message = isset( $api_result['message'] ) && ! empty( $api_result['message'] )
-					? $api_result['message']
-					: __( 'Error fetching property IDs from API', 'connect-crm-realstate' );
-				wp_send_json_error( array( 'message' => $error_message ) );
-			}
-
-			set_transient( $transient_key, $api_result, 10 * MINUTE_IN_SECONDS );
-		}
-
+		$api_result     = API::get_all_property_ids( $crm_type, true );
 		$api_properties = isset( $api_result['data'] ) ? $api_result['data'] : array();
 		$api_count      = count( $api_properties );
 		$api_ids        = array_keys( $api_properties );
@@ -382,23 +430,47 @@ class Import {
 				$available_properties[ $prop_id ] = $prop_data;
 			}
 		}
-		$available_ids = array_keys( $available_properties );
+
+		/**
+		 * Filter available properties for import stats (e.g. by postal code or province in PRO).
+		 *
+		 * @param array $available_properties Map of property_id => prop_data.
+		 * @param array $api_properties      All API properties.
+		 */
+		$available_properties = apply_filters( 'ccrmre_available_properties_for_stats', $available_properties, $api_properties );
 
 		$wp_properties = SYNC::get_wordpress_property_data( $crm_type );
-		$wp_count      = count( $wp_properties );
+
+		/**
+		 * Filter WordPress properties for import stats (e.g. limit to province-filtered IDs in PRO).
+		 *
+		 * @param array $wp_properties        Map of property_id => array( last_updated ).
+		 * @param array $available_properties Already-filtered available properties from API.
+		 */
+		$wp_properties = apply_filters( 'ccrmre_wordpress_properties_for_stats', $wp_properties, $available_properties );
+
+		$wp_count = count( $wp_properties );
 
 		$counts = self::compute_import_stats( $available_properties, $wp_properties, $api_ids );
 
-		wp_send_json_success(
-			array_merge(
-				array(
-					'api_count'       => $api_count,
-					'available_count' => count( $available_properties ),
-					'wp_count'        => $wp_count,
-				),
-				$counts
-			)
+		$response = array_merge(
+			array(
+				'api_count'                  => $api_count,
+				'available_count'            => count( $available_properties ),
+				'wp_count'                   => $wp_count,
+				'filtered_by_province_count' => 0,
+			),
+			$counts
 		);
+
+		/**
+		 * Filter stats response (e.g. PRO can set api_count to filtered count when postal filter is active).
+		 *
+		 * @param array $response Keys: api_count, available_count, wp_count, new_count, outdated_count, import_count, delete_count.
+		 */
+		$response = apply_filters( 'ccrmre_import_stats_response', $response );
+
+		wp_send_json_success( $response );
 	}
 
 	/**
