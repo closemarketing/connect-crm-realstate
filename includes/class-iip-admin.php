@@ -445,6 +445,17 @@ class Admin {
 		 */
 		do_action( 'ccrmre_register_settings', $this->settings );
 
+		// Show province filter upsell when Inmovilla and PRO not active (PRO registers its own field when active).
+		if ( isset( $this->settings['type'] ) && 'inmovilla' === $this->settings['type'] && ! defined( 'CCRMRE_PRO_VERSION' ) ) {
+			add_settings_field(
+				'ccrmre_province_filter_upsell',
+				__( 'Filter by Province (Inmovilla)', 'connect-crm-realstate' ),
+				array( $this, 'province_filter_upsell_callback' ),
+				'ccrmre_settings',
+				'ccrmre_admin_settings'
+			);
+		}
+
 		add_settings_field(
 			'ccrmre_download_images',
 			__( 'Download Images Locally', 'connect-crm-realstate' ),
@@ -719,6 +730,23 @@ class Admin {
 			'<p class="description">%s <code>[ccrmre_property_info]</code></p>',
 			esc_html__( 'Enable automatic display of property information box with icons and price, or use the shortcode manually:', 'connect-crm-realstate' )
 		);
+	}
+
+	/**
+	 * Province filter upsell: disabled select + link to PRO (only shown when PRO not active).
+	 *
+	 * @return void
+	 */
+	public function province_filter_upsell_callback() {
+		$pro_url = CCRMRE_PRO_PLUGIN_URL;
+		?>
+		<select id="ccrmre_province_filter_upsell" disabled="disabled" style="max-width: 400px;">
+			<option value=""><?php esc_html_e( 'Available in PRO', 'connect-crm-realstate' ); ?></option>
+		</select>
+		<p class="description">
+			<a href="<?php echo esc_url( $pro_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Get PRO to filter by province', 'connect-crm-realstate' ); ?></a>
+		</p>
+		<?php
 	}
 
 	/**
