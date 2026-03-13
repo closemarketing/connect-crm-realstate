@@ -147,8 +147,8 @@ class Import {
 
 		// When starting a new page, fetch from cached property IDs.
 		if ( ( 0 === $loop_page && 0 < $pagination ) || ( 0 === $loop && -1 === $pagination ) ) {
-			$result_api = API::get_all_property_ids( $crm, true );
-			$properties = self::build_import_list_from_cached_ids( $crm, $result_api, $changed_from, $mode );
+			$result_api    = API::get_all_property_ids( $crm, true );
+			$properties    = self::build_import_list_from_cached_ids( $crm, $result_api, $changed_from, $mode );
 			$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] ' . __( 'Connecting with API and syncing Properties ...', 'connect-crm-realstate' ) . '<br/>';
 
 			if ( 'updated' === $mode && 'ok' === $result_api['status'] && isset( $result_api['count'] ) && $result_api['count'] > 0 ) {
@@ -356,10 +356,13 @@ class Import {
 
 		if ( ! empty( $changed_from ) ) {
 			$from_ts = strtotime( $changed_from );
-			$data    = array_filter( $data, function ( $meta ) use ( $from_ts ) {
-				$lu = isset( $meta['last_updated'] ) ? $meta['last_updated'] : '';
-				return '' !== $lu && strtotime( $lu ) >= $from_ts;
-			} );
+			$data    = array_filter(
+				$data,
+				function ( $meta ) use ( $from_ts ) {
+					$lu = isset( $meta['last_updated'] ) ? $meta['last_updated'] : '';
+					return '' !== $lu && strtotime( $lu ) >= $from_ts;
+				}
+			);
 		}
 
 		if ( 'updated' === $mode ) {
