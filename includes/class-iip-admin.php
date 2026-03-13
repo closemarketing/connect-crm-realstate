@@ -738,7 +738,7 @@ class Admin {
 	 * @return void
 	 */
 	public function province_filter_upsell_callback() {
-		$pro_url = CCRMRE_PRO_PLUGIN_URL;
+		$pro_url = CCRMRE_PRO_PLUGIN_URL_WEB;
 		?>
 		<select id="ccrmre_province_filter_upsell" disabled="disabled" style="max-width: 400px;">
 			<option value=""><?php esc_html_e( 'Available in PRO', 'connect-crm-realstate' ); ?></option>

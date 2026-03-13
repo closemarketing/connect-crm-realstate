@@ -2,7 +2,7 @@
 /**
  * Tests for API Helper class
  *
- * Command: composer test-debug -- --filter=HelperApiTest
+ * Command: composer test-debug -- --filter=HelperAPITest
  *
  * @package Connect_CRM_RealState
  */
@@ -16,7 +16,7 @@ use WP_UnitTestCase;
 /**
  * Test API Helper methods
  */
-class HelperApiTest extends WP_UnitTestCase {
+class HelperAPITest extends WP_UnitTestCase {
 
 	/**
 	 * Property list returned by the mocked API for get_unsynced tests.

@@ -212,10 +212,12 @@ class API {
 		);
 
 		$url = 'https://apiweb.inmovilla.com/apiweb/apiweb.php';
-
+		error_log( '$texto: ' . $texto);
 		return self::execute_with_retry(
 			function () use ( $url, $args ) {
 				$response = wp_remote_post( $url, $args );
+
+				error_log( '$response: ' . print_r( $response, true ) );
 
 				self::save_inmovilla_cookies( $response );
 
