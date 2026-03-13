@@ -56,10 +56,10 @@ class API {
 				if ( $with_metadata ) {
 					// Store as associative array with metadata.
 					$property_ids[ $list_key ] = array(
-						'last_updated' => $property_info['last_updated'],
-						'status'       => $property_info['status'],
-						'state_code'   => $property_info['state_code'],
-						'zip'          => $property_info['zip'],
+						'last_updated' => $property_info['last_updated'] ?? null,
+						'status'       => $property_info['status'] ?? null,
+						'state_code'   => $property_info['state_code'] ?? null,
+						'zip'          => $property_info['zip'] ?? null,
 					);
 				} else {
 					// Store as simple array of IDs.
@@ -212,12 +212,10 @@ class API {
 		);
 
 		$url = 'https://apiweb.inmovilla.com/apiweb/apiweb.php';
-		error_log( '$texto: ' . $texto);
+
 		return self::execute_with_retry(
 			function () use ( $url, $args ) {
 				$response = wp_remote_post( $url, $args );
-
-				error_log( '$response: ' . print_r( $response, true ) );
 
 				self::save_inmovilla_cookies( $response );
 
