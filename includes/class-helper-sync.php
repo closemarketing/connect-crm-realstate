@@ -402,23 +402,25 @@ class SYNC {
 	 * @return bool
 	 */
 	public static function is_property_available( $property, $crm ) {
-		if ( isset( $property['status'] ) ) {
-			return (bool) $property['status'];
-		}
+		$available = false;
 
-		if ( 'inmovilla_procesos' === $crm ) {
+		if ( isset( $property['status'] ) ) {
+			$available = (bool) $property['status'];
+		} elseif ( 'inmovilla_procesos' === $crm ) {
 			// Check nodisponible field (1 = not available, 0 = available).
-			return ! isset( $property['nodisponible'] ) || 1 !== (int) $property['nodisponible'];
+			$available = ! isset( $property['nodisponible'] ) || 1 !== (int) $property['nodisponible'];
 		} elseif ( 'inmovilla' === $crm ) {
 			// Check estado field in Inmovilla APIWEB.
-			return ! isset( $property['estado'] ) || 'V' !== $property['estado'];
+			$available = ! isset( $property['estado'] ) || 'V' !== $property['estado'];
 		} elseif ( 'anaconda' === $crm ) {
 			// Check operation_status field in Anaconda.
-			return ! isset( $property['operation_status'] ) || 'Vendido' !== $property['operation_status'];
+			$available = ! isset( $property['operation_status'] ) || 'Vendido' !== $property['operation_status'];
+		} else {
+			$available = true;
 		}
 
-		// Default: assume available.
-		return true;
+		// Let PRO (and other plugins) exclude by province or postal code.
+		return $available && apply_filters( 'ccrmre_should_import_property', true, $property );
 	}
 
 	/**

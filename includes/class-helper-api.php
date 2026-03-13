@@ -32,7 +32,9 @@ class API {
 	 * @return array Array with status and list of property IDs/references (with metadata if requested)
 	 */
 	public static function get_all_property_ids( $crm_type, $with_metadata = true ) {
-		$property_ids = get_transient( 'ccrmre_query_property_ids' );
+		$transient_key = 'ccrmre_query_property_ids_' . $crm_type;
+		$property_ids  = get_transient( $transient_key );
+
 		if ( false === $property_ids || ! is_array( $property_ids ) ) {
 			$property_ids = array();
 			$result       = self::get_properties();
@@ -64,7 +66,8 @@ class API {
 					$property_ids[] = $list_key;
 				}
 			}
-			set_transient( 'ccrmre_query_property_ids', $property_ids, MINUTE_IN_SECONDS * 3 );
+
+			set_transient( $transient_key, $property_ids, MINUTE_IN_SECONDS * 30 );
 		}
 
 		return array(
@@ -148,7 +151,7 @@ class API {
 	 * @param int    $idioma Language ID (1 = Spanish).
 	 * @return array
 	 */
-	public static function request_inmovilla( $tipo = 'paginacion', $pos_inicial = 1, $num_elementos = 50, $where = '', $orden = '', $idioma = 1 ) {
+	public static function request_inmovilla( $tipo = 'paginacion', $pos_inicial = 1, $num_elementos = 200, $where = '', $orden = '', $idioma = 1 ) {
 		$settings    = get_option( 'ccrmre_settings' );
 		$numagencia  = isset( $settings['numagencia'] ) ? $settings['numagencia'] : '';
 		$apipassword = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
@@ -232,9 +235,9 @@ class API {
 					return array(
 						'status'     => 'error',
 						'message'    => sprintf(
-							/* translators: %d: HTTP response code */
-							__( 'Inmovilla API returned error code: %d', 'connect-crm-realstate' ),
-							$code
+							/* translators: %d: HTTP response */
+							__( 'Inmovilla API returned error: %d', 'connect-crm-realstate' ),
+							$body
 						),
 						'data'       => array(),
 						'error_type' => self::detect_error_type( $response, $code ),
