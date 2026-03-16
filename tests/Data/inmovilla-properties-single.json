@@ -1,0 +1,241 @@
+{
+	"ficha": [
+		{
+			"posicion": 1,
+			"elementos": 1,
+			"total": 1
+		},
+		{
+			"tipovpo": 6,
+			"cod_ofer": 28334412,
+			"numfotos": 29,
+			"keyacci": 1,
+			"fotoletra": 5,
+			"numagencia": 6283,
+			"numsucursal": 6283,
+			"codaccion": 1,
+			"acciones": "Vender",
+			"ref": "DN26BELICENA",
+			"referenciacol": "PR01156",
+			"latitud": 37.166973794999997,
+			"altitud": -3.691761407,
+			"tipomensual": "MES",
+			"precioinmo": 209900,
+			"nbtipo": "Adosado",
+			"keygrupo": 1,
+			"ciudad": "Vegas del Genil",
+			"zona": "Vega de granada zona noroeste",
+			"energialetra": "D",
+			"energiarecibido": 1,
+			"energiavalor": 107.40000000000001,
+			"emisionesvalor": 20.100000000000001,
+			"emisionesletra": "C",
+			"nbconservacion": "Buen estado",
+			"key_loca": 291699,
+			"key_tipo": 199,
+			"banyos": 2,
+			"m_parcela": 126,
+			"estadoficha": 1,
+			"m_cons": 180,
+			"habitaciones": 1,
+			"habdobles": 3,
+			"keyprov": 21,
+			"provincia": "GRANADA",
+			"pais": 724,
+			"comunidad": "Andalucia",
+			"keyagente": 207268,
+			"antiguedad": 2008,
+			"keycalle": 6,
+			"keyvista": 10,
+			"zonaauxiliar": "Belicena",
+			"x_entorno": 49664,
+			"agencia": "Inmobiliaria D&n",
+			"web": "http:\/\/www.dninmobiliaria.com",
+			"emailagencia": "info@example.com",
+			"telefono": "958469561",
+			"email": "info@inmovilla.com",
+			"antesydespues": 1,
+			"total_hab": 4,
+			"plaza_gara": 2,
+			"parking": 2,
+			"todoext": 2,
+			"mls": 1,
+			"cp": "18101",
+			"fechacreacion": "2026-03-06 10:41:50",
+			"fechaactualizacion": "2026-03-13 13:10:27",
+			"srvfotos": 15,
+			"soysrv": 15,
+			"tipotour": 1,
+			"euribor": "3",
+			"nbtodoext": "Exterior",
+			"nbvista": "A la calle",
+			"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-1.jpg"
+		}
+	],
+	"fotos": {
+		"28334412": [
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-1.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-2.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-3.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-4.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-5.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-6.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-7.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-8.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-9.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-10.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-11.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-12.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-13.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-14.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-15.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-16.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-17.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-18.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-19.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-20.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-21.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-22.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-23.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-24.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-25.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-26.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-27.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-28.jpg",
+			"https:\/\/fotos15.example.com\/6283\/28334412\/5-29.jpg"
+		]
+	},
+	"descripciones": {
+		"28334412": {
+			"1": {
+				"titulo": "\ud83c\udfe1\u2728 EXCLUSIVA CASA ADOSADA EN UNA DE LAS ZONAS M\u00c1S DEMANDADAS DE BELICENA",
+				"descrip": "Si buscas tranquilidad, ambiente familiar y calidad de vida, esta vivienda es para ti \u2764\ufe0f. Ubicada en una de las zonas m\u00e1s valoradas y consolidadas de Belicena, disfrutar\u00e1s de un entorno acogedor, seguro y perfecto para familias \ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66.~~La vivienda cuenta con 180 m\u00b2 construidos, distribuidos en tres plantas (incluyendo amplio s\u00f3tano\/garaje), ofreciendo espacio y versatilidad para adaptarse a cualquier necesidad.~     4 dormitorios, 3 en la planta de arriba y uno en la planta de abajo.~\ud83d\udec1 2 ba\u00f1os completos~\ud83c\udf3f Gran patio de 48 m\u00b2, elevado respecto a las viviendas colindantes \u2014queda a ras de sal\u00f3n y cocina\u2014 aportando una funcionalidad excepcional y continuidad interior-exterior~\ud83d\udd25 Bajo el patio se encuentran 3 estancias adicionales, una de ellas con chimenea, ideales como gimnasio \ud83d\udcaa, despacho \ud83d\udda5\ufe0f, sala de ocio \ud83c\udfac o taller \ud83d\udee0\ufe0f~~Se entrega amueblada, tal y como aparece en las fotos, lista para entrar a vivir \ud83d\udecb\ufe0f\ud83d\udd11.~~En el apartado energ\u00e9tico, marca la diferencia:~~\u2600\ufe0f Instalaci\u00f3n de placas solares de 6 kW en cubierta~\ud83d\udd0b Bater\u00eda de 5,5 kW con inversor en el garaje~~Esto te permite cargar tu coche el\u00e9ctrico pr\u00e1cticamente a coste cero \ud83d\ude97\u26a1, reduciendo dr\u00e1sticamente el gasto energ\u00e9tico del hogar y ganando independencia frente a las subidas de la luz \ud83d\udcc9.~~Adem\u00e1s, dispone de:~~\u2744\ufe0f Aire acondicionado fr\u00edo\/calor en sal\u00f3n, dormitorio principal y otro dormitorio~\ud83d\ude98 Garaje con capacidad para dos coches~\ud83d\udd10 Rampa de cochera cerrada con persiana autom\u00e1tica~\ud83d\udcf2 Persiana autom\u00e1tica domotizada en el sal\u00f3n con salida a la terraza~~\ud83d\udc8e Casas con estas mejoras, este nivel de equipamiento y en esta zona no salen al mercado todos los d\u00edas\u2026 y menos en este rango de precio.~~Una vivienda eficiente, espaciosa y pensada para disfrutar tanto dentro como fuera \ud83c\udf1e\ud83c\udfe0.~~Si buscas una oportunidad real en Belicena, esta es de las que no duran.<br>"
+			}
+		}
+	},
+	"videos": {},
+	"similares": null,
+	"antesydespues": [],
+	"fotos_etiquetas": {
+		"28334412": [
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-1.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-2.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-3.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-4.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-5.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-6.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-7.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-8.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-9.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-10.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-11.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-12.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-13.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-14.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-15.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-16.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-17.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-18.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-19.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-20.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-21.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-22.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-23.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-24.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-25.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-26.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-27.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-28.jpg",
+				"etiqueta": ""
+			},
+			{
+				"foto": "https:\/\/fotos15.example.com\/6283\/28334412\/5-29.jpg",
+				"etiqueta": ""
+			}
+		]
+	},
+	"campos_personalizados": [],
+	"documentos": []
+}

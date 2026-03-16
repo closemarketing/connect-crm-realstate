@@ -4,7 +4,7 @@ Tags: real estate, properties, inmovilla, anaconda, crm
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,6 +43,7 @@ Connect CRM RealState imports properties from popular real estate CRM systems (I
 **PRO Features (via [Connect CRM RealState PRO](https://close.technology/wordpress-plugins/conecta-crm-realstate/) add-on):**
 
 * Automatic background synchronization via cron
+* Add ability to filter by postal code and province
 * WPCLI for long-running tasks
 * SEO-optimized property content *(coming soon)*
 * AI-powered property descriptions with LLM *(coming soon)*
@@ -93,13 +94,15 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 == Changelog ==
 
-= Unreleased =
--   Added Taxonomy Mapping feature: repeater field to map CRM fields to WordPress taxonomies.
--   Added automatic taxonomy term assignment during property synchronization.
+= 1.2.1 =
+* Added ability to filter by Postal Code.
+* Added ability to filter by Province.
 
 = 1.2.0 =
 * Major refactor. Created the free version of the plugin.
 * Error in property API does not stop the import.
+* Added Taxonomy Mapping feature: repeater field to map CRM fields to WordPress taxonomies.
+* Added automatic taxonomy term assignment during property synchronization.
 
 = 1.0.0 =
 * Initial release on WordPress.org.

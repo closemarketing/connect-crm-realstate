@@ -1,0 +1,30 @@
+{
+	"paginacion": [
+		{
+			"posicion": 1,
+			"elementos": 50,
+			"total": 3
+		},
+		{
+			"cod_ofer": 28473973,
+			"ref": "D26907A",
+			"nodisponible": 0,
+			"fechaact": "2026-03-13 12:41:51",
+			"keyprov": 21
+		},
+		{
+			"cod_ofer": 28461076,
+			"ref": "MCREINA",
+			"nodisponible": 0,
+			"fechaact": "2026-03-13 13:28:45",
+			"keyprov": 21
+		},
+		{
+			"cod_ofer": 28334412,
+			"ref": "DN26BELICENA",
+			"nodisponible": 0,
+			"fechaact": "2026-03-13 13:10:27",
+			"keyprov": 21
+		}
+	]
+}

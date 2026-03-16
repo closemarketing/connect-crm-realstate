@@ -30,6 +30,12 @@ var loadImportStats;
 				if ( response.success ) {
 					document.getElementById('stat-available-count').textContent = response.data.available_count.toLocaleString();
 					document.getElementById('stat-api-count').textContent = response.data.api_count.toLocaleString();
+					var filteredByProvince = typeof response.data.filtered_by_province_count !== 'undefined' ? response.data.filtered_by_province_count : 0;
+					var wrap = document.getElementById('stat-filtered-province-wrap');
+					if ( wrap ) {
+						document.getElementById('stat-filtered-province-count').textContent = filteredByProvince.toLocaleString();
+						wrap.style.display = filteredByProvince > 0 ? '' : 'none';
+					}
 					document.getElementById('stat-wp-count').textContent = response.data.wp_count.toLocaleString();
 					document.getElementById('stat-import-count').textContent = response.data.import_count.toLocaleString();
 					document.getElementById('stat-new-count').textContent = response.data.new_count.toLocaleString();
