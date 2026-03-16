@@ -26,6 +26,10 @@ if ( ! defined( 'CCRMRE_POST_TYPE' ) ) {
 	define( 'CCRMRE_POST_TYPE', 'ccrmre_property' );
 }
 
+if ( ! defined( 'CCRMRE_PRO_PLUGIN_URL_WEB' ) ) {
+	define( 'CCRMRE_PRO_PLUGIN_URL_WEB', 'https://close.technology/wordpress-plugins/connect-crm-realstate-pro/' );
+}
+
 if ( ! defined( 'DOING_AJAX' ) ) {
 	define( 'DOING_AJAX', false );
 }
