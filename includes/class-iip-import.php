@@ -62,6 +62,11 @@ class Import {
 			return;
 		}
 
+		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( 'iip-import' !== $active_tab ) {
+			return;
+		}
+
 		wp_enqueue_script(
 			'ccrmre-manual-sync',
 			CCRMRE_PLUGIN_URL . 'includes/assets/iip-manual-sync.js',
