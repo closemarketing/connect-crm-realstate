@@ -4,7 +4,7 @@ Tags: real estate, properties, inmovilla, anaconda, crm
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,9 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 4. Property gallery frontend display
 
 == Changelog ==
+
+= 1.2.2 =
+* Fixed Auto Display Photo Gallery setting not saving (form input name did not match the settings sanitizer).
 
 = 1.2.1 =
 * Added ability to filter by Postal Code.

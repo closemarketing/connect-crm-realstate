@@ -702,7 +702,7 @@ class Admin {
 	public function show_gallery_callback() {
 		$show_gallery = isset( $this->settings['show_gallery'] ) ? $this->settings['show_gallery'] : 'no';
 		?>
-		<select name="ccrmre_settings[ccrmre_show_gallery]" id="show_gallery">
+		<select name="ccrmre_settings[show_gallery]" id="show_gallery">
 			<option value="no" <?php selected( $show_gallery, 'no' ); ?>><?php esc_html_e( 'No - Use shortcode only', 'connect-crm-realstate' ); ?></option>
 			<option value="yes" <?php selected( $show_gallery, 'yes' ); ?>><?php esc_html_e( 'Yes - Auto display after title', 'connect-crm-realstate' ); ?></option>
 		</select>
