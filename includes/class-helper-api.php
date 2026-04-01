@@ -243,7 +243,6 @@ class API {
 						'error_type' => self::detect_error_type( $response, $code ),
 					);
 				}
-
 				$data = json_decode( $body, true );
 
 				if ( json_last_error() !== JSON_ERROR_NONE ) {
@@ -1407,6 +1406,75 @@ class API {
 			set_transient( 'ccrmre_query_inmovilla_provincias', $result, DAY_IN_SECONDS );
 		}
 		return $result;
+	}
+
+	/**
+	 * Get a cod_ciu => city data map for Inmovilla APIWEB, with transient caching.
+	 *
+	 * @param int|null $id Optional cod_ciu to look up. Returns the full map when null.
+	 * @return array|string City array for the given id, empty string if not found, or the full map.
+	 */
+	public static function get_inmovilla_ciudades_map( $id = null ) {
+		$map = get_transient( 'ccrmre_inmovilla_ciudades_map' );
+		if ( ! empty( $map ) && is_array( $map ) ) {
+			if ( null !== $id ) {
+				if ( isset( $map[ (int) $id ] ) ) {
+					return $map[ (int) $id ];
+				}
+				// ID not in cached map — force a fresh fetch below.
+				delete_transient( 'ccrmre_inmovilla_ciudades_map' );
+				$map = array();
+			} else {
+				return $map;
+			}
+		}
+
+		$map           = array();
+		$page_size     = 200;
+		$pos_inicial   = 1;
+		$total_records = null;
+
+		do {
+			$result = self::request_inmovilla( 'ciudades', $pos_inicial, $page_size );
+
+			if ( 'ok' !== $result['status'] || ! isset( $result['data']['ciudades'] ) ) {
+				if ( 1 === $pos_inicial ) {
+					return $map;
+				}
+				break;
+			}
+
+			$raw = $result['data']['ciudades'];
+
+			// Index 0 is metadata with total.
+			if ( null === $total_records && isset( $raw[0]['total'] ) ) {
+				$total_records = (int) $raw[0]['total'];
+			}
+
+			// Items start at index 1.
+			$count = count( $raw );
+			for ( $i = 1; $i < $count; $i++ ) {
+				$ciudad = $raw[ $i ];
+				if ( isset( $ciudad['cod_ciu'], $ciudad['city'] ) ) {
+					$map[ (int) $ciudad['cod_ciu'] ] = array(
+						'city'     => $ciudad['city'],
+						'province' => isset( $ciudad['provincia'] ) ? $ciudad['provincia'] : '',
+					);
+				}
+			}
+
+			$pos_inicial += $page_size;
+		} while ( null !== $total_records && $pos_inicial <= $total_records );
+
+		if ( ! empty( $map ) ) {
+			set_transient( 'ccrmre_inmovilla_ciudades_map', $map, DAY_IN_SECONDS * 3 );
+		}
+
+		if ( null !== $id ) {
+			return isset( $map[ (int) $id ] ) ? $map[ (int) $id ] : '';
+		}
+
+		return $map;
 	}
 
 	/**

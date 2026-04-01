@@ -189,10 +189,20 @@ class SYNC {
 		if ( 'inmovilla' === $crm ) {
 			// Inmovilla APIWEB: descripciones is an array with titulo and descrip keys.
 			$descripciones = isset( $item['descripciones'] ) ? $item['descripciones'] : array();
+
+			// Resolve cod_ciu (numeric city code) to a city name.
+			$city = '';
+			if ( ! empty( $item['key_loca'] ) ) {
+				$city_data = API::get_inmovilla_ciudades_map( $item['key_loca'] );
+				if ( is_array( $city_data ) ) {
+					$city = $city_data['city'];
+				}
+			}
+
 			return array(
 				'title'       => isset( $descripciones['titulo'] ) ? $descripciones['titulo'] : __( 'Property', 'connect-crm-realstate' ),
 				'description' => isset( $descripciones['descrip'] ) ? $descripciones['descrip'] : '',
-				'city'        => isset( $item['ciudad'] ) ? $item['ciudad'] : '',
+				'city'        => $city,
 			);
 		}
 
