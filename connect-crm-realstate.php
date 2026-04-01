@@ -5,7 +5,7 @@
  * Description: Connect Properties from Inmovilla/Anaconda to a Custom Post Type.
  * Author: closetechnology
  * Author URI: https://close.technology/
- * Version: 1.2.2
+ * Version: 1.2.3-beta.1
  *
  * @package WordPress
  * Text Domain: connect-crm-realstate
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
 
-define( 'CCRMRE_VERSION', '1.2.2' );
+define( 'CCRMRE_VERSION', '1.2.3-beta.1' );
 define( 'CCRMRE_PLUGIN', __FILE__ );
 define( 'CCRMRE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'CCRMRE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );

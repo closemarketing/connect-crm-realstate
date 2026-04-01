@@ -94,6 +94,9 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 == Changelog ==
 
+= 1.2.3 =
+* Fixed: automatic sync error due to IP address change (missing `$_SERVER['REMOTE_ADDR']` check).
+
 = 1.2.2 =
 * Fixed Auto Display Photo Gallery setting not saving (form input name did not match the settings sanitizer).
 
