@@ -103,7 +103,7 @@ class HelperAPITest extends WP_UnitTestCase {
 					$tipo = $parts[4];
 				}
 			}
-			$file = 'ficha' === $tipo ? 'inmovilla-properties-single.json' : 'inmovilla-properties-one-page.json';
+			$file = 'ficha' === $tipo ? 'inmovilla-properties-single.json' : ( 'ciudades' === $tipo ? 'inmovilla-web-ciudades.json' : 'inmovilla-properties-one-page.json' );
 			$path = UNIT_TESTS_DATA_PLUGIN_DIR . $file;
 			if ( file_exists( $path ) ) {
 				return array(
@@ -1238,5 +1238,108 @@ class HelperAPITest extends WP_UnitTestCase {
 			$this->assertArrayHasKey( 'city', $result, "Missing 'city' for CRM: $crm" );
 		}
 	}
-}
 
+	// -------------------------------------------------------------------------
+	// Tests: get_inmovilla_ciudades_map
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Set up APIWEB credentials before each ciudades map test.
+	 */
+	private function set_inmovilla_settings() {
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '123',
+				'apipassword' => 'test',
+				'post_type'   => 'property',
+			)
+		);
+		delete_transient( 'ccrmre_inmovilla_ciudades_map' );
+	}
+
+	/**
+	 * Returns a full map indexed by cod_ciu with city and province keys.
+	 */
+	public function test_get_inmovilla_ciudades_map_returns_full_map() {
+		$this->set_inmovilla_settings();
+
+		$map = API::get_inmovilla_ciudades_map();
+
+		$this->assertIsArray( $map );
+		$this->assertNotEmpty( $map );
+
+		// Fixture has 226 cities (metadata row excluded).
+		$this->assertCount( 226, $map );
+	}
+
+	/**
+	 * Each entry has city and province keys.
+	 */
+	public function test_get_inmovilla_ciudades_map_entry_structure() {
+		$this->set_inmovilla_settings();
+
+		$map = API::get_inmovilla_ciudades_map();
+
+		// Check first fixture entry: cod_ciu=41999, city=Pinoso, provincia=ALICANTE.
+		$this->assertArrayHasKey( 41999, $map );
+		$this->assertArrayHasKey( 'city', $map[41999] );
+		$this->assertArrayHasKey( 'province', $map[41999] );
+		$this->assertEquals( 'Pinoso', $map[41999]['city'] );
+		$this->assertEquals( 'ALICANTE', $map[41999]['province'] );
+	}
+
+	/**
+	 * Lookup by id returns the city array for a known city.
+	 */
+	public function test_get_inmovilla_ciudades_map_lookup_by_id_found() {
+		$this->set_inmovilla_settings();
+
+		$result = API::get_inmovilla_ciudades_map( 49399 );
+
+		$this->assertIsArray( $result );
+		$this->assertEquals( 'El Ejido', $result['city'] );
+		$this->assertEquals( 'ALMERIA', $result['province'] );
+	}
+
+	/**
+	 * Lookup by id returns empty string for an unknown city.
+	 */
+	public function test_get_inmovilla_ciudades_map_lookup_by_id_not_found() {
+		$this->set_inmovilla_settings();
+
+		$result = API::get_inmovilla_ciudades_map( 99999999 );
+
+		$this->assertSame( '', $result );
+	}
+
+	/**
+	 * Result is cached in a transient after the first call.
+	 */
+	public function test_get_inmovilla_ciudades_map_is_cached() {
+		$this->set_inmovilla_settings();
+
+		API::get_inmovilla_ciudades_map();
+
+		$cached = get_transient( 'ccrmre_inmovilla_ciudades_map' );
+		$this->assertIsArray( $cached );
+		$this->assertNotEmpty( $cached );
+	}
+
+	/**
+	 * A stale cache miss for a specific id triggers a fresh API call and re-populates the cache.
+	 */
+	public function test_get_inmovilla_ciudades_map_refetches_on_cache_miss_for_id() {
+		$this->set_inmovilla_settings();
+
+		// Populate cache with a map that is missing cod_ciu=41999.
+		set_transient( 'ccrmre_inmovilla_ciudades_map', array( 99 => array( 'city' => 'Fake', 'province' => '' ) ), DAY_IN_SECONDS );
+
+		// Requesting a missing id should force a fresh fetch.
+		$result = API::get_inmovilla_ciudades_map( 41999 );
+
+		$this->assertIsArray( $result );
+		$this->assertEquals( 'Pinoso', $result['city'] );
+	}
+}
