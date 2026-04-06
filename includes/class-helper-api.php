@@ -247,6 +247,23 @@ class API {
 				$data = json_decode( $body, true );
 
 				if ( json_last_error() !== JSON_ERROR_NONE ) {
+					// Detect Inmovilla IP registration error (plain-text response, not JSON).
+					if ( is_string( $body ) && false !== stripos( $body, 'NECESITAMOS RECIBIR LA IP' ) ) {
+						$server_ip = isset( $_SERVER['SERVER_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_ADDR'] ) ) : '';
+						if ( empty( $server_ip ) ) {
+							$server_ip = gethostbyname( gethostname() );
+						}
+						return array(
+							'status'     => 'error',
+							'message'    => sprintf(
+								/* translators: %s: Server IP address */
+								__( 'Inmovilla API requires IP registration. Please provide your server IP (%s) to Inmovilla support so they can whitelist it.', 'connect-crm-realstate' ),
+								$server_ip
+							),
+							'data'       => array(),
+							'error_type' => 'ip_not_registered',
+						);
+					}
 					$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' );
 					$message .= is_string( $body ) ? ' - ' . $body : '';
 					return array(
@@ -1729,6 +1746,11 @@ class API {
 
 			// Detect error type and get wait time.
 			$error_type = isset( $result['error_type'] ) ? $result['error_type'] : 'default';
+
+			// If IP is not registered, retrying will never help — return immediately.
+			if ( 'ip_not_registered' === $error_type ) {
+				return $result;
+			}
 
 			// If skip_retry is enabled (manual import), return immediately.
 			if ( self::$skip_retry ) {
