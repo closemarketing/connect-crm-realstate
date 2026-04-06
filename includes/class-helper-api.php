@@ -244,7 +244,6 @@ class API {
 					);
 				}
 
-				error_log( '$body: ' . print_r( $body, true ) );
 				$data = json_decode( $body, true );
 
 				if ( json_last_error() !== JSON_ERROR_NONE ) {
