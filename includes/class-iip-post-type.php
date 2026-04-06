@@ -182,6 +182,52 @@ class PostType {
 				?>
 			</tbody>
 		</table>
+
+		<?php
+		// Show taxonomy mappings assigned to this post.
+		$taxonomy_mappings = get_option( 'ccrmre_taxonomy_mappings', array() );
+		if ( ! empty( $taxonomy_mappings ) && is_array( $taxonomy_mappings ) ) :
+			?>
+			<h4 style="margin: 16px 0 8px;"><?php esc_html_e( 'Taxonomy Mappings', 'connect-crm-realstate' ); ?></h4>
+			<table class="property-meta-table">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'CRM Field', 'connect-crm-realstate' ); ?></th>
+						<th><?php esc_html_e( 'Taxonomy', 'connect-crm-realstate' ); ?></th>
+						<th><?php esc_html_e( 'Assigned Terms', 'connect-crm-realstate' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $taxonomy_mappings as $mapping ) : ?>
+						<?php
+						$crm_field = isset( $mapping['crm_field'] ) ? $mapping['crm_field'] : '';
+						$taxonomy  = isset( $mapping['taxonomy'] ) ? $mapping['taxonomy'] : '';
+
+						if ( empty( $crm_field ) || empty( $taxonomy ) || ! taxonomy_exists( $taxonomy ) ) {
+							continue;
+						}
+
+						$tax_object = get_taxonomy( $taxonomy );
+						$tax_label  = $tax_object ? $tax_object->labels->name : $taxonomy;
+						$crm_label  = isset( $field_labels[ $crm_field ] ) ? $field_labels[ $crm_field ] : $crm_field;
+
+						$terms = wp_get_object_terms( $post->ID, $taxonomy, array( 'fields' => 'names' ) );
+						?>
+						<tr>
+							<td><strong><?php echo esc_html( $crm_label ); ?></strong><br/><small><?php echo esc_html( $crm_field ); ?></small></td>
+							<td><?php echo esc_html( $tax_label ); ?><br/><small><?php echo esc_html( $taxonomy ); ?></small></td>
+							<td>
+								<?php if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) : ?>
+									<?php echo esc_html( implode( ', ', $terms ) ); ?>
+								<?php else : ?>
+									<em style="color:#999;"><?php esc_html_e( 'None', 'connect-crm-realstate' ); ?></em>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
 		<?php
 	}
 
