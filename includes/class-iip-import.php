@@ -400,6 +400,11 @@ class Import {
 			$ids = array_keys( $data );
 		}
 
+		// Batch mode: limit to first 20 properties for testing purposes.
+		if ( 'batch' === $mode ) {
+			$ids = array_slice( $ids, 0, 20 );
+		}
+
 		$items = array();
 		foreach ( $ids as $id ) {
 			$minimal = SYNC::build_minimal_item( $id, $crm );

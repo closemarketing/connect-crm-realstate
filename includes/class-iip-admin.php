@@ -44,6 +44,7 @@ class Admin {
 		add_action( 'admin_menu', array( $this, 'plugin_settings' ) );
 		add_action( 'admin_notices', array( $this, 'show_admin_notices' ) );
 		add_action( 'wp_ajax_ccrmre_auto_map_fields', array( $this, 'ajax_auto_map_fields' ) );
+		add_action( 'wp_ajax_ccrmre_import_enums', array( $this, 'ajax_import_enums' ) );
 	}
 
 	/**
@@ -263,6 +264,28 @@ class Admin {
 				)
 			);
 		}
+
+		// Enqueue enums scripts on enums tab.
+		if ( 'iip-enums' === $active_tab ) {
+			wp_enqueue_script(
+				'ccrmre-enums',
+				CCRMRE_PLUGIN_URL . 'includes/assets/iip-enums.js',
+				array( 'jquery' ),
+				CCRMRE_VERSION,
+				true
+			);
+			wp_localize_script(
+				'ccrmre-enums',
+				'ccrmreEnums',
+				array(
+					'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
+					'nonce'         => wp_create_nonce( 'ccrmre_import_enums_nonce' ),
+					'importing'     => __( 'Importing...', 'connect-crm-realstate' ),
+					'importSuccess' => __( 'Import completed successfully.', 'connect-crm-realstate' ),
+					'importError'   => __( 'Error during import. Please try again.', 'connect-crm-realstate' ),
+				)
+			);
+		}
 	}
 
 	/**
@@ -299,6 +322,11 @@ class Admin {
 		echo '<a href="' . esc_url( '?page=ccrmre_options&tab=iip-taxonomy' ) . '" class="nav-tab ';
 		echo ( 'iip-taxonomy' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Taxonomy Mapping', 'connect-crm-realstate' ) . '</a>';
+
+		// Enums tab.
+		echo '<a href="' . esc_url( '?page=ccrmre_options&tab=iip-enums' ) . '" class="nav-tab ';
+		echo ( 'iip-enums' === $active_tab ? 'nav-tab-active' : '' );
+		echo '">' . esc_html__( 'Enums', 'connect-crm-realstate' ) . '</a>';
 
 		/**
 		 * Allow PRO or add-ons to inject extra admin tabs.
@@ -354,6 +382,10 @@ class Admin {
 			<?php
 		}
 
+		if ( 'iip-enums' === $active_tab ) {
+			$this->render_enums_tab();
+		}
+
 		/**
 		 * Allow PRO or add-ons to render custom tab content.
 		 *
@@ -362,6 +394,80 @@ class Admin {
 		do_action( 'ccrmre_admin_tab_content', $active_tab );
 
 		echo '</div>';
+	}
+
+	/**
+	 * Render the Enums tab content.
+	 *
+	 * Fetches all enum values from the API (using the same cache layer as sync)
+	 * and displays them as tables with numeric code and human-readable label.
+	 *
+	 * @return void
+	 */
+	private function render_enums_tab() {
+		$settings = get_option( 'ccrmre_settings' );
+		$crm_type = isset( $settings['type'] ) ? $settings['type'] : '';
+
+		echo '<h1>' . esc_html__( 'Enums', 'connect-crm-realstate' ) . '</h1>';
+
+		if ( ! in_array( $crm_type, array( 'inmovilla', 'inmovilla_procesos' ), true ) ) {
+			echo '<p>' . esc_html__( 'Enums are only available for Inmovilla CRM types. Your current type is: ', 'connect-crm-realstate' ) . '<strong>' . esc_html( ! empty( $crm_type ) ? $crm_type : __( '(not set)', 'connect-crm-realstate' ) ) . '</strong>.</p>';
+			return;
+		}
+
+		// Button triggers AJAX import; results area is populated dynamically.
+		?>
+		<p>
+			<button id="ccrmre-import-enums-btn" class="button button-primary">
+				<?php esc_html_e( 'Import Enums', 'connect-crm-realstate' ); ?>
+			</button>
+		</p>
+		<div id="ccrmre-enums-log" style="margin: 12px 0; display: none;">
+			<ul id="ccrmre-enums-log-list" style="margin: 0; list-style: disc; padding-left: 20px;"></ul>
+		</div>
+		<div id="ccrmre-enums-tables">
+		<?php
+
+		// Read from cache and render existing data (if already imported before).
+		$transient_key = 'inmovilla_procesos' === $crm_type ? 'ccrmre_query_enums_inmovilla_procesos' : 'ccrmre_query_enums_inmovilla';
+		$enums         = get_transient( $transient_key );
+
+		if ( ! empty( $enums ) && is_array( $enums ) ) {
+			$this->render_enums_tables( $enums );
+		}
+
+		echo '</div>';
+	}
+
+	/**
+	 * Render enum values as HTML tables.
+	 *
+	 * @param array $enums Associative array keyed by enum name, each containing index => label pairs.
+	 * @return void
+	 */
+	private function render_enums_tables( $enums ) {
+		foreach ( $enums as $enum_key => $values ) {
+			if ( empty( $values ) || ! is_array( $values ) ) {
+				continue;
+			}
+
+			echo '<h2>' . esc_html( $enum_key ) . ' <small>(' . (int) count( $values ) . ' ' . esc_html__( 'values', 'connect-crm-realstate' ) . ')</small></h2>';
+			echo '<table class="wp-list-table widefat fixed striped" style="margin-bottom: 24px;">';
+			echo '<thead><tr>';
+			echo '<th style="width: 120px;">' . esc_html__( 'Number', 'connect-crm-realstate' ) . '</th>';
+			echo '<th>' . esc_html__( 'Value', 'connect-crm-realstate' ) . '</th>';
+			echo '</tr></thead><tbody>';
+
+			foreach ( $values as $index => $label ) {
+				echo '<tr>';
+				echo '<td><code>' . esc_html( (string) $index ) . '</code></td>';
+				$display = is_array( $label ) ? implode( ' — ', array_map( 'strval', $label ) ) : (string) $label;
+				echo '<td>' . esc_html( $display ) . '</td>';
+				echo '</tr>';
+			}
+
+			echo '</tbody></table>';
+		}
 	}
 
 	/**
@@ -866,6 +972,7 @@ class Admin {
 					$import_mode_options = array(
 						'updated' => __( 'Properties to update', 'connect-crm-realstate' ),
 						'all'     => __( 'All properties', 'connect-crm-realstate' ),
+						'batch'   => __( 'Batch of properties (20)', 'connect-crm-realstate' ),
 					);
 					$import_mode_options = apply_filters( 'ccrmre_import_mode_options', $import_mode_options );
 					foreach ( $import_mode_options as $value => $label ) {
@@ -1155,6 +1262,59 @@ class Admin {
 		);
 
 		return $meta_keys;
+	}
+
+	/**
+	 * AJAX handler for auto-mapping fields
+	 *
+	 * @return void
+	 */
+	/**
+	 * AJAX handler for importing enums from the CRM API.
+	 *
+	 * Fetches each enum group step by step and streams progress back to the client.
+	 *
+	 * @return void
+	 */
+	public function ajax_import_enums() {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'ccrmre_import_enums_nonce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed', 'connect-crm-realstate' ) ) );
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions', 'connect-crm-realstate' ) ) );
+		}
+
+		$settings = get_option( 'ccrmre_settings' );
+		$crm_type = isset( $settings['type'] ) ? $settings['type'] : '';
+
+		if ( ! in_array( $crm_type, array( 'inmovilla', 'inmovilla_procesos' ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Enums are only available for Inmovilla CRM types.', 'connect-crm-realstate' ) ) );
+		}
+
+		// Fetch enums forcing a fresh API call (skips cache).
+		// 'conservacion' seeds the inmovilla_procesos fetch which pulls all tipos in one call.
+		$enums = API::get_enums( $crm_type, 'conservacion', true );
+
+		// get_enums() for inmovilla_procesos returns the per-key slice; read the full transient.
+		if ( 'inmovilla_procesos' === $crm_type ) {
+			API::get_enums( $crm_type, 'key_loca', true );
+			$enums = get_transient( 'ccrmre_query_enums_inmovilla_procesos' );
+		}
+
+		if ( empty( $enums ) || ! is_array( $enums ) ) {
+			wp_send_json_error( array( 'message' => __( 'No enum data could be retrieved. Please check your API credentials.', 'connect-crm-realstate' ) ) );
+		}
+
+		$steps = array();
+		foreach ( $enums as $key => $values ) {
+			$steps[] = array(
+				'key'   => $key,
+				'count' => is_array( $values ) ? count( $values ) : 0,
+			);
+		}
+
+		wp_send_json_success( array( 'steps' => $steps ) );
 	}
 
 	/**

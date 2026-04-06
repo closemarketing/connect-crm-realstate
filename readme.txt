@@ -94,6 +94,15 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 == Changelog ==
 
+= 1.2.3 =
+* Added ability to filter properties by different variables (postal code, province, etc.).
+* Improved API request management with better error handling and retry logic.
+* Fixed detection of Inmovilla IP registration errors to skip unnecessary retries.
+* Fixed city names being saved as numeric IDs instead of city names in Inmovilla APIWEB.
+* Added admin settings tab with enums for CRM-specific field options.
+* Removed legacy Inmovilla APIWEB PHP files from tests.
+
+
 = 1.2.2 =
 * Fixed Auto Display Photo Gallery setting not saving (form input name did not match the settings sanitizer).
 

@@ -237,6 +237,19 @@ class SYNC {
 					return $item_meta;
 			}
 		}
+
+		if ( 'inmovilla' === $crm ) {
+			$enums = API::get_enums( $crm );
+			if ( 'key_loca' === $key ) {
+				$ciudad_data = isset( $enums['key_loca'][ $item_meta ] ) ? $enums['key_loca'][ $item_meta ] : null;
+				if ( ! empty( $ciudad_data ) ) {
+					return is_array( $ciudad_data ) && isset( $ciudad_data['city'] ) ? $ciudad_data['city'] : (string) $ciudad_data;
+				}
+			} elseif ( isset( $enums[ $key ][ $item_meta ] ) ) {
+				return $enums[ $key ][ $item_meta ];
+			}
+		}
+
 		return $item_meta;
 	}
 

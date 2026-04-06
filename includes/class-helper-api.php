@@ -244,6 +244,7 @@ class API {
 					);
 				}
 
+				error_log( '$body: ' . print_r( $body, true ) );
 				$data = json_decode( $body, true );
 
 				if ( json_last_error() !== JSON_ERROR_NONE ) {
@@ -1002,18 +1003,76 @@ class API {
 	}
 
 	/**
-	 * Get enums from Inmovilla Procesos
+	 * Get enums for the given CRM type.
 	 *
-	 * @param string $crm_type CRM type.
-	 * @param string $key      Optional enum key to filter.
+	 * @param string $crm_type      CRM type (inmovilla, inmovilla_procesos).
+	 * @param string $key           Optional enum key to filter (inmovilla_procesos only).
+	 * @param bool   $force_refresh Skip cache and force a fresh API fetch.
 	 *
 	 * @return array
 	 */
-	public static function get_enums( $crm_type, $key = '' ) {
+	public static function get_enums( $crm_type, $key = '', $force_refresh = false ) {
 		if ( 'inmovilla_procesos' === $crm_type ) {
-			return self::get_enums_inmovilla_procesos( $key );
+			return self::get_enums_inmovilla_procesos( $key, $force_refresh );
+		}
+		if ( 'inmovilla' === $crm_type ) {
+			return self::get_enums_inmovilla( $force_refresh );
 		}
 		return array();
+	}
+
+	/**
+	 * Get enums from Inmovilla APIWEB (tipos, ciudades, zonas).
+	 *
+	 * Fetches and caches tipos (key_tipo), ciudades (key_loca) and zonas (key_zona)
+	 * from the Inmovilla APIWEB and returns them as a unified enum array.
+	 *
+	 * @param bool $force_refresh Skip cache and force a fresh API fetch.
+	 * @return array Associative array keyed by enum name, each containing index => label pairs.
+	 */
+	public static function get_enums_inmovilla( $force_refresh = false ) {
+		if ( ! $force_refresh ) {
+			$enums = get_transient( 'ccrmre_query_enums_inmovilla' );
+			if ( ! empty( $enums ) && is_array( $enums ) ) {
+				return $enums;
+			}
+		}
+
+		$enums = array();
+
+		// Fetch tipos (key_tipo).
+		$result_tipos = self::get_inmovilla_tipos();
+		if ( 'ok' === $result_tipos['status'] && ! empty( $result_tipos['data'] ) ) {
+			foreach ( $result_tipos['data'] as $item ) {
+				$id    = isset( $item['cod_tipo'] ) ? $item['cod_tipo'] : null;
+				$label = isset( $item['tipo'] ) ? $item['tipo'] : null;
+				if ( null !== $id && null !== $label ) {
+					$enums['key_tipo'][ $id ] = $label;
+				}
+			}
+		}
+
+		// Fetch ciudades (key_loca).
+		$result_ciudades = self::get_inmovilla_ciudades();
+		if ( 'ok' === $result_ciudades['status'] && ! empty( $result_ciudades['data'] ) ) {
+			foreach ( $result_ciudades['data'] as $item ) {
+				$id    = isset( $item['cod_ciu'] ) ? $item['cod_ciu'] : null;
+				$label = isset( $item['city'] ) ? $item['city'] : null;
+				if ( null !== $id && null !== $label ) {
+					$provincia                = isset( $item['provincia'] ) ? ' (' . $item['provincia'] . ')' : '';
+					$enums['key_loca'][ $id ] = array(
+						'city'  => $label,
+						'state' => isset( $item['provincia'] ) ? $item['provincia'] : '',
+					);
+				}
+			}
+		}
+
+		if ( ! empty( $enums ) ) {
+			set_transient( 'ccrmre_query_enums_inmovilla', $enums, DAY_IN_SECONDS * 3 );
+		}
+
+		return $enums;
 	}
 
 	/**
@@ -1257,10 +1316,11 @@ class API {
 	/**
 	 * Get enums from Inmovilla Procesos
 	 *
-	 * @param string $key Enum key.
+	 * @param string $key           Enum key.
+	 * @param bool   $force_refresh Skip cache and force a fresh API fetch.
 	 * @return array
 	 */
-	public static function get_enums_inmovilla_procesos( $key = '' ) {
+	public static function get_enums_inmovilla_procesos( $key = '', $force_refresh = false ) {
 		if ( empty( $key ) ) {
 			return '';
 		}
@@ -1300,10 +1360,15 @@ class API {
 			return '';
 		}
 
+		if ( $force_refresh ) {
+			delete_transient( 'ccrmre_query_enums_inmovilla_procesos' );
+			delete_transient( 'ccrmre_query_inmovilla_procesos_ciudades' );
+		}
+
 		$enums = get_transient( 'ccrmre_query_enums_inmovilla_procesos' );
 		$enums = empty( $enums ) ? array() : $enums;
 
-		if ( empty( $enums[ $key ] ) ) {
+		if ( $force_refresh || empty( $enums[ $key ] ) ) {
 			if ( 'key_loca' === $key ) {
 				$ciudades      = self::get_inmovilla_procesos_ciudades();
 				$enums[ $key ] = $ciudades;
