@@ -287,6 +287,7 @@ class API {
 	 * Get client IP address
 	 *
 	 * Tries to get the real client IP from various proxy headers.
+	 * In cron/CLI context (no HTTP request), falls back to the server's public IP.
 	 *
 	 * @return string Client IP address.
 	 */
@@ -310,7 +311,57 @@ class API {
 			}
 		}
 
-		return isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		if ( ! empty( $remote_addr ) && '127.0.0.1' !== $remote_addr && '::1' !== $remote_addr ) {
+			return $remote_addr;
+		}
+
+		// Cron/CLI context: no HTTP request. Return the server's public IP.
+		return self::get_server_public_ip();
+	}
+
+	/**
+	 * Get the server's public IP address.
+	 *
+	 * Cached in a WordPress option for 24 hours to avoid repeated external calls.
+	 * Used as fallback in cron/CLI context where $_SERVER headers are not available.
+	 *
+	 * @return string Public IP address or empty string on failure.
+	 */
+	private static function get_server_public_ip() {
+		$cached = get_option( 'ccrmre_server_public_ip' );
+		$expiry = get_option( 'ccrmre_server_public_ip_expiry', 0 );
+
+		if ( ! empty( $cached ) && time() < (int) $expiry ) {
+			return $cached;
+		}
+
+		// Try SERVER_ADDR first (available in FPM/Apache with a real HTTP context).
+		$server_addr = isset( $_SERVER['SERVER_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_ADDR'] ) ) : '';
+		if ( ! empty( $server_addr ) && '127.0.0.1' !== $server_addr && '::1' !== $server_addr ) {
+			update_option( 'ccrmre_server_public_ip', $server_addr, false );
+			update_option( 'ccrmre_server_public_ip_expiry', time() + DAY_IN_SECONDS, false );
+			return $server_addr;
+		}
+
+		// Last resort: ask an external service for the public outbound IP.
+		$response = wp_remote_get( 'https://api.ipify.org', array( 'timeout' => 5 ) );
+		if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
+			$ip = trim( wp_remote_retrieve_body( $response ) );
+			if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+				update_option( 'ccrmre_server_public_ip', $ip, false );
+				update_option( 'ccrmre_server_public_ip_expiry', time() + DAY_IN_SECONDS, false );
+				return $ip;
+			}
+		}
+
+		// Fallback to hostname resolution.
+		$hostname_ip = gethostbyname( gethostname() );
+		if ( filter_var( $hostname_ip, FILTER_VALIDATE_IP ) ) {
+			return $hostname_ip;
+		}
+
+		return '';
 	}
 
 	/**
