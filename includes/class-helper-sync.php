@@ -196,6 +196,21 @@ class SYNC {
 			);
 		}
 
+		if ( 'pararius_office' === $crm ) {
+			// Pararius Office: title is the 'title' field; description is 'description'.
+			$title = '';
+			if ( ! empty( $item['title'] ) ) {
+				$title = $item['title'];
+			} elseif ( ! empty( $item['street'] ) ) {
+				$title = trim( $item['street'] . ' ' . ( $item['number'] ?? '' ) . ( $item['addition'] ?? '' ) );
+			}
+			return array(
+				'title'       => ! empty( $title ) ? $title : __( 'Property', 'connect-crm-realstate' ),
+				'description' => isset( $item['description'] ) ? $item['description'] : '',
+				'city'        => isset( $item['city'] ) ? $item['city'] : '',
+			);
+		}
+
 		// Anaconda.
 		return array(
 			'title'       => isset( $item['name'] ) ? $item['name'] : __( 'Property', 'connect-crm-realstate' ),
@@ -214,6 +229,15 @@ class SYNC {
 	 * @return string
 	 */
 	public static function format_item_meta( $crm, $item_meta, $key ) {
+		if ( 'pararius_office' === $crm ) {
+			// Array fields (facilities, heating, photos) are JSON-encoded for storage.
+			$array_fields = array( 'heating', 'parking_facilities', 'property_facilities', 'bathroom_facilities', 'photos' );
+			if ( in_array( $key, $array_fields, true ) && is_array( $item_meta ) ) {
+				return wp_json_encode( $item_meta );
+			}
+			return $item_meta;
+		}
+
 		if ( 'inmovilla_procesos' === $crm ) {
 			$enums = API::get_enums( $crm, $key );
 			switch ( $key ) {

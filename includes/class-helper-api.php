@@ -416,6 +416,7 @@ class API {
 			'anaconda'           => 200,
 			'inmovilla'          => 50,
 			'inmovilla_procesos' => -1,
+			'pararius_office'    => -1,
 		);
 
 		return isset( $pagination_sizes[ $crm ] ) ? $pagination_sizes[ $crm ] : 100;
@@ -514,6 +515,87 @@ class API {
 	}
 
 	/**
+	 * Request to Pararius Office API
+	 *
+	 * Documentation: https://api.parariusoffice.nl/db.php
+	 *
+	 * @param string $action API action (default: 'getproperties').
+	 * @param string $lang   Language code (default: 'nl').
+	 * @return array
+	 */
+	public static function request_pararius_office( $action = 'getproperties', $lang = 'nl' ) {
+		$settings = get_option( 'ccrmre_settings' );
+		$api_key  = isset( $settings['apipassword'] ) ? $settings['apipassword'] : '';
+
+		if ( empty( $api_key ) ) {
+			return array(
+				'status'  => 'error',
+				'message' => __( 'Pararius Office API key is not configured', 'connect-crm-realstate' ),
+				'data'    => array(),
+			);
+		}
+
+		$api_config = self::get_api_config( 'pararius_office' );
+		$url        = add_query_arg(
+			array(
+				'key'            => $api_key,
+				'action'         => $action,
+				'lang'           => $lang,
+				'version'        => '3',
+				'client-version' => '3.0.3',
+			),
+			'https://api.parariusoffice.nl/db.php'
+		);
+
+		return self::execute_with_retry(
+			function () use ( $url, $api_config ) {
+				$response    = wp_remote_get( $url, array( 'timeout' => $api_config['timeout'] ) );
+				$result_body = wp_remote_retrieve_body( $response );
+				$code        = wp_remote_retrieve_response_code( $response );
+
+				if ( is_wp_error( $response ) ) {
+					return array(
+						'status'     => 'error',
+						'message'    => $response->get_error_message(),
+						'data'       => array(),
+						'error_type' => self::detect_error_type( $response, 0 ),
+					);
+				}
+
+				$code_first = (int) substr( (string) $code, 0, 1 );
+				if ( 2 !== $code_first ) {
+					return array(
+						'status'     => 'error',
+						'message'    => sprintf(
+							/* translators: %d: HTTP error code */
+							__( 'Pararius Office API returned error code: %d', 'connect-crm-realstate' ),
+							$code
+						),
+						'data'       => array(),
+						'error_type' => self::detect_error_type( $response, $code ),
+					);
+				}
+
+				$data = json_decode( $result_body, true );
+
+				if ( null === $data ) {
+					return array(
+						'status'  => 'error',
+						'message' => __( 'Invalid JSON response from Pararius Office API', 'connect-crm-realstate' ),
+						'data'    => array(),
+					);
+				}
+
+				return array(
+					'status' => 'ok',
+					'data'   => $data,
+				);
+			},
+			'Pararius Office API'
+		);
+	}
+
+	/**
 	 * Request to properties API from CRM
 	 *
 	 * @param int    $page Page of properties (for Anaconda) or page number for pagination (Inmovilla).
@@ -563,6 +645,8 @@ class API {
 			return $result;
 		} elseif ( 'inmovilla' === $settings_crm ) {
 			return self::request_inmovilla_all_properties( $changed_from );
+		} elseif ( 'pararius_office' === $settings_crm ) {
+			return self::request_pararius_office_all_properties( $changed_from );
 		}
 
 		return array(
@@ -631,6 +715,64 @@ class API {
 			'status' => 'ok',
 			'data'   => $all_properties,
 			'meta'   => array( 'total' => $total_records ?? count( $all_properties ) ),
+		);
+	}
+
+	/**
+	 * Fetch all properties from Pararius Office API.
+	 *
+	 * The API returns all properties in a single response under result.properties.
+	 * Each property key is the house_id; we normalize to a flat indexed array.
+	 *
+	 * @param string $changed_from ISO date string to filter by last-updated date.
+	 * @return array
+	 */
+	public static function request_pararius_office_all_properties( $changed_from = '' ) {
+		$result = self::request_pararius_office( 'getproperties' );
+
+		if ( 'ok' !== $result['status'] ) {
+			return $result;
+		}
+
+		$properties = isset( $result['data']['result']['properties'] ) ? $result['data']['result']['properties'] : array();
+
+		if ( ! is_array( $properties ) ) {
+			return array(
+				'status'  => 'error',
+				'message' => __( 'Unexpected response format from Pararius Office API', 'connect-crm-realstate' ),
+				'data'    => array(),
+			);
+		}
+
+		// Normalize: each item is the property array; ensure house_id is set from the key if missing.
+		$all_properties = array();
+		foreach ( $properties as $house_id => $prop ) {
+			if ( ! isset( $prop['house_id'] ) ) {
+				$prop['house_id'] = $house_id;
+			}
+			$all_properties[] = $prop;
+		}
+
+		// Filter by date if changed_from is specified (use 'modified' or 'date' field if available).
+		if ( ! empty( $changed_from ) ) {
+			$changed_timestamp = strtotime( $changed_from );
+			if ( $changed_timestamp ) {
+				$all_properties = array_values(
+					array_filter(
+						$all_properties,
+						function ( $prop ) use ( $changed_timestamp ) {
+							$modified = isset( $prop['modified'] ) ? strtotime( $prop['modified'] ) : 0;
+							return $modified >= $changed_timestamp;
+						}
+					)
+				);
+			}
+		}
+
+		return array(
+			'status' => 'ok',
+			'data'   => $all_properties,
+			'meta'   => array( 'total' => count( $all_properties ) ),
 		);
 	}
 
@@ -712,6 +854,9 @@ class API {
 
 				$result['data'] = $property_data;
 			}
+		} elseif ( 'pararius_office' === $crm ) {
+			// Pararius Office returns complete data in the listing response; no per-property endpoint needed.
+			$result['data'] = is_array( $item ) ? $item : array();
 		}
 
 		return $result;
@@ -730,6 +875,8 @@ class API {
 			return self::get_fields_inmovilla_procesos();
 		} elseif ( 'inmovilla' === $crm ) {
 			return self::get_fields_inmovilla();
+		} elseif ( 'pararius_office' === $crm ) {
+			return self::get_fields_pararius_office();
 		}
 
 		return array();
@@ -932,6 +1079,111 @@ class API {
 	}
 
 	/**
+	 * Get fields from Pararius Office API.
+	 *
+	 * Uses a known static field list derived from the Pararius Office API response schema.
+	 *
+	 * @return array
+	 */
+	private static function get_fields_pararius_office() {
+		$cached = get_transient( 'ccrmre_query_pararius_office_fields_v1' );
+
+		if ( $cached ) {
+			return $cached;
+		}
+
+		// Fetch a live sample to extract fields dynamically.
+		$result = self::request_pararius_office( 'getproperties' );
+
+		if ( 'ok' === $result['status'] && ! empty( $result['data']['result']['properties'] ) ) {
+			$properties      = $result['data']['result']['properties'];
+			$sample_property = reset( $properties );
+
+			// Static labels derived from the Pararius Office API documentation.
+			$labels = array(
+				'house_id'                   => 'House ID',
+				'title'                      => 'Title',
+				'street'                     => 'Street',
+				'number'                     => 'House Number',
+				'addition'                   => 'House Number Addition',
+				'zipcode'                    => 'Zipcode',
+				'district'                   => 'District',
+				'location'                   => 'Location Features',
+				'province'                   => 'Province',
+				'city'                       => 'City',
+				'country'                    => 'Country',
+				'lat'                        => 'Latitude',
+				'lng'                        => 'Longitude',
+				'forrent'                    => 'For Rent',
+				'forrent_type'               => 'Rent Type (400=daily, 401=weekly, 402=monthly, 403=yearly)',
+				'price'                      => 'Rent Price',
+				'price_on_request'           => 'Price on Request',
+				'deposit'                    => 'Deposit',
+				'forsale'                    => 'For Sale',
+				'forsale_price'              => 'Sale Price',
+				'forsale_price_on_request'   => 'Sale Price on Request',
+				'kadaster_ownership'         => 'Kadaster Ownership',
+				'forsale_condition'          => 'Sale Condition',
+				'forsale_price_type'         => 'Sale Price Type',
+				'short_stay'                 => 'Short Stay',
+				'short_stay_price'           => 'Short Stay Price per Day',
+				'interior'                   => 'Interior',
+				'bedrooms'                   => 'Bedrooms',
+				'persons'                    => 'Persons',
+				'toilets'                    => 'Toilets',
+				'bathrooms'                  => 'Bathrooms',
+				'rooms'                      => 'Rooms',
+				'elevator'                   => 'Elevator',
+				'flooring'                   => 'Flooring',
+				'surface'                    => 'Surface (m²)',
+				'kitchen'                    => 'Kitchen',
+				'house_type'                 => 'House Type',
+				'garden'                     => 'Garden',
+				'balcony'                    => 'Balcony',
+				'roofterrace'                => 'Roof Terrace',
+				'parking'                    => 'Parking',
+				'parking_distance'           => 'Parking Distance',
+				'description'                => 'Description',
+				'buildyear'                  => 'Build Year',
+				'heating'                    => 'Heating',
+				'parking_facilities'         => 'Parking Facilities',
+				'property_facilities'        => 'Property Facilities',
+				'bathroom_facilities'        => 'Bathroom Facilities',
+				'modified'                   => 'Last Modified',
+				'status'                     => 'Status',
+				'photos'                     => 'Photos',
+			);
+
+			$fields_slug = array_filter( array_keys( $sample_property ) );
+			$fields_data = array();
+
+			foreach ( $fields_slug as $slug ) {
+				$label         = ! empty( $labels[ $slug ] ) ? $labels[ $slug ] : ucwords( str_replace( '_', ' ', $slug ) );
+				$fields_data[] = array(
+					'name'   => $slug,
+					'label'  => $label,
+					'sample' => isset( $sample_property[ $slug ] ) ? self::format_sample_value( $sample_property[ $slug ] ) : '',
+				);
+			}
+
+			$pararius_fields = array(
+				'status' => 'ok',
+				'data'   => $fields_data,
+			);
+
+			set_transient( 'ccrmre_query_pararius_office_fields_v1', $pararius_fields, DAY_IN_SECONDS );
+
+			return $pararius_fields;
+		}
+
+		return array(
+			'status'  => 'error',
+			'message' => __( 'Error getting Pararius Office fields. Please check your API connection.', 'connect-crm-realstate' ),
+			'data'    => array(),
+		);
+	}
+
+	/**
 	 * Get property ID/reference/status/date from property data
 	 *
 	 * @param array  $property Property data.
@@ -968,6 +1220,13 @@ class API {
 				'status'       => 'nodisponible',
 				'last_updated' => 'fechaact',
 				'state_code'   => 'keyprov',
+			),
+			'pararius_office'    => array(
+				'id'           => 'house_id',
+				'reference'    => 'house_id',
+				'status'       => 'status',
+				'last_updated' => 'modified',
+				'state_code'   => 'province',
 			),
 		);
 
@@ -1672,6 +1931,15 @@ class API {
 			'inmovilla_procesos' => array(
 				'name'             => 'Inmovilla Procesos',
 				'timeout'          => 300,  // 5 minutes in seconds.
+				'pagination'       => -1,   // All at once.
+				'retry_timeout'    => self::RETRY_CONFIG['timeout']['wait'],
+				'retry_rate_limit' => self::RETRY_CONFIG['rate_limit']['wait'],
+				'retry_server'     => self::RETRY_CONFIG['server_error']['wait'],
+				'max_retries'      => self::MAX_RETRIES,
+			),
+			'pararius_office'    => array(
+				'name'             => 'Pararius Office',
+				'timeout'          => 60,   // 1 minute in seconds.
 				'pagination'       => -1,   // All at once.
 				'retry_timeout'    => self::RETRY_CONFIG['timeout']['wait'],
 				'retry_rate_limit' => self::RETRY_CONFIG['rate_limit']['wait'],

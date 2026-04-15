@@ -680,6 +680,7 @@ class Admin {
 			<option value="anaconda" <?php selected( $type_option, 'anaconda' ); ?>><?php esc_html_e( 'Anaconda', 'connect-crm-realstate' ); ?></option>
 			<option value="inmovilla" <?php selected( $type_option, 'inmovilla' ); ?>><?php esc_html_e( 'Inmovilla APIWEB', 'connect-crm-realstate' ); ?></option>
 			<option value="inmovilla_procesos" <?php selected( $type_option, 'inmovilla_procesos' ); ?>><?php esc_html_e( 'Inmovilla Procesos', 'connect-crm-realstate' ); ?></option>
+			<option value="pararius_office" <?php selected( $type_option, 'pararius_office' ); ?>><?php esc_html_e( 'Pararius Office', 'connect-crm-realstate' ); ?></option>
 		</select>
 		<?php
 	}
