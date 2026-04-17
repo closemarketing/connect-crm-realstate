@@ -94,6 +94,13 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 == Changelog ==
 
+= 1.2.4 =
+* Fixed property info box not displaying all mapped fields: display now iterates dynamically over configured merge fields instead of relying on hard-coded field name lists.
+* Added support for Inmovilla-specific field names (`banyos`, `total_hab`, `habdobles`, `m_cons`, `m_uties`, `m_terraza`, `m_parcela`, `precioalq`, `preciotraspaso`, `nbtipo`, `nbconservacion`, `zona`, `ref`, `cod_ofer`, etc.).
+* Boolean feature fields (balcony, elevator, terrace, parking, pool, sea views, etc.) now shown as cards when active.
+* Multiple price types (sale, rental, transfer) each displayed in the price header row when available.
+* Fixed property info box light color scheme: replaced theme CSS variables that resolved to dark colors with fixed light values; removed automatic dark mode override.
+
 = 1.2.3 =
 * Fixed: automatic sync error due to IP address change (missing `$_SERVER['REMOTE_ADDR']` check).
 * Added ability to filter properties by different variables (postal code, province, etc.).
