@@ -6,6 +6,11 @@
  * @copyright  2023 Closemarketing
  */
 
+/* Default primary color – overridden via inline style from settings */
+.ccrmre-property-info-box {
+	--ccrmre-primary: #0073aa;
+}
+
 /* Main Container */
 .ccrmre-property-info-box {
 	background: #f8f9fa;
@@ -31,7 +36,7 @@
 	min-width: 160px;
 	text-align: center;
 	padding: 20px;
-	background: var(--wp--preset--color--primary, #0073aa);
+	background: var(--ccrmre-primary);
 	color: #fff;
 	border-radius: 12px;
 }
@@ -58,8 +63,8 @@
 /* Info Grid */
 .ccrmre-info-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: 20px;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 16px;
 }
 
 .ccrmre-info-item {
@@ -77,7 +82,7 @@
 	background: #f0f0f1;
 	transform: translateY(-2px);
 	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-	border-color: var(--wp--preset--color--primary, #0073aa);
+	border-color: var(--ccrmre-primary);
 }
 
 /* Icon Styles */
@@ -87,8 +92,8 @@
 	justify-content: center;
 	width: 48px;
 	height: 48px;
-	background: var(--wp--preset--color--primary, #0073aa);
-	color: var(--wp--preset--color--base, #fff);
+	background: var(--ccrmre-primary);
+	color: #fff;
 	border-radius: 10px;
 	flex-shrink: 0;
 }
@@ -134,7 +139,7 @@
 
 	.ccrmre-info-grid {
 		grid-template-columns: repeat(2, 1fr);
-		gap: 15px;
+		gap: 12px;
 	}
 
 	.ccrmre-info-item {
@@ -181,15 +186,14 @@
 	}
 
 	.ccrmre-info-grid {
-		grid-template-columns: 1fr;
-		gap: 12px;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 10px;
 	}
 
 	.ccrmre-info-item {
 		padding: 10px;
 	}
 }
-
 
 /* Print Styles */
 @media print {

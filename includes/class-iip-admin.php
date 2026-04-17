@@ -174,6 +174,14 @@ class Admin {
 				CCRMRE_VERSION,
 				true
 			);
+			wp_enqueue_style( 'wp-color-picker' );
+			wp_enqueue_script(
+				'ccrmre-color-picker',
+				plugin_dir_url( __FILE__ ) . 'assets/iip-color-picker.js',
+				array( 'wp-color-picker' ),
+				CCRMRE_VERSION,
+				true
+			);
 		}
 
 		// Enqueue taxonomy mapping scripts on taxonomy tab.
@@ -586,6 +594,14 @@ class Admin {
 			'ccrmre_admin_settings'
 		);
 
+		add_settings_field(
+			'ccrmre_info_box_color',
+			__( 'Property Info Box Primary Color', 'connect-crm-realstate' ),
+			array( $this, 'info_box_color_callback' ),
+			'ccrmre_settings',
+			'ccrmre_admin_settings'
+		);
+
 		// Merge fields settings.
 		register_setting(
 			'ccrmre_merge_group',
@@ -636,6 +652,14 @@ class Admin {
 			'show_gallery',
 			'show_property_info',
 		);
+
+		// Sanitize hex color separately.
+		if ( isset( $input['info_box_color'] ) ) {
+			$color = sanitize_hex_color( $input['info_box_color'] );
+			if ( $color ) {
+				$sanitary_values['info_box_color'] = $color;
+			}
+		}
 
 		/**
 		 * Allow PRO or add-ons to add extra sanitize field keys.
@@ -837,6 +861,27 @@ class Admin {
 			esc_html__( 'Enable automatic display of property information box with icons and price, or use the shortcode manually:', 'connect-crm-realstate' )
 		);
 	}
+
+	/**
+	 * Info box color callback
+	 *
+	 * @return void
+	 */
+	public function info_box_color_callback() {
+		$color = isset( $this->settings['info_box_color'] ) ? $this->settings['info_box_color'] : '#0073aa';
+		?>
+		<input
+			type="text"
+			name="ccrmre_settings[info_box_color]"
+			id="ccrmre_info_box_color"
+			value="<?php echo esc_attr( $color ); ?>"
+			class="ccrmre-color-picker"
+			data-default-color="#0073aa"
+		/>
+		<p class="description"><?php esc_html_e( 'Primary color used for the property info box icons and price banner.', 'connect-crm-realstate' ); ?></p>
+		<?php
+	}
+
 
 	/**
 	 * Province filter upsell: disabled select + link to PRO (only shown when PRO not active).

@@ -55,6 +55,84 @@ class PropertyInfo {
 	);
 
 	/**
+	 * CRM fields that must never be shown publicly (internal/technical data).
+	 *
+	 * @var array
+	 */
+	private $private_fields = array(
+		'cod_ofer',
+		'foto',
+		'altitud',
+		'longitud',
+		'numsucursal',
+		'keyagente',
+		'srvfotos',
+		'fotoletra',
+		'numfotos',
+		'numagencia',
+	);
+
+	/**
+	 * Spanish province codes (INE) mapped to province names.
+	 *
+	 * @var array
+	 */
+	private $province_codes = array(
+		'1'  => 'Álava',
+		'2'  => 'Albacete',
+		'3'  => 'Alicante',
+		'4'  => 'Almería',
+		'5'  => 'Ávila',
+		'6'  => 'Badajoz',
+		'7'  => 'Illes Balears',
+		'8'  => 'Barcelona',
+		'9'  => 'Burgos',
+		'10' => 'Cáceres',
+		'11' => 'Cádiz',
+		'12' => 'Castellón',
+		'13' => 'Ciudad Real',
+		'14' => 'Córdoba',
+		'15' => 'A Coruña',
+		'16' => 'Cuenca',
+		'17' => 'Girona',
+		'18' => 'Granada',
+		'19' => 'Guadalajara',
+		'20' => 'Gipuzkoa',
+		'21' => 'Huelva',
+		'22' => 'Huesca',
+		'23' => 'Jaén',
+		'24' => 'León',
+		'25' => 'Lleida',
+		'26' => 'La Rioja',
+		'27' => 'Lugo',
+		'28' => 'Madrid',
+		'29' => 'Málaga',
+		'30' => 'Murcia',
+		'31' => 'Navarra',
+		'32' => 'Ourense',
+		'33' => 'Asturias',
+		'34' => 'Palencia',
+		'35' => 'Las Palmas',
+		'36' => 'Pontevedra',
+		'37' => 'Salamanca',
+		'38' => 'Santa Cruz de Tenerife',
+		'39' => 'Cantabria',
+		'40' => 'Segovia',
+		'41' => 'Sevilla',
+		'42' => 'Soria',
+		'43' => 'Tarragona',
+		'44' => 'Teruel',
+		'45' => 'Toledo',
+		'46' => 'Valencia',
+		'47' => 'Valladolid',
+		'48' => 'Bizkaia',
+		'49' => 'Zamora',
+		'50' => 'Zaragoza',
+		'51' => 'Ceuta',
+		'52' => 'Melilla',
+	);
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -244,6 +322,11 @@ class PropertyInfo {
 				'label' => __( 'Agency', 'connect-crm-realstate' ),
 				'icon'  => '<path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>',
 			),
+			'keyprov'         => array(
+				'label'      => __( 'Province', 'connect-crm-realstate' ),
+				'icon'       => '<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>',
+				'is_province' => true,
+			),
 		);
 
 		// Register shortcode (prefixed for Plugin Directory guidelines).
@@ -277,6 +360,18 @@ class PropertyInfo {
 			array(),
 			CCRMRE_VERSION
 		);
+
+		// Inject the primary color as a CSS custom property so the stylesheet can use it.
+		$color = isset( $this->settings['info_box_color'] ) && $this->settings['info_box_color']
+			? sanitize_hex_color( $this->settings['info_box_color'] )
+			: '#0073aa';
+
+		if ( $color ) {
+			wp_add_inline_style(
+				'ccrmre-property-info',
+				'.ccrmre-property-info-box { --ccrmre-primary: ' . $color . '; }'
+			);
+		}
 	}
 
 	/**
@@ -362,6 +457,11 @@ class PropertyInfo {
 				continue;
 			}
 
+			// Skip internal/technical fields not meant for public display.
+			if ( in_array( strtolower( $crm_field ), $this->private_fields, true ) ) {
+				continue;
+			}
+
 			$value = get_post_meta( $post_id, $wp_field, true );
 
 			if ( '' === $value || null === $value || false === $value ) {
@@ -393,6 +493,10 @@ class PropertyInfo {
 					}
 					if ( ! empty( $def['is_bool'] ) ) {
 						$display_value = __( 'Yes', 'connect-crm-realstate' );
+					}
+					if ( ! empty( $def['is_province'] ) ) {
+						$code          = (string) $value;
+						$display_value = isset( $this->province_codes[ $code ] ) ? $this->province_codes[ $code ] : $value;
 					}
 					$label = $def['label'];
 					$icon  = $def['icon'];
