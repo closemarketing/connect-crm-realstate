@@ -187,11 +187,22 @@ class Import {
 					);
 				}
 
-				$error_message  = ! empty( $result_api['message'] ) ? $result_api['message'] : __( 'Error connecting with API. Please check your API connection.', 'connect-crm-realstate' );
+				$error_message = ! empty( $result_api['message'] ) ? $result_api['message'] : __( 'Error connecting with API. Please check your API connection.', 'connect-crm-realstate' );
 				if ( str_contains( $error_message, 'error: 0' ) ) {
-					$error_message = __( 'Inmovilla API returned error code 0. This usually means the server IP is not registered in Inmovilla or the API is temporarily unavailable.', 'connect-crm-realstate' );
+					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'Inmovilla API temporarily unavailable (error 0). Waiting before retry...', 'connect-crm-realstate' ) . '</strong><br/>';
+
+					wp_send_json_success(
+						array(
+							'loop'         => $loop,
+							'message'      => $progress_msg,
+							'pagination'   => $pagination,
+							'totalprop'    => $totalprop,
+							'finish'       => false,
+							'rate_limit'   => true,
+							'wait_seconds' => 60,
+						)
+					);
 				}
-				$error_message .= '. ' . __( 'If your credentials are correct, wait a few minutes and try again.', 'connect-crm-realstate' );
 
 				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $error_message . '<br/>';
 
