@@ -187,7 +187,10 @@ class Import {
 					);
 				}
 
-				$error_message  = $result_api['data'] ?? __( 'Error connecting with API. Please check your API connection.', 'connect-crm-realstate' );
+				$error_message  = ! empty( $result_api['message'] ) ? $result_api['message'] : __( 'Error connecting with API. Please check your API connection.', 'connect-crm-realstate' );
+				if ( str_contains( $error_message, 'error: 0' ) ) {
+					$error_message = __( 'Inmovilla API returned error code 0. This usually means the server IP is not registered in Inmovilla or the API is temporarily unavailable.', 'connect-crm-realstate' );
+				}
 				$error_message .= '. ' . __( 'If your credentials are correct, wait a few minutes and try again.', 'connect-crm-realstate' );
 
 				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $error_message . '<br/>';
@@ -373,6 +376,15 @@ class Import {
 		if ( 'updated' === $mode ) {
 			$fake_properties = array();
 			foreach ( $data as $id => $meta ) {
+				$minimal = SYNC::build_minimal_item( $id, $crm );
+				if ( isset( $meta['state_code'] ) && '' !== $meta['state_code'] ) {
+					$minimal['state_code'] = $meta['state_code'];
+				}
+				$minimal['status'] = isset( $meta['status'] ) ? $meta['status'] : true;
+				if ( ! apply_filters( 'ccrmre_should_import_property', true, $minimal ) ) {
+					continue;
+				}
+
 				if ( 'anaconda' === $crm ) {
 					$fake_properties[] = array(
 						'id'         => $id,
@@ -407,9 +419,11 @@ class Import {
 
 		$items = array();
 		foreach ( $ids as $id ) {
-			$minimal = SYNC::build_minimal_item( $id, $crm );
-			$status  = isset( $data[ $id ]['status'] ) ? $data[ $id ]['status'] : true;
-			$items[] = array_merge( $minimal, array( 'status' => $status ) );
+			$minimal    = SYNC::build_minimal_item( $id, $crm );
+			$status     = isset( $data[ $id ]['status'] ) ? $data[ $id ]['status'] : true;
+			$state_code = isset( $data[ $id ]['state_code'] ) ? $data[ $id ]['state_code'] : '';
+			$extra      = '' !== $state_code ? array( 'state_code' => $state_code ) : array();
+			$items[]    = array_merge( $minimal, array( 'status' => $status ), $extra );
 		}
 
 		return $items;
