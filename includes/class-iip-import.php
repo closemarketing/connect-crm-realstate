@@ -435,7 +435,7 @@ class Import {
 			$state_code = isset( $data[ $id ]['state_code'] ) ? $data[ $id ]['state_code'] : '';
 			$extra      = '' !== $state_code ? array( 'state_code' => $state_code ) : array();
 			$item       = array_merge( $minimal, array( 'status' => $status ), $extra );
-			
+
 			// In "all mode" check if we must import or not and clean list.
 			if ( ! apply_filters( 'ccrmre_should_import_property', true, $item ) ) {
 				continue;

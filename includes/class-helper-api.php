@@ -1468,6 +1468,7 @@ class API {
 	 * Get provinces from Inmovilla
 	 *
 	 * @param bool $only_with_properties Only provinces with properties.
+	 * @param bool $force_refresh Force a fresh API call ignoring cached transient.
 	 * @return array
 	 */
 	public static function get_inmovilla_provincias( $only_with_properties = true, $force_refresh = false ) {
