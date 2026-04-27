@@ -188,7 +188,7 @@ class Import {
 				}
 
 				$error_message = ! empty( $result_api['message'] ) ? $result_api['message'] : __( 'Error connecting with API. Please check your API connection.', 'connect-crm-realstate' );
-				if ( str_contains( $error_message, 'error: 0' ) ) {
+				if ( false !== strpos( $error_message, 'error: 0' ) ) {
 					$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:orange;">' . __( 'Inmovilla API temporarily unavailable (error 0). Waiting before retry...', 'connect-crm-realstate' ) . '</strong><br/>';
 
 					wp_send_json_success(
