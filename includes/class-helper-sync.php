@@ -550,8 +550,8 @@ class SYNC {
 		$settings  = get_option( 'ccrmre_settings' );
 		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 
-		// Get all property IDs from API.
-		$api_result = API::get_all_property_ids( $crm_type );
+		// Get all property IDs from API (use cached result if available).
+		$api_result = API::get_all_property_ids( $crm_type, true );
 		if ( 'error' === $api_result['status'] ) {
 			return array(
 				'status'  => 'error',

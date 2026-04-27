@@ -1468,24 +1468,31 @@ class API {
 	 * Get provinces from Inmovilla
 	 *
 	 * @param bool $only_with_properties Only provinces with properties.
+	 * @param bool $force_refresh Force a fresh API call ignoring cached transient.
 	 * @return array
 	 */
-	public static function get_inmovilla_provincias( $only_with_properties = true ) {
-		$result = get_transient( 'ccrmre_query_inmovilla_provincias' );
+	public static function get_inmovilla_provincias( $only_with_properties = true, $force_refresh = false ) {
+		$transient_key = 'ccrmre_query_inmovilla_provincias';
+
+		if ( $force_refresh ) {
+			delete_transient( $transient_key );
+		}
+
+		$result = get_transient( $transient_key );
 		if ( false === $result || empty( $result['data'] ) || 'ok' !== $result['status'] ) {
 			$tipo   = $only_with_properties ? 'provinciasofertas' : 'provincias';
 			$result = self::request_inmovilla( $tipo, 1, 100 );
 
 			if ( 'ok' === $result['status'] && isset( $result['data'][ $tipo ] ) ) {
-				// Remove metadata row.
 				$provincias = $result['data'][ $tipo ];
 				unset( $provincias[0] );
-				return array(
+				$result = array(
 					'status' => 'ok',
 					'data'   => array_values( $provincias ),
 				);
 			}
-			set_transient( 'ccrmre_query_inmovilla_provincias', $result, DAY_IN_SECONDS );
+			// No TTL: provinces don't change. Refresh only via explicit button.
+			set_transient( $transient_key, $result, 0 );
 		}
 		return $result;
 	}
