@@ -214,12 +214,14 @@ class PropertyInfo {
 				'icon'  => '<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>',
 			),
 			'key_tipo'         => array(
-				'label' => __( 'Type', 'connect-crm-realstate' ),
-				'icon'  => '<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>',
+				'label'   => __( 'Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>',
+				'is_enum' => true,
 			),
 			'nbconservacion'   => array(
-				'label' => __( 'Condition', 'connect-crm-realstate' ),
-				'icon'  => '<path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>',
+				'label'   => __( 'Condition', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>',
+				'is_enum' => true,
 			),
 			// Location.
 			'ciudad'           => array(
@@ -231,8 +233,9 @@ class PropertyInfo {
 				'icon'  => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>',
 			),
 			'key_zona'         => array(
-				'label' => __( 'Zone', 'connect-crm-realstate' ),
-				'icon'  => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>',
+				'label'   => __( 'Zone', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>',
+				'is_enum' => true,
 			),
 			// Reference.
 			'ref'              => array(
@@ -326,6 +329,97 @@ class PropertyInfo {
 				'label'       => __( 'Province', 'connect-crm-realstate' ),
 				'icon'        => '<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>',
 				'is_province' => true,
+			),
+			// Enum-only fields (resolved from API enum lists).
+			'keyacci'          => array(
+				'label'   => __( 'Operation Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'keycalefa'        => array(
+				'label'   => __( 'Heating Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/>',
+				'is_enum' => true,
+			),
+			'keycalle'         => array(
+				'label'   => __( 'Street Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'keycarpin'        => array(
+				'label'   => __( 'Carpentry Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'keycarpinext'     => array(
+				'label'   => __( 'Exterior Carpentry Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'keyelectricidad'  => array(
+				'label'   => __( 'Electrical Installation', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'keyfachada'       => array(
+				'label'   => __( 'Facade Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'keyori'           => array(
+				'label'   => __( 'Orientation', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'keysuelo'         => array(
+				'label'   => __( 'Floor Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'keytecho'         => array(
+				'label'   => __( 'Ceiling Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'keyvista'         => array(
+				'label'   => __( 'View Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>',
+				'is_enum' => true,
+			),
+			'key_loca'         => array(
+				'label'   => __( 'City', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>',
+				'is_enum' => true,
+			),
+			'estadoficha'      => array(
+				'label'   => __( 'Property Status', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>',
+				'is_enum' => true,
+			),
+			'conservacion'     => array(
+				'label'   => __( 'Conservation', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>',
+				'is_enum' => true,
+			),
+			'tgascom'          => array(
+				'label'   => __( 'Community Fee Period', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>',
+				'is_enum' => true,
+			),
+			'tipovpo'          => array(
+				'label'   => __( 'VPO Type', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'x_entorno'        => array(
+				'label'   => __( 'Surroundings', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_enum' => true,
+			),
+			'todoext'          => array(
+				'label'   => __( 'All Exterior', 'connect-crm-realstate' ),
+				'icon'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>',
+				'is_bool' => true,
 			),
 		);
 
@@ -444,6 +538,7 @@ class PropertyInfo {
 		// Get merge fields configuration: [ 'crm_field' => 'wp_meta_key', ... ].
 		$merge_fields        = get_option( 'ccrmre_merge_fields', array() );
 		$merge_fields_labels = get_option( 'ccrmre_merge_fields_labels', array() );
+		$crm_type            = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
 
 		if ( empty( $merge_fields ) ) {
 			return '';
@@ -498,6 +593,18 @@ class PropertyInfo {
 					if ( ! empty( $def['is_province'] ) ) {
 						$code          = (string) $value;
 						$display_value = isset( $this->province_codes[ $code ] ) ? $this->province_codes[ $code ] : $value;
+					}
+					if ( ! empty( $def['is_enum'] ) ) {
+						$enums     = API::get_enums( $crm_type, $crm_field );
+						$enum_list = isset( $enums[ $crm_field ] ) ? $enums[ $crm_field ] : array();
+						if ( isset( $enum_list[ $value ] ) ) {
+							$resolved = $enum_list[ $value ];
+							if ( is_array( $resolved ) && isset( $resolved['city'] ) ) {
+								$display_value = $resolved['city'];
+							} elseif ( is_string( $resolved ) && '' !== $resolved ) {
+								$display_value = $resolved;
+							}
+						}
 					}
 					$label = ! empty( $merge_fields_labels[ $crm_field ] ) ? $merge_fields_labels[ $crm_field ] : $def['label'];
 					$icon  = $def['icon'];
