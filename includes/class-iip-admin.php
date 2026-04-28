@@ -38,6 +38,13 @@ class Admin {
 	private $settings_fields;
 
 	/**
+	 * Custom labels for merge fields
+	 *
+	 * @var array
+	 */
+	private $settings_fields_labels;
+
+	/**
 	 * Construct and intialize
 	 */
 	public function __construct() {
@@ -302,8 +309,9 @@ class Admin {
 	 * @return void
 	 */
 	public function plugin_options_page() {
-		$this->settings        = get_option( 'ccrmre_settings' );
-		$this->settings_fields = get_option( 'ccrmre_merge_fields' );
+		$this->settings               = get_option( 'ccrmre_settings' );
+		$this->settings_fields        = get_option( 'ccrmre_merge_fields' );
+		$this->settings_fields_labels = get_option( 'ccrmre_merge_fields_labels', array() );
 
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
 
@@ -607,6 +615,12 @@ class Admin {
 			'ccrmre_merge_group',
 			'ccrmre_merge_fields',
 			array( $this, 'sanitize_fields_settings_merge' )
+		);
+
+		register_setting(
+			'ccrmre_merge_group',
+			'ccrmre_merge_fields_labels',
+			array( $this, 'sanitize_fields_settings_merge_labels' )
 		);
 
 		add_settings_section(
@@ -1188,6 +1202,7 @@ class Admin {
 		echo '<tr valign="top">';
 		echo '<th scope="col"><strong>' . esc_html__( 'CRM Fields', 'connect-crm-realstate' ) . '</strong></th>';
 		echo '<th scope="col"><strong>' . esc_html__( 'Sample Data', 'connect-crm-realstate' ) . '</strong></th>';
+		echo '<th scope="col"><strong>' . esc_html__( 'Label', 'connect-crm-realstate' ) . '</strong></th>';
 		echo '<th scope="col"><strong>' . esc_html__( 'WordPress Fields', 'connect-crm-realstate' ) . '</strong></th>';
 		echo '</tr>';
 		echo '</thead>';
@@ -1209,6 +1224,12 @@ class Admin {
 				echo '<span class="ccrmre-sample-empty">—</span>';
 			}
 			echo '</td>';
+
+			$field_name      = $property_field['name'];
+			$saved_label     = isset( $this->settings_fields_labels[ $field_name ] ) ? $this->settings_fields_labels[ $field_name ] : '';
+			$hardcoded_label = PropertyInfo::get_field_label( $field_name );
+			$default_label   = ! empty( $saved_label ) ? $saved_label : ( $hardcoded_label ?? $property_field['label'] );
+			echo '<td class="ccrmre-label-field"><input type="text" name="ccrmre_merge_fields_labels[' . esc_attr( $field_name ) . ']" value="' . esc_attr( $default_label ) . '" class="regular-text" /></td>';
 
 			echo '<td class="ccrmre-wp-field"><select name="ccrmre_merge_fields[' . esc_attr( $property_field['name'] ) . ']" class="ccrmre-select2-field" style="width: 100%;">';
 			echo '<option value=""';
@@ -1266,6 +1287,31 @@ class Admin {
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( 'CCRMRE Merge Fields Saved: ' . print_r( $sanitary_values, true ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log, WordPress.PHP.DevelopmentFunctions.error_log_print_r
+		}
+
+		return $sanitary_values;
+	}
+
+	/**
+	 * Sanitize merge fields labels before saving to DB
+	 *
+	 * @param array $input Input fields.
+	 * @return array
+	 */
+	public function sanitize_fields_settings_merge_labels( $input ) {
+		if ( ! is_array( $input ) ) {
+			return array();
+		}
+
+		$sanitary_values = array();
+
+		foreach ( $input as $key => $value ) {
+			$sanitized_key   = sanitize_text_field( $key );
+			$sanitized_value = sanitize_text_field( $value );
+
+			if ( ! empty( $sanitized_key ) ) {
+				$sanitary_values[ $sanitized_key ] = $sanitized_value;
+			}
 		}
 
 		return $sanitary_values;

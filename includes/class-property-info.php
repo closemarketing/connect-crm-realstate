@@ -442,7 +442,8 @@ class PropertyInfo {
 		}
 
 		// Get merge fields configuration: [ 'crm_field' => 'wp_meta_key', ... ].
-		$merge_fields = get_option( 'ccrmre_merge_fields', array() );
+		$merge_fields        = get_option( 'ccrmre_merge_fields', array() );
+		$merge_fields_labels = get_option( 'ccrmre_merge_fields_labels', array() );
 
 		if ( empty( $merge_fields ) ) {
 			return '';
@@ -479,7 +480,7 @@ class PropertyInfo {
 
 			if ( $def && ! empty( $def['is_price'] ) ) {
 				$price_items[ $crm_field ] = array(
-					'label' => $def['label'],
+					'label' => ! empty( $merge_fields_labels[ $crm_field ] ) ? $merge_fields_labels[ $crm_field ] : $def['label'],
 					'value' => $this->format_price( $value ),
 					'icon'  => $def['icon'],
 				);
@@ -498,11 +499,11 @@ class PropertyInfo {
 						$code          = (string) $value;
 						$display_value = isset( $this->province_codes[ $code ] ) ? $this->province_codes[ $code ] : $value;
 					}
-					$label = $def['label'];
+					$label = ! empty( $merge_fields_labels[ $crm_field ] ) ? $merge_fields_labels[ $crm_field ] : $def['label'];
 					$icon  = $def['icon'];
 				} else {
 					// Unknown field: use the CRM field name as label, generic icon.
-					$label = ucfirst( str_replace( '_', ' ', $crm_field ) );
+					$label = ! empty( $merge_fields_labels[ $crm_field ] ) ? $merge_fields_labels[ $crm_field ] : ucfirst( str_replace( '_', ' ', $crm_field ) );
 					$icon  = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>';
 				}
 
@@ -552,6 +553,62 @@ class PropertyInfo {
 		</div>
 		<?php
 		return ob_get_clean();
+	}
+
+	/**
+	 * Get the hardcoded label for a CRM field, or null if unknown.
+	 *
+	 * @param string $crm_field CRM field name.
+	 * @return string|null
+	 */
+	public static function get_field_label( $crm_field ) {
+		static $labels = null;
+
+		if ( null === $labels ) {
+			$labels = array(
+				'precioinmo'       => __( 'Price', 'connect-crm-realstate' ),
+				'precioreal'       => __( 'Real Price', 'connect-crm-realstate' ),
+				'precioalq'        => __( 'Rental Price', 'connect-crm-realstate' ),
+				'preciotraspaso'   => __( 'Transfer Price', 'connect-crm-realstate' ),
+				'outlet'           => __( 'Previous Price', 'connect-crm-realstate' ),
+				'total_hab'        => __( 'Bedrooms', 'connect-crm-realstate' ),
+				'habdobles'        => __( 'Double Bedrooms', 'connect-crm-realstate' ),
+				'habitaciones'     => __( 'Single Bedrooms', 'connect-crm-realstate' ),
+				'banyos'           => __( 'Bathrooms', 'connect-crm-realstate' ),
+				'aseos'            => __( 'Toilets', 'connect-crm-realstate' ),
+				'm_cons'           => __( 'Built Area', 'connect-crm-realstate' ),
+				'm_uties'          => __( 'Useful Area', 'connect-crm-realstate' ),
+				'm_terraza'        => __( 'Terrace', 'connect-crm-realstate' ),
+				'm_parcela'        => __( 'Plot', 'connect-crm-realstate' ),
+				'nbtipo'           => __( 'Type', 'connect-crm-realstate' ),
+				'key_tipo'         => __( 'Type', 'connect-crm-realstate' ),
+				'nbconservacion'   => __( 'Condition', 'connect-crm-realstate' ),
+				'ciudad'           => __( 'City', 'connect-crm-realstate' ),
+				'zona'             => __( 'Zone', 'connect-crm-realstate' ),
+				'key_zona'         => __( 'Zone', 'connect-crm-realstate' ),
+				'ref'              => __( 'Reference', 'connect-crm-realstate' ),
+				'cod_ofer'         => __( 'Code', 'connect-crm-realstate' ),
+				'balcon'           => __( 'Balcony', 'connect-crm-realstate' ),
+				'terraza'          => __( 'Terrace', 'connect-crm-realstate' ),
+				'ascensor'         => __( 'Elevator', 'connect-crm-realstate' ),
+				'parking'          => __( 'Parking', 'connect-crm-realstate' ),
+				'plaza_gara'       => __( 'Garage Space', 'connect-crm-realstate' ),
+				'aire_con'         => __( 'A/C', 'connect-crm-realstate' ),
+				'calefaccion'      => __( 'Heating', 'connect-crm-realstate' ),
+				'muebles'          => __( 'Furnished', 'connect-crm-realstate' ),
+				'piscina_com'      => __( 'Community Pool', 'connect-crm-realstate' ),
+				'piscina_prop'     => __( 'Private Pool', 'connect-crm-realstate' ),
+				'vistasalmar'      => __( 'Sea Views', 'connect-crm-realstate' ),
+				'vistasdespejadas' => __( 'Open Views', 'connect-crm-realstate' ),
+				'exclu'            => __( 'Exclusive', 'connect-crm-realstate' ),
+				'distmar'          => __( 'Distance to Sea', 'connect-crm-realstate' ),
+				'tipomensual'      => __( 'Rental Period', 'connect-crm-realstate' ),
+				'agencia'          => __( 'Agency', 'connect-crm-realstate' ),
+				'keyprov'          => __( 'Province', 'connect-crm-realstate' ),
+			);
+		}
+
+		return isset( $labels[ $crm_field ] ) ? $labels[ $crm_field ] : null;
 	}
 }
 
