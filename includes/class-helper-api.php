@@ -310,7 +310,13 @@ class API {
 			}
 		}
 
-		return isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		if ( ! empty( $remote_addr ) ) {
+			return $remote_addr;
+		}
+
+		// Cron context: no HTTP request, resolve server IP from hostname.
+		return gethostbyname( gethostname() );
 	}
 
 	/**

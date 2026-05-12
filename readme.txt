@@ -94,6 +94,9 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 == Changelog ==
 
+= 1.2.5 =
+* Fix cron import not getting IP address for Inmovilla APIWEB, causing registration errors and failed imports.
+
 = 1.2.4 =
 * Fixed property info box not displaying all mapped fields: display now iterates dynamically over configured merge fields instead of relying on hard-coded field name lists.
 * Added support for Inmovilla-specific field names (`banyos`, `total_hab`, `habdobles`, `m_cons`, `m_uties`, `m_terraza`, `m_parcela`, `precioalq`, `preciotraspaso`, `nbtipo`, `nbconservacion`, `zona`, `ref`, `cod_ofer`, etc.).
