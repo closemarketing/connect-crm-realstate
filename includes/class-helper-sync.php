@@ -250,6 +250,15 @@ class SYNC {
 			}
 		}
 
+		// Apply custom price format if enabled and this is a numeric price field.
+		$settings = get_option( 'ccrmre_settings' );
+		if ( ! empty( $settings['price_format_enabled'] ) && 'yes' === $settings['price_format_enabled'] && is_numeric( $item_meta ) && PropertyInfo::is_price_field( $key ) ) {
+			$decimals     = isset( $settings['price_num_decimals'] ) ? (int) $settings['price_num_decimals'] : 0;
+			$decimal_sep  = isset( $settings['price_decimal_sep'] ) ? $settings['price_decimal_sep'] : ',';
+			$thousand_sep = isset( $settings['price_thousand_sep'] ) ? $settings['price_thousand_sep'] : '.';
+			return number_format( (float) $item_meta, $decimals, $decimal_sep, $thousand_sep );
+		}
+
 		return $item_meta;
 	}
 

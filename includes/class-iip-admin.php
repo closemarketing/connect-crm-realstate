@@ -602,6 +602,46 @@ class Admin {
 			'ccrmre_admin_settings'
 		);
 
+		// Price format section.
+		add_settings_section(
+			'ccrmre_currency_settings',
+			__( 'Price Format', 'connect-crm-realstate' ),
+			array( $this, 'currency_section_info' ),
+			'ccrmre_settings'
+		);
+
+		add_settings_field(
+			'ccrmre_price_format_enabled',
+			__( 'Save Price with Format', 'connect-crm-realstate' ),
+			array( $this, 'price_format_enabled_callback' ),
+			'ccrmre_settings',
+			'ccrmre_currency_settings'
+		);
+
+		add_settings_field(
+			'ccrmre_price_thousand_sep',
+			__( 'Thousand Separator', 'connect-crm-realstate' ),
+			array( $this, 'price_thousand_sep_callback' ),
+			'ccrmre_settings',
+			'ccrmre_currency_settings'
+		);
+
+		add_settings_field(
+			'ccrmre_price_decimal_sep',
+			__( 'Decimal Separator', 'connect-crm-realstate' ),
+			array( $this, 'price_decimal_sep_callback' ),
+			'ccrmre_settings',
+			'ccrmre_currency_settings'
+		);
+
+		add_settings_field(
+			'ccrmre_price_num_decimals',
+			__( 'Number of Decimals', 'connect-crm-realstate' ),
+			array( $this, 'price_num_decimals_callback' ),
+			'ccrmre_settings',
+			'ccrmre_currency_settings'
+		);
+
 		// Merge fields settings.
 		register_setting(
 			'ccrmre_merge_group',
@@ -651,6 +691,10 @@ class Admin {
 			'download_images',
 			'show_gallery',
 			'show_property_info',
+			'price_format_enabled',
+			'price_thousand_sep',
+			'price_decimal_sep',
+			'price_num_decimals',
 		);
 
 		// Sanitize hex color separately.
@@ -882,6 +926,111 @@ class Admin {
 		<?php
 	}
 
+
+	/**
+	 * Currency section description.
+	 *
+	 * @return void
+	 */
+	public function currency_section_info() {
+		_e( 'By default prices are saved as plain numbers (e.g. 167000). Enable the option below to save them with formatting (e.g. 167.000).', 'connect-crm-realstate' );
+	}
+
+	/**
+	 * Price format enabled checkbox callback.
+	 *
+	 * @return void
+	 */
+	public function price_format_enabled_callback() {
+		$enabled = isset( $this->settings['price_format_enabled'] ) ? $this->settings['price_format_enabled'] : 'no';
+		?>
+		<label>
+			<input type="checkbox" name="ccrmre_settings[price_format_enabled]" id="ccrmre_price_format_enabled" value="yes" <?php checked( $enabled, 'yes' ); ?>>
+			<?php esc_html_e( 'Enable custom price format when saving to database', 'connect-crm-realstate' ); ?>
+		</label>
+		<p class="description"><?php _e( 'When enabled, prices <strong>will be stored</strong> as formatted strings using the settings below.', 'connect-crm-realstate' ); ?></p>
+		<script>
+		(function() {
+			function togglePriceFormatFields() {
+				var checked = document.getElementById('ccrmre_price_format_enabled').checked;
+				var ids = ['ccrmre_price_thousand_sep', 'ccrmre_price_decimal_sep', 'ccrmre_price_num_decimals'];
+				ids.forEach(function(id) {
+					var el = document.getElementById(id);
+					if (el) el.closest('tr').style.display = checked ? '' : 'none';
+				});
+			}
+			document.addEventListener('DOMContentLoaded', function() {
+				togglePriceFormatFields();
+				document.getElementById('ccrmre_price_format_enabled').addEventListener('change', togglePriceFormatFields);
+			});
+		})();
+		</script>
+		<?php
+	}
+
+	/**
+	 * Thousand separator callback.
+	 *
+	 * @return void
+	 */
+	public function price_thousand_sep_callback() {
+		$sep = isset( $this->settings['price_thousand_sep'] ) ? $this->settings['price_thousand_sep'] : '.';
+		printf(
+			'<input type="text" name="ccrmre_settings[price_thousand_sep]" id="ccrmre_price_thousand_sep" value="%s" class="small-text">',
+			esc_attr( $sep )
+		);
+	}
+
+	/**
+	 * Decimal separator callback.
+	 *
+	 * @return void
+	 */
+	public function price_decimal_sep_callback() {
+		$sep = isset( $this->settings['price_decimal_sep'] ) ? $this->settings['price_decimal_sep'] : ',';
+		printf(
+			'<input type="text" name="ccrmre_settings[price_decimal_sep]" id="ccrmre_price_decimal_sep" value="%s" class="small-text">',
+			esc_attr( $sep )
+		);
+	}
+
+	/**
+	 * Number of decimals callback.
+	 *
+	 * @return void
+	 */
+	public function price_num_decimals_callback() {
+		$decimals = isset( $this->settings['price_num_decimals'] ) ? (int) $this->settings['price_num_decimals'] : 2;
+		printf(
+			'<input type="number" name="ccrmre_settings[price_num_decimals]" id="ccrmre_price_num_decimals" value="%d" class="small-text" min="0" max="10" step="1">',
+			$decimals
+		);
+		?>
+		<p class="description" style="margin-top: 12px;">
+			<?php esc_html_e( 'Preview:', 'connect-crm-realstate' ); ?>
+			<strong id="ccrmre_price_preview"></strong>
+		</p>
+		<script>
+		(function() {
+			var SAMPLE = 167000;
+			function updatePreview() {
+				var thou  = document.getElementById('ccrmre_price_thousand_sep').value;
+				var dec   = document.getElementById('ccrmre_price_decimal_sep').value;
+				var decs  = parseInt(document.getElementById('ccrmre_price_num_decimals').value, 10) || 0;
+				var parts = SAMPLE.toFixed(decs).split('.');
+				parts[0]  = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thou);
+				document.getElementById('ccrmre_price_preview').textContent = parts.join(dec);
+			}
+			document.addEventListener('DOMContentLoaded', function() {
+				['ccrmre_price_thousand_sep','ccrmre_price_decimal_sep','ccrmre_price_num_decimals'].forEach(function(id) {
+					document.getElementById(id).addEventListener('input', updatePreview);
+				});
+				updatePreview();
+			});
+		})();
+		</script>
+		<?php
+	}
 
 	/**
 	 * Province filter upsell: disabled select + link to PRO (only shown when PRO not active).
