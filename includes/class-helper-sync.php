@@ -214,6 +214,15 @@ class SYNC {
 	 * @return string
 	 */
 	public static function format_item_meta( $crm, $item_meta, $key ) {
+		// Custom price format setting takes priority over all CRM-specific defaults.
+		$settings = get_option( 'ccrmre_settings' );
+		if ( ! empty( $settings['price_format_enabled'] ) && 'yes' === $settings['price_format_enabled'] && is_numeric( $item_meta ) && PropertyInfo::is_price_field( $key ) ) {
+			$decimals     = isset( $settings['price_num_decimals'] ) ? (int) $settings['price_num_decimals'] : 0;
+			$decimal_sep  = isset( $settings['price_decimal_sep'] ) ? $settings['price_decimal_sep'] : ',';
+			$thousand_sep = isset( $settings['price_thousand_sep'] ) ? $settings['price_thousand_sep'] : '.';
+			return number_format( (float) $item_meta, $decimals, $decimal_sep, $thousand_sep );
+		}
+
 		if ( 'inmovilla_procesos' === $crm ) {
 			$enums = API::get_enums( $crm, $key );
 			switch ( $key ) {
@@ -248,15 +257,6 @@ class SYNC {
 			} elseif ( isset( $enums[ $key ][ $item_meta ] ) ) {
 				return $enums[ $key ][ $item_meta ];
 			}
-		}
-
-		// Apply custom price format if enabled and this is a numeric price field.
-		$settings = get_option( 'ccrmre_settings' );
-		if ( ! empty( $settings['price_format_enabled'] ) && 'yes' === $settings['price_format_enabled'] && is_numeric( $item_meta ) && PropertyInfo::is_price_field( $key ) ) {
-			$decimals     = isset( $settings['price_num_decimals'] ) ? (int) $settings['price_num_decimals'] : 0;
-			$decimal_sep  = isset( $settings['price_decimal_sep'] ) ? $settings['price_decimal_sep'] : ',';
-			$thousand_sep = isset( $settings['price_thousand_sep'] ) ? $settings['price_thousand_sep'] : '.';
-			return number_format( (float) $item_meta, $decimals, $decimal_sep, $thousand_sep );
 		}
 
 		return $item_meta;
