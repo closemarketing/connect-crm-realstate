@@ -478,9 +478,11 @@ class PropertyInfo {
 			}
 
 			if ( $def && ! empty( $def['is_price'] ) ) {
+				$settings      = get_option( 'ccrmre_settings' );
+				$price_enabled = ! empty( $settings['price_format_enabled'] ) && 'yes' === $settings['price_format_enabled'];
 				$price_items[ $crm_field ] = array(
 					'label' => $def['label'],
-					'value' => $this->format_price( $value ),
+					'value' => $price_enabled ? $value . ' €' : $this->format_price( $value ),
 					'icon'  => $def['icon'],
 				);
 			} else {
