@@ -96,6 +96,7 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 = 1.2.5 =
 * Fixed: automatic sync error due to IP address change.
+* Fix cron import not getting IP address for Inmovilla APIWEB, causing registration errors and failed imports.
 
 = 1.2.4 =
 * Fixed property info box not displaying all mapped fields: display now iterates dynamically over configured merge fields instead of relying on hard-coded field name lists.
