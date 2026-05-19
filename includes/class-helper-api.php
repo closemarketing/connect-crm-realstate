@@ -225,6 +225,7 @@ class API {
 						'message'    => $response->get_error_message(),
 						'data'       => array(),
 						'error_type' => self::detect_error_type( $response, 0 ),
+						'request'    => array( 'url' => $url, 'body' => $args['body'] ?? '' ),
 					);
 				}
 
@@ -241,6 +242,8 @@ class API {
 						),
 						'data'       => array(),
 						'error_type' => self::detect_error_type( $response, $code ),
+						'request'    => array( 'url' => $url, 'body' => $args['body'] ?? '' ),
+						'response'   => array( 'code' => $code, 'body' => $body ),
 					);
 				}
 
@@ -518,6 +521,13 @@ class API {
 				$result_body = wp_remote_retrieve_body( $response );
 				$code        = wp_remote_retrieve_response_code( $response );
 
+				$request_info = array(
+					'url'     => $api_url,
+					'method'  => $args['method'] ?? 'GET',
+					'headers' => $args['headers'] ?? array(),
+					'body'    => $args['body'] ?? '',
+				);
+
 				if ( is_wp_error( $response ) ) {
 					$error_type = self::detect_error_type( $response, $code );
 					return array(
@@ -525,6 +535,7 @@ class API {
 						'message'    => $response->get_error_message(),
 						'data'       => array(),
 						'error_type' => $error_type,
+						'request'    => $request_info,
 					);
 				}
 
@@ -540,6 +551,8 @@ class API {
 						),
 						'data'       => array(),
 						'error_type' => $error_type,
+						'request'    => $request_info,
+						'response'   => array( 'code' => $code, 'body' => $result_body ),
 					);
 				}
 
