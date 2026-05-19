@@ -311,11 +311,19 @@ class API {
 		}
 
 		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-		if ( ! empty( $remote_addr ) ) {
+		if ( ! empty( $remote_addr ) && '127.0.0.1' !== $remote_addr ) {
+			// Cache the real server IP for use in cron (where $_SERVER is unavailable).
+			update_option( 'ccrmre_server_ip', $remote_addr, false );
 			return $remote_addr;
 		}
 
-		// Cron context: no HTTP request, resolve server IP from hostname.
+		// Cron context: no HTTP request — use the IP cached from a previous web request.
+		$cached_ip = get_option( 'ccrmre_server_ip', '' );
+		if ( ! empty( $cached_ip ) ) {
+			return $cached_ip;
+		}
+
+		// Last resort: resolve server IP from hostname.
 		return gethostbyname( gethostname() );
 	}
 
