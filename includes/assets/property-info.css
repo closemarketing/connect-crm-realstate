@@ -6,25 +6,38 @@
  * @copyright  2023 Closemarketing
  */
 
+/* Default primary color – overridden via inline style from settings */
+.ccrmre-property-info-box {
+	--ccrmre-primary: #0073aa;
+}
+
 /* Main Container */
 .ccrmre-property-info-box {
-	background: var(--wp--preset--color--primary, var(--wp--preset--color--base, #f8f9fa));
-	border: 1px solid var(--wp--preset--color--contrast, rgba(0, 0, 0, 0.1));
+	background: #f8f9fa;
+	border: 1px solid rgba(0, 0, 0, 0.1);
 	border-radius: 16px;
 	padding: 30px;
 	margin: 30px 0;
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-	color: var(--wp--preset--color--contrast, #333);
+	color: #333;
 	font-family: var(--wp--preset--font-family--body, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif);
 }
 
 /* Price Section */
-.ccrmre-info-price {
-	text-align: center;
+.ccrmre-info-price-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
 	margin-bottom: 30px;
+}
+
+.ccrmre-info-price {
+	flex: 1;
+	min-width: 160px;
+	text-align: center;
 	padding: 20px;
-	background: var(--wp--preset--color--primary, #0073aa);
-	color: var(--wp--preset--color--base, #fff);
+	background: var(--ccrmre-primary);
+	color: #fff;
 	border-radius: 12px;
 }
 
@@ -50,8 +63,8 @@
 /* Info Grid */
 .ccrmre-info-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: 20px;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 16px;
 }
 
 .ccrmre-info-item {
@@ -59,17 +72,17 @@
 	align-items: center;
 	gap: 15px;
 	padding: 15px;
-	background: var(--wp--preset--color--base, #fff);
-	border: 1px solid var(--wp--preset--color--contrast, rgba(0, 0, 0, 0.08));
+	background: #fff;
+	border: 1px solid rgba(0, 0, 0, 0.08);
 	border-radius: 12px;
 	transition: all 0.3s ease;
 }
 
 .ccrmre-info-item:hover {
-	background: var(--wp--preset--color--secondary, #f0f0f1);
+	background: #f0f0f1;
 	transform: translateY(-2px);
 	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-	border-color: var(--wp--preset--color--primary, #0073aa);
+	border-color: var(--ccrmre-primary);
 }
 
 /* Icon Styles */
@@ -79,8 +92,8 @@
 	justify-content: center;
 	width: 48px;
 	height: 48px;
-	background: var(--wp--preset--color--primary, #0073aa);
-	color: var(--wp--preset--color--base, #fff);
+	background: var(--ccrmre-primary);
+	color: #fff;
 	border-radius: 10px;
 	flex-shrink: 0;
 }
@@ -102,14 +115,14 @@
 	font-size: 24px;
 	font-weight: 700;
 	line-height: 1.2;
-	color: var(--wp--preset--color--contrast, #333);
+	color: #333;
 }
 
 .ccrmre-info-label {
 	font-size: 13px;
 	opacity: 0.7;
 	text-transform: capitalize;
-	color: var(--wp--preset--color--contrast, #666);
+	color: #666;
 }
 
 /* Responsive Design */
@@ -126,7 +139,7 @@
 
 	.ccrmre-info-grid {
 		grid-template-columns: repeat(2, 1fr);
-		gap: 15px;
+		gap: 12px;
 	}
 
 	.ccrmre-info-item {
@@ -159,9 +172,13 @@
 		border-radius: 10px;
 	}
 
-	.ccrmre-info-price {
+	.ccrmre-info-price-row {
+		gap: 10px;
 		margin-bottom: 20px;
-		padding-bottom: 20px;
+	}
+
+	.ccrmre-info-price {
+		padding: 15px;
 	}
 
 	.ccrmre-price-value {
@@ -169,30 +186,12 @@
 	}
 
 	.ccrmre-info-grid {
-		grid-template-columns: 1fr;
-		gap: 12px;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 10px;
 	}
 
 	.ccrmre-info-item {
 		padding: 10px;
-	}
-}
-
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-	.ccrmre-property-info-box {
-		background: var(--wp--preset--color--base, #1a1a1a);
-		border-color: var(--wp--preset--color--contrast, rgba(255, 255, 255, 0.1));
-		color: var(--wp--preset--color--contrast, #e0e0e0);
-	}
-
-	.ccrmre-info-item {
-		background: var(--wp--preset--color--base, #2a2a2a);
-		border-color: var(--wp--preset--color--contrast, rgba(255, 255, 255, 0.08));
-	}
-
-	.ccrmre-info-item:hover {
-		background: var(--wp--preset--color--secondary, #333);
 	}
 }
 

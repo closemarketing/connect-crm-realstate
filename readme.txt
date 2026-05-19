@@ -4,7 +4,7 @@ Tags: real estate, properties, inmovilla, anaconda, crm
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.2
+Stable tag: 1.2.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,8 +94,24 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 == Changelog ==
 
-= 1.2.3 =
+= 1.2.5 =
 * Fixed: automatic sync error due to IP address change.
+
+= 1.2.4 =
+* Fixed property info box not displaying all mapped fields: display now iterates dynamically over configured merge fields instead of relying on hard-coded field name lists.
+* Added support for Inmovilla-specific field names (`banyos`, `total_hab`, `habdobles`, `m_cons`, `m_uties`, `m_terraza`, `m_parcela`, `precioalq`, `preciotraspaso`, `nbtipo`, `nbconservacion`, `zona`, `ref`, `cod_ofer`, etc.).
+* Boolean feature fields (balcony, elevator, terrace, parking, pool, sea views, etc.) now shown as cards when active.
+* Multiple price types (sale, rental, transfer) each displayed in the price header row when available.
+* Fixed property info box light color scheme: replaced theme CSS variables that resolved to dark colors with fixed light values; removed automatic dark mode override.
+
+= 1.2.3 =
+* Fixed: automatic sync error due to IP address change (missing `$_SERVER['REMOTE_ADDR']` check).
+* Added ability to filter properties by different variables (postal code, province, etc.).
+* Improved API request management with better error handling and retry logic.
+* Fixed detection of Inmovilla IP registration errors to skip unnecessary retries.
+* Fixed city names being saved as numeric IDs instead of city names in Inmovilla APIWEB.
+* Added admin settings tab with enums for CRM-specific field options.
+* Removed legacy Inmovilla APIWEB PHP files from tests.
 
 = 1.2.2 =
 * Fixed Auto Display Photo Gallery setting not saving (form input name did not match the settings sanitizer).
