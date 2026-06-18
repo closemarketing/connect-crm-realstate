@@ -183,8 +183,12 @@ class API {
 		// Build POST body with IP tracking for API security.
 		$body  = 'param=' . $texto;
 		$body .= '&json=1'; // Request JSON response.
-		$body .= '&ia=' . self::get_client_ip();
-		$body .= '&ib=' . self::get_forwarded_ip();
+
+		$client_ip = self::get_client_ip();
+		$body .= '&ia=' . $client_ip;
+
+		$forwarded_ip = self::get_forwarded_ip();
+		$body .= '&ib=' . $forwarded_ip;
 
 		// Add domain to the request, matching the official Inmovilla client order.
 		$parsed_url = wp_parse_url( get_site_url() );
@@ -305,7 +309,7 @@ class API {
 		);
 
 		foreach ( $proxy_headers as $key ) {
-			if ( ! empty( $_SERVER[ $key ] ) ) {
+			if ( ! empty( $_SERVER[ $key ] ) && ! in_array( $_SERVER[ $key ], array( '127.0.0.1', '::1' ), true ) ) {
 				$ips = explode( ',', sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) ) );
 				$ip  = trim( $ips[0] );
 				if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
@@ -315,19 +319,19 @@ class API {
 		}
 
 		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-		if ( ! empty( $remote_addr ) && '127.0.0.1' !== $remote_addr && '::1' !== $remote_addr ) {
+		if ( ! empty( $remote_addr ) && ! in_array( $remote_addr, array( '127.0.0.1', '::1' ), true ) ) {
 			return $remote_addr;
 		}
 
-		// Cron/CLI context: no HTTP request. Return the server's public IP.
+		// Cron/CLI context: loopback or no REMOTE_ADDR — return the server's public IP.
 		return self::get_server_public_ip();
 	}
 
 	/**
 	 * Get the server's public IP address.
 	 *
-	 * Cached in a WordPress option for 24 hours to avoid repeated external calls.
-	 * Used as fallback in cron/CLI context where $_SERVER headers are not available.
+	 * Cached in a WordPress option for 24 hours. Used as fallback in cron/CLI context
+	 * where REMOTE_ADDR is loopback or absent.
 	 *
 	 * @return string Public IP address or empty string on failure.
 	 */
@@ -335,19 +339,18 @@ class API {
 		$cached = get_option( 'ccrmre_server_public_ip' );
 		$expiry = get_option( 'ccrmre_server_public_ip_expiry', 0 );
 
-		if ( ! empty( $cached ) && time() < (int) $expiry ) {
+		$is_loopback = in_array( $cached, array( '127.0.0.1', '::1' ), true );
+		if ( ! empty( $cached ) && ! $is_loopback && time() < (int) $expiry ) {
 			return $cached;
 		}
 
-		// Try SERVER_ADDR first (available in FPM/Apache with a real HTTP context).
 		$server_addr = isset( $_SERVER['SERVER_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_ADDR'] ) ) : '';
-		if ( ! empty( $server_addr ) && '127.0.0.1' !== $server_addr && '::1' !== $server_addr ) {
+		if ( ! empty( $server_addr ) && ! in_array( $server_addr, array( '127.0.0.1', '::1' ), true ) ) {
 			update_option( 'ccrmre_server_public_ip', $server_addr, false );
 			update_option( 'ccrmre_server_public_ip_expiry', time() + DAY_IN_SECONDS, false );
 			return $server_addr;
 		}
 
-		// Last resort: ask an external service for the public outbound IP.
 		$response = wp_remote_get( 'https://api.ipify.org', array( 'timeout' => 5 ) );
 		if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
 			$ip = trim( wp_remote_retrieve_body( $response ) );
@@ -358,7 +361,6 @@ class API {
 			}
 		}
 
-		// Fallback to hostname resolution.
 		$hostname_ip = gethostbyname( gethostname() );
 		if ( filter_var( $hostname_ip, FILTER_VALIDATE_IP ) ) {
 			return $hostname_ip;
@@ -387,7 +389,8 @@ class API {
 	 * @return string Absolute path to cookie file.
 	 */
 	private static function get_inmovilla_cookie_jar_path() {
-		return get_temp_dir() . 'ccrmre-inmovilla-cookies.txt';
+		$uploads = wp_upload_dir();
+		return $uploads['basedir'] . '/ccrmre_logs/inmovilla-cookies.txt';
 	}
 
 	/**
