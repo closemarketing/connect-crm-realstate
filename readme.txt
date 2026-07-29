@@ -4,7 +4,7 @@ Tags: real estate, properties, inmovilla, anaconda, crm
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,9 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 4. Property gallery frontend display
 
 == Changelog ==
+
+= 1.2.5 =
+* Fixed: scheduled/cron syncs (WP-Cron loopback, WP-CLI, Action Scheduler) were reported by Inmovilla as coming from a non-whitelisted IP even though manual syncs from the admin worked fine. The `ia`/`ib` parameters sent to the Inmovilla API were built from `$_SERVER['REMOTE_ADDR']`/proxy headers of the *incoming* request, which is empty or a loopback address (`127.0.0.1`) when there is no real browser request driving the sync. Now falls back to the server's own external IP (matching Inmovilla's official reference client), with an optional `CCRMRE_EXTERNAL_IP` constant to override it explicitly on load-balanced/NAT setups.
 
 = 1.2.4 =
 * Fixed property info box not displaying all mapped fields: display now iterates dynamically over configured merge fields instead of relying on hard-coded field name lists.

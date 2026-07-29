@@ -249,10 +249,7 @@ class API {
 				if ( json_last_error() !== JSON_ERROR_NONE ) {
 					// Detect Inmovilla IP registration error (plain-text response, not JSON).
 					if ( is_string( $body ) && false !== stripos( $body, 'NECESITAMOS RECIBIR LA IP' ) ) {
-						$server_ip = isset( $_SERVER['SERVER_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_ADDR'] ) ) : '';
-						if ( empty( $server_ip ) ) {
-							$server_ip = gethostbyname( gethostname() );
-						}
+						$server_ip = self::get_server_external_ip();
 						return array(
 							'status'     => 'error',
 							'message'    => sprintf(
@@ -286,7 +283,12 @@ class API {
 	/**
 	 * Get client IP address
 	 *
-	 * Tries to get the real client IP from various proxy headers.
+	 * Tries to get the real client IP from various proxy headers. When there is
+	 * no real incoming request to read (WP-Cron loopback runs or WP-CLI/Action
+	 * Scheduler executions have an empty or local REMOTE_ADDR), falls back to
+	 * the server's own external IP, matching Inmovilla's official reference
+	 * client behavior so scheduled syncs report the same whitelisted IP as
+	 * manual syncs triggered from the admin.
 	 *
 	 * @return string Client IP address.
 	 */
@@ -310,7 +312,37 @@ class API {
 			}
 		}
 
-		return isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+
+		if ( ! filter_var( $remote_addr, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+			return self::get_server_external_ip();
+		}
+
+		return $remote_addr;
+	}
+
+	/**
+	 * Get the server's own external IP address.
+	 *
+	 * Used when the request context has no usable client IP (WP-Cron loopback,
+	 * WP-CLI, Action Scheduler). Allows an explicit override via the
+	 * CCRMRE_EXTERNAL_IP constant for servers behind a load balancer/NAT where
+	 * gethostbyname() would not resolve to the whitelisted public IP.
+	 *
+	 * @return string Server external IP address.
+	 */
+	private static function get_server_external_ip() {
+		if ( defined( 'CCRMRE_EXTERNAL_IP' ) && CCRMRE_EXTERNAL_IP ) {
+			return CCRMRE_EXTERNAL_IP;
+		}
+
+		$server_ip = isset( $_SERVER['SERVER_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_ADDR'] ) ) : '';
+
+		if ( ! empty( $server_ip ) ) {
+			return $server_ip;
+		}
+
+		return gethostbyname( gethostname() );
 	}
 
 	/**
