@@ -190,6 +190,9 @@ class API {
 		$forwarded_ip = self::get_forwarded_ip();
 		$body .= '&ib=' . $forwarded_ip;
 
+		// Obtain the SERVER Forwarded IP.
+		$server_forwarded_ip = self::get_server_public_ip();
+
 		// Add domain to the request, matching the official Inmovilla client order.
 		$parsed_url = wp_parse_url( get_site_url() );
 		$hostname   = isset( $parsed_url['host'] ) ? $parsed_url['host'] : '';
@@ -207,6 +210,7 @@ class API {
 				'Accept-Charset'  => 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
 				'Accept-Language' => 'en-us,en;q=0.5',
 				'Pragma'          => '',
+				'X-Forwarded-For' => $server_forwarded_ip
 			),
 			'body'       => $body,
 			'cookies'    => self::load_inmovilla_cookies(),
