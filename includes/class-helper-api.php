@@ -190,9 +190,6 @@ class API {
 		$forwarded_ip = self::get_forwarded_ip();
 		$body .= '&ib=' . $forwarded_ip;
 
-		// Obtain the SERVER Forwarded IP.
-		$server_forwarded_ip = self::get_server_public_ip();
-
 		// Add domain to the request, matching the official Inmovilla client order.
 		$parsed_url = wp_parse_url( get_site_url() );
 		$hostname   = isset( $parsed_url['host'] ) ? $parsed_url['host'] : '';
@@ -210,7 +207,6 @@ class API {
 				'Accept-Charset'  => 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
 				'Accept-Language' => 'en-us,en;q=0.5',
 				'Pragma'          => '',
-				'X-Forwarded-For' => $server_forwarded_ip
 			),
 			'body'       => $body,
 			'cookies'    => self::load_inmovilla_cookies(),
@@ -222,7 +218,7 @@ class API {
 		$url = 'https://apiweb.inmovilla.com/apiweb/apiweb.php';
 
 		return self::execute_with_retry(
-			function () use ( $url, $args ) {
+			function () use ( $url, $args, $client_ip, $forwarded_ip ) {
 				$response = wp_remote_post( $url, $args );
 
 				self::save_inmovilla_cookies( $response );
@@ -260,16 +256,15 @@ class API {
 				if ( json_last_error() !== JSON_ERROR_NONE ) {
 					// Detect Inmovilla IP registration error (plain-text response, not JSON).
 					if ( is_string( $body ) && false !== stripos( $body, 'NECESITAMOS RECIBIR LA IP' ) ) {
-						$server_ip = isset( $_SERVER['SERVER_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_ADDR'] ) ) : '';
-						if ( empty( $server_ip ) ) {
-							$server_ip = gethostbyname( gethostname() );
-						}
+						$server_ip = self::get_server_public_ip();
 						return array(
 							'status'     => 'error',
 							'message'    => sprintf(
-								/* translators: %s: Server IP address */
-								__( 'Inmovilla API requires IP registration. Please provide your server IP (%s) to Inmovilla support so they can whitelist it.', 'connect-crm-realstate' ),
-								$server_ip
+								/* translators: 1: Server IP address, 2: ia param sent, 3: ib param sent */
+								__( 'Inmovilla API requires IP registration. Please provide your server IP (%1$s) to Inmovilla support so they can whitelist it. (ia=%2$s, ib=%3$s)', 'connect-crm-realstate' ),
+								$server_ip,
+								$client_ip,
+								$forwarded_ip
 							),
 							'data'       => array(),
 							'error_type' => 'ip_not_registered',
@@ -313,7 +308,7 @@ class API {
 		);
 
 		foreach ( $proxy_headers as $key ) {
-			if ( ! empty( $_SERVER[ $key ] ) && ! in_array( $_SERVER[ $key ], array( '127.0.0.1', '::1' ), true ) ) {
+			if ( ! empty( $_SERVER[ $key ] ) ) {
 				$ips = explode( ',', sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) ) );
 				$ip  = trim( $ips[0] );
 				if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
@@ -322,12 +317,11 @@ class API {
 			}
 		}
 
-		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-		if ( ! empty( $remote_addr ) && ! in_array( $remote_addr, array( '127.0.0.1', '::1' ), true ) ) {
-			return $remote_addr;
+		if ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+			return sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
 		}
 
-		// Cron/CLI context: loopback or no REMOTE_ADDR — return the server's public IP.
+		// No HTTP request context at all (CLI/cron): fall back to the server's public IP.
 		return self::get_server_public_ip();
 	}
 
@@ -384,7 +378,9 @@ class API {
 		if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
 			return sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
 		}
-		return '';
+
+		// Cron/CLI context: no HTTP_X_FORWARDED_FOR header — fall back to the server's public IP.
+		return self::get_server_public_ip();
 	}
 
 	/**
