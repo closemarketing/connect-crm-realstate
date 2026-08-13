@@ -214,7 +214,7 @@ class API {
 		$url = 'https://apiweb.inmovilla.com/apiweb/apiweb.php';
 
 		return self::execute_with_retry(
-			function () use ( $url, $args ) {
+			function () use ( $url, $args, $numagencia, $hostname ) {
 				$response = wp_remote_post( $url, $args );
 
 				self::save_inmovilla_cookies( $response );
@@ -248,21 +248,9 @@ class API {
 
 				if ( json_last_error() !== JSON_ERROR_NONE ) {
 					// Detect Inmovilla IP registration error (plain-text response, not JSON).
-					if ( is_string( $body ) && false !== stripos( $body, 'NECESITAMOS RECIBIR LA IP' ) ) {
-						$server_ip = isset( $_SERVER['SERVER_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_ADDR'] ) ) : '';
-						if ( empty( $server_ip ) ) {
-							$server_ip = gethostbyname( gethostname() );
-						}
-						return array(
-							'status'     => 'error',
-							'message'    => sprintf(
-								/* translators: %s: Server IP address */
-								__( 'Inmovilla API requires IP registration. Please provide your server IP (%s) to Inmovilla support so they can whitelist it.', 'connect-crm-realstate' ),
-								$server_ip
-							),
-							'data'       => array(),
-							'error_type' => 'ip_not_registered',
-						);
+					$ip_error = self::detect_ip_whitelist_error( $body, $numagencia, $hostname );
+					if ( null !== $ip_error ) {
+						return $ip_error;
 					}
 					$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' );
 					$message .= is_string( $body ) ? ' - ' . $body : '';
@@ -280,6 +268,72 @@ class API {
 				);
 			},
 			'Inmovilla API Web'
+		);
+	}
+
+	/**
+	 * Detect Inmovilla IP whitelist error and build an actionable response
+	 *
+	 * Inmovilla APIWEB returns a plain-text die() body (not JSON) when the
+	 * server's outbound IP has not been whitelisted. It has been observed
+	 * using more than one wording for this, so several patterns are checked.
+	 *
+	 * @param mixed  $body Raw response body.
+	 * @param string $numagencia Agency number configured in plugin settings.
+	 * @param string $hostname Site hostname.
+	 * @return array|null Error response array (status/message/error_type/mailto), or null if body doesn't match.
+	 */
+	private static function detect_ip_whitelist_error( $body, $numagencia, $hostname ) {
+		if ( ! is_string( $body ) ) {
+			return null;
+		}
+
+		$ip_error_patterns = array( 'NECESITAMOS RECIBIR LA IP', 'IP NO VALIDADA', 'IP_RECIVED' );
+		$matched           = false;
+		foreach ( $ip_error_patterns as $pattern ) {
+			if ( false !== stripos( $body, $pattern ) ) {
+				$matched = true;
+				break;
+			}
+		}
+
+		if ( ! $matched ) {
+			return null;
+		}
+
+		// Prefer the IP Inmovilla reports having received: it reflects what
+		// their firewall actually saw, which can differ from the server's
+		// local IP when there's a proxy/CDN/load balancer in front.
+		$ip = '';
+		if ( preg_match( '/IP_RECIVED:\s*([0-9.]+)/i', $body, $matches ) ) {
+			$ip = $matches[1];
+		} else {
+			$ip = isset( $_SERVER['SERVER_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_ADDR'] ) ) : '';
+			if ( empty( $ip ) ) {
+				$ip = gethostbyname( gethostname() );
+			}
+		}
+
+		$mailto_body = sprintf(
+			"Hello,\n\nPlease whitelist the following IP address so our WordPress site can connect to the Inmovilla API:\n\nIP: %s\nAgency number: %s\nWebsite: %s\n\nThank you.",
+			$ip,
+			$numagencia,
+			$hostname
+		);
+		$mailto      = 'mailto:soporte@inmovilla.com'
+			. '?subject=' . rawurlencode( sprintf( 'IP whitelist request - Agency %s', $numagencia ) )
+			. '&body=' . rawurlencode( $mailto_body );
+
+		return array(
+			'status'     => 'error',
+			'message'    => sprintf(
+				/* translators: %s: Server IP address */
+				__( 'Inmovilla API requires IP registration. Please ask Inmovilla support to whitelist your server IP (%s).', 'connect-crm-realstate' ),
+				$ip
+			),
+			'data'       => array(),
+			'error_type' => 'ip_not_registered',
+			'mailto'     => $mailto,
 		);
 	}
 
