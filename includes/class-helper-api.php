@@ -319,23 +319,30 @@ class API {
 			}
 		}
 
-		if ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
-			return sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		if ( ! empty( $remote_addr ) && ! in_array( $remote_addr, array( '127.0.0.1', '::1' ), true ) ) {
+			return $remote_addr;
 		}
 
-		// No HTTP request context at all (CLI/cron): fall back to the server's public IP.
+		// Cron/CLI context: loopback or no REMOTE_ADDR — fall back to the server's public IP.
 		return self::get_server_public_ip();
 	}
 
 	/**
 	 * Get the server's public IP address.
 	 *
-	 * Cached in a WordPress option for 24 hours. Used as fallback in cron/CLI context
-	 * where REMOTE_ADDR is loopback or absent.
+	 * If CCRMRE_INMOVILLA_IP_OVERRIDE is defined (e.g. in wp-config.php for a
+	 * local/dev environment behind a non-whitelisted egress IP), that value is
+	 * returned as-is. Otherwise cached in a WordPress option for 24 hours, used
+	 * as fallback in cron/CLI context where REMOTE_ADDR is loopback or absent.
 	 *
 	 * @return string Public IP address or empty string on failure.
 	 */
 	private static function get_server_public_ip() {
+		if ( defined( 'CCRMRE_INMOVILLA_IP_OVERRIDE' ) && CCRMRE_INMOVILLA_IP_OVERRIDE ) {
+			return CCRMRE_INMOVILLA_IP_OVERRIDE;
+		}
+
 		$cached = get_option( 'ccrmre_server_public_ip' );
 		$expiry = get_option( 'ccrmre_server_public_ip_expiry', 0 );
 
