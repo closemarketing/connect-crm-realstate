@@ -1815,7 +1815,7 @@ class API {
 					__( '%s: Maximum retry attempts reached. Last error: ', 'connect-crm-realstate' ),
 					$api_name
 				) . $result['message'];
-				return $result;
+				return self::log_inmovilla_support_error( $result );
 			}
 
 			// Detect error type and get wait time.
@@ -1823,13 +1823,13 @@ class API {
 
 			// If IP is not registered, retrying will never help — return immediately.
 			if ( 'ip_not_registered' === $error_type ) {
-				return $result;
+				return self::log_inmovilla_support_error( $result );
 			}
 
 			// If skip_retry is enabled (manual import), return immediately.
 			if ( self::$skip_retry ) {
 				$result['error_type'] = $error_type;
-				return $result;
+				return self::log_inmovilla_support_error( $result );
 			}
 
 			$retry_config = isset( self::RETRY_CONFIG[ $error_type ] ) ? self::RETRY_CONFIG[ $error_type ] : self::RETRY_CONFIG['default'];
@@ -1847,6 +1847,31 @@ class API {
 			// Wait before retry.
 			sleep( $wait_seconds );
 		}
+
+		return $result;
+	}
+
+	/**
+	 * Append the Inmovilla-support log block to the error message.
+	 *
+	 * Mirrors what their apiinmovilla.php writes when DEPURAR_API_INMOVILLA is
+	 * enabled: parameters sent and raw response, one line each, per request.
+	 * Appended directly to 'message' so every caller (cron log, manual import UI)
+	 * shows it automatically without needing to know about a separate field.
+	 *
+	 * @param array $result API result array (with 'request' and 'response' keys).
+	 * @return array Result array with 'message' extended.
+	 */
+	private static function log_inmovilla_support_error( $result ) {
+		$id_petition = wp_rand( 100000, 999999 ) . '_' . time();
+		$req_body    = isset( $result['request']['body'] ) ? $result['request']['body'] : '';
+		$resp_body   = isset( $result['response']['body'] ) ? $result['response']['body'] : $result['message'];
+
+		$log  = PHP_EOL . 'Información para soporte Inmovilla:' . PHP_EOL;
+		$log .= gmdate( 'Y-m-d H:i:s' ) . " - id_petition: {$id_petition} - parametros: {$req_body}" . PHP_EOL;
+		$log .= gmdate( 'Y-m-d H:i:s' ) . " - id_petition: {$id_petition} - respuesta: {$resp_body}";
+
+		$result['message'] .= $log;
 
 		return $result;
 	}

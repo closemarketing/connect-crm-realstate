@@ -204,7 +204,8 @@ class Import {
 					);
 				}
 
-				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $error_message . '<br/>';
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong>';
+				$progress_msg .= '<pre style="white-space:pre-wrap;background:#f5f5f5;padding:10px;">' . esc_html( $error_message ) . '</pre>';
 
 				wp_send_json_error(
 					array(
