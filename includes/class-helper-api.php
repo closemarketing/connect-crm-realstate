@@ -268,6 +268,8 @@ class API {
 							),
 							'data'       => array(),
 							'error_type' => 'ip_not_registered',
+							'request'    => array( 'url' => $url, 'body' => $args['body'] ?? '' ),
+							'response'   => array( 'code' => $code, 'body' => $body ),
 						);
 					}
 					$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' );
