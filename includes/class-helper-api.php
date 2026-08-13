@@ -181,14 +181,14 @@ class API {
 		$texto = rawurlencode( $texto );
 
 		// Build POST body with IP tracking for API security.
-		$body  = 'param=' . $texto;
-		$body .= '&json=1'; // Request JSON response.
-
-		$client_ip = self::get_client_ip();
-		$body .= '&ia=' . $client_ip;
-
-		$forwarded_ip = self::get_forwarded_ip();
-		$body .= '&ib=' . $forwarded_ip;
+		// Inmovilla whitelists the server's IP, not the visitor triggering the
+		// request, so ia/ib always carry the server's own public IP — the same
+		// value regardless of whether this runs from a browser click or cron.
+		$server_ip = self::get_server_public_ip();
+		$body      = 'param=' . $texto;
+		$body     .= '&json=1'; // Request JSON response.
+		$body     .= '&ia=' . $server_ip;
+		$body     .= '&ib=' . $server_ip;
 
 		// Add domain to the request, matching the official Inmovilla client order.
 		$parsed_url = wp_parse_url( get_site_url() );
@@ -218,7 +218,7 @@ class API {
 		$url = 'https://apiweb.inmovilla.com/apiweb/apiweb.php';
 
 		return self::execute_with_retry(
-			function () use ( $url, $args, $client_ip, $forwarded_ip ) {
+			function () use ( $url, $args, $server_ip ) {
 				$response = wp_remote_post( $url, $args );
 
 				self::save_inmovilla_cookies( $response );
@@ -256,15 +256,12 @@ class API {
 				if ( json_last_error() !== JSON_ERROR_NONE ) {
 					// Detect Inmovilla IP registration error (plain-text response, not JSON).
 					if ( is_string( $body ) && false !== stripos( $body, 'NECESITAMOS RECIBIR LA IP' ) ) {
-						$server_ip = self::get_server_public_ip();
 						return array(
 							'status'     => 'error',
 							'message'    => sprintf(
-								/* translators: 1: Server IP address, 2: ia param sent, 3: ib param sent */
-								__( 'Inmovilla API requires IP registration. Please provide your server IP (%1$s) to Inmovilla support so they can whitelist it. (ia=%2$s, ib=%3$s)', 'connect-crm-realstate' ),
-								$server_ip,
-								$client_ip,
-								$forwarded_ip
+								/* translators: %s: Server IP address */
+								__( 'Inmovilla API requires IP registration. Please provide your server IP (%s) to Inmovilla support so they can whitelist it.', 'connect-crm-realstate' ),
+								$server_ip
 							),
 							'data'       => array(),
 							'error_type' => 'ip_not_registered',
@@ -289,43 +286,6 @@ class API {
 			},
 			'Inmovilla API Web'
 		);
-	}
-
-	/**
-	 * Get client IP address
-	 *
-	 * Tries to get the real client IP from various proxy headers.
-	 * In cron/CLI context (no HTTP request), falls back to the server's public IP.
-	 *
-	 * @return string Client IP address.
-	 */
-	private static function get_client_ip() {
-		$proxy_headers = array(
-			'HTTP_CLIENT_IP',
-			'HTTP_X_FORWARDED_FOR',
-			'HTTP_X_FORWARDED',
-			'HTTP_FORWARDED_FOR',
-			'HTTP_FORWARDED',
-			'HTTP_CF_CONNECTING_IP',
-		);
-
-		foreach ( $proxy_headers as $key ) {
-			if ( ! empty( $_SERVER[ $key ] ) ) {
-				$ips = explode( ',', sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) ) );
-				$ip  = trim( $ips[0] );
-				if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
-					return $ip;
-				}
-			}
-		}
-
-		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-		if ( ! empty( $remote_addr ) && ! in_array( $remote_addr, array( '127.0.0.1', '::1' ), true ) ) {
-			return $remote_addr;
-		}
-
-		// Cron/CLI context: loopback or no REMOTE_ADDR — fall back to the server's public IP.
-		return self::get_server_public_ip();
 	}
 
 	/**
@@ -374,22 +334,6 @@ class API {
 		}
 
 		return '';
-	}
-
-	/**
-	 * Get forwarded IP address
-	 *
-	 * Gets the X-Forwarded-For header value for Inmovilla API.
-	 *
-	 * @return string Forwarded IP address.
-	 */
-	private static function get_forwarded_ip() {
-		if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-			return sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
-		}
-
-		// Cron/CLI context: no HTTP_X_FORWARDED_FOR header — fall back to the server's public IP.
-		return self::get_server_public_ip();
 	}
 
 	/**
