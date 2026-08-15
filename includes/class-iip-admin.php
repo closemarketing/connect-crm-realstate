@@ -314,7 +314,7 @@ class Admin {
 		// Import Properties tab.
 		echo '<a href="' . esc_url( '?page=ccrmre_options&tab=iip-import' ) . '" class="nav-tab ';
 		echo ( 'iip-import' === $active_tab ? 'nav-tab-active' : '' );
-		echo '">' . esc_html__( 'Import Properties', 'connect-crm-realstate' ) . '</a>';
+		echo '">' . esc_html__( 'Properties & Demands', 'connect-crm-realstate' ) . '</a>';
 
 		// Settings tab.
 		echo '<a href="' . esc_url( '?page=ccrmre_options&tab=iip-settings' ) . '" class="nav-tab ';
@@ -912,7 +912,7 @@ class Admin {
 
 		?>
 		<div class="connect-realstate-manual-action">
-			<h2><?php esc_html_e( 'Import Properties', 'connect-crm-realstate' ); ?></h2>
+			<h2><?php esc_html_e( 'Properties & Demands', 'connect-crm-realstate' ); ?></h2>
 
 			<!-- Import Statistics -->
 			<div class="ccrmre-import-stats">

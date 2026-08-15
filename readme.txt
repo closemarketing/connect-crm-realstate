@@ -65,7 +65,7 @@ Used to fetch property data when you use the Inmovilla Procesos CRM type. The pl
 3. Activate the plugin through the 'Plugins' screen in WordPress.
 4. Go to Connect CRM RealState > Settings to configure your CRM API credentials.
 5. Go to Merge Variables to map CRM fields to WordPress custom fields.
-6. Go to Import Properties to start importing.
+6. Go to Properties & Demands to start importing.
 
 == Frequently Asked Questions ==
 
@@ -87,7 +87,7 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 == Screenshots ==
 
-1. Import Properties dashboard with statistics
+1. Properties & Demands dashboard with statistics
 2. Settings page for CRM configuration
 3. Merge Variables field mapping interface
 4. Property gallery frontend display
