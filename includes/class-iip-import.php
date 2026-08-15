@@ -204,7 +204,7 @@ class Import {
 					);
 				}
 
-				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $error_message . '<br/>';
+				$progress_msg .= '[' . date_i18n( 'H:i:s' ) . '] <strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $error_message . self::format_ip_whitelist_notice( $result_api ) . '<br/>';
 
 				wp_send_json_error(
 					array(
@@ -292,7 +292,7 @@ class Import {
 					}
 
 					$progress_msg .= $line_prefix . esc_html( $id_display ) . ' ERR - ';
-					$progress_msg .= '<strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $result_get_property['message'] . '<br/>';
+					$progress_msg .= '<strong style="color:red;">' . __( 'API ERROR:', 'connect-crm-realstate' ) . '</strong> ' . $result_get_property['message'] . self::format_ip_whitelist_notice( $result_get_property ) . '<br/>';
 					wp_send_json_success(
 						array(
 							'loop'       => $loop + 1,
@@ -610,5 +610,21 @@ class Import {
 		$label  = __( 'Property', 'connect-crm-realstate' );
 		$suffix = self::format_title_city_suffix_static( $title, $city );
 		return '[' . $time . '] ' . (int) $index . ' - ' . $label . ' ' . (string) $ref . ' ' . $action . $suffix;
+	}
+
+	/**
+	 * Builds the "ask Inmovilla to whitelist this IP" link for the sync log.
+	 *
+	 * @param array $result API result array, possibly containing 'error_type' and 'mailto'.
+	 * @return string HTML snippet with a mailto link, or empty string when not applicable.
+	 */
+	private static function format_ip_whitelist_notice( $result ) {
+		if ( ! isset( $result['error_type'] ) || 'ip_not_registered' !== $result['error_type'] || empty( $result['mailto'] ) ) {
+			return '';
+		}
+
+		return ' <a href="' . esc_url( $result['mailto'] ) . '" target="_blank" rel="noopener noreferrer">'
+			. esc_html__( 'Request IP whitelist from Inmovilla support', 'connect-crm-realstate' )
+			. '</a>';
 	}
 }

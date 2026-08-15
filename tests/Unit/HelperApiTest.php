@@ -34,6 +34,15 @@ class HelperAPITest extends WP_UnitTestCase {
 	private $mock_api_error = false;
 
 	/**
+	 * When set, the APIWEB mock returns this raw string body (HTTP 200) instead
+	 * of the file-based JSON mock. Used to simulate Inmovilla's plain-text
+	 * die() responses (e.g. IP whitelist errors).
+	 *
+	 * @var string|null
+	 */
+	private $mock_apiweb_body = null;
+
+	/**
 	 * Set up test environment.
 	 */
 	public function setUp(): void {
@@ -41,6 +50,7 @@ class HelperAPITest extends WP_UnitTestCase {
 
 		$this->mock_api_properties = null;
 		$this->mock_api_error      = false;
+		$this->mock_apiweb_body    = null;
 		$this->cleanup_properties();
 
 		// Avoid sleep() in execute_with_retry when mock returns error (test_propagates_api_http_error, etc.).
@@ -93,6 +103,12 @@ class HelperAPITest extends WP_UnitTestCase {
 				return array(
 					'body'     => '',
 					'response' => array( 'code' => 500, 'message' => 'Internal Server Error' ),
+				);
+			}
+			if ( null !== $this->mock_apiweb_body ) {
+				return array(
+					'body'     => $this->mock_apiweb_body,
+					'response' => array( 'code' => 200, 'message' => 'OK' ),
 				);
 			}
 			$tipo = 'paginacion';
@@ -381,6 +397,56 @@ class HelperAPITest extends WP_UnitTestCase {
 		$this->assertSame( 'error', $result['status'] );
 		$this->assertArrayHasKey( 'message', $result );
 		$this->assertEmpty( $result['data'] );
+	}
+
+	/**
+	 * Inmovilla API (APIWEB): "NECESITAMOS RECIBIR LA IP" die() body is detected
+	 * as an IP whitelist error and produces a mailto link.
+	 */
+	public function test_inmovilla_api_detects_ip_whitelist_error_necesitamos() {
+		$this->mock_apiweb_body = 'die("NECESITAMOS RECIBIR LA IP");';
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '6533',
+				'apipassword' => 'test',
+				'post_type'   => 'property',
+			)
+		);
+
+		$result = API::request_inmovilla( 'paginacion', 1, 10 );
+
+		$this->assertSame( 'error', $result['status'] );
+		$this->assertSame( 'ip_not_registered', $result['error_type'] );
+		$this->assertArrayHasKey( 'mailto', $result );
+		$this->assertStringContainsString( 'mailto:soporte@inmovilla.com', $result['mailto'] );
+	}
+
+	/**
+	 * Inmovilla API (APIWEB): "xIP NO VALIDADA - IP_RECIVED: ..." die() body is
+	 * also detected as an IP whitelist error, extracting the reported IP.
+	 */
+	public function test_inmovilla_api_detects_ip_whitelist_error_ip_recived() {
+		$this->mock_apiweb_body = 'die("xIP NO VALIDADA - IP_RECIVED: 217.160.134.44 --- 12066_244_ext");';
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '6533',
+				'apipassword' => 'test',
+				'post_type'   => 'property',
+			)
+		);
+
+		$result = API::request_inmovilla( 'paginacion', 1, 10 );
+
+		$this->assertSame( 'error', $result['status'] );
+		$this->assertSame( 'ip_not_registered', $result['error_type'] );
+		$this->assertStringContainsString( '217.160.134.44', $result['message'] );
+		$this->assertArrayHasKey( 'mailto', $result );
+		$this->assertStringContainsString( 'mailto:soporte@inmovilla.com', $result['mailto'] );
+		$this->assertStringContainsString( rawurlencode( '217.160.134.44' ), $result['mailto'] );
 	}
 
 	/**
