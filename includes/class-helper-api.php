@@ -260,7 +260,9 @@ class API {
 						return $ip_error;
 					}
 					$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' );
-					$message .= is_string( $body ) ? ' - ' . $body : '';
+					// Escaped: this message is later rendered via innerHTML in iip-manual-sync.js,
+					// and $body is Inmovilla's raw response — untrusted, third-party content.
+					$message .= is_string( $body ) ? ' - ' . esc_html( $body ) : '';
 					return array(
 						'status'     => 'error',
 						'message'    => $message,
@@ -274,7 +276,8 @@ class API {
 					'data'   => $data,
 				);
 			},
-			'Inmovilla API Web'
+			'Inmovilla API Web',
+			true
 		);
 	}
 
@@ -362,13 +365,12 @@ class API {
 		$cached = get_option( 'ccrmre_server_public_ip' );
 		$expiry = get_option( 'ccrmre_server_public_ip_expiry', 0 );
 
-		$is_loopback = in_array( $cached, array( '127.0.0.1', '::1' ), true );
-		if ( ! empty( $cached ) && ! $is_loopback && time() < (int) $expiry ) {
+		if ( self::is_public_ip( $cached ) && time() < (int) $expiry ) {
 			return $cached;
 		}
 
 		$server_addr = isset( $_SERVER['SERVER_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_ADDR'] ) ) : '';
-		if ( ! empty( $server_addr ) && ! in_array( $server_addr, array( '127.0.0.1', '::1' ), true ) ) {
+		if ( self::is_public_ip( $server_addr ) ) {
 			update_option( 'ccrmre_server_public_ip', $server_addr, false );
 			update_option( 'ccrmre_server_public_ip_expiry', time() + DAY_IN_SECONDS, false );
 			return $server_addr;
@@ -377,7 +379,7 @@ class API {
 		$response = wp_remote_get( 'https://api.ipify.org', array( 'timeout' => 5 ) );
 		if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
 			$ip = trim( wp_remote_retrieve_body( $response ) );
-			if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			if ( self::is_public_ip( $ip ) ) {
 				update_option( 'ccrmre_server_public_ip', $ip, false );
 				update_option( 'ccrmre_server_public_ip_expiry', time() + DAY_IN_SECONDS, false );
 				return $ip;
@@ -385,7 +387,7 @@ class API {
 		}
 
 		$hostname_ip = gethostbyname( gethostname() );
-		if ( filter_var( $hostname_ip, FILTER_VALIDATE_IP ) ) {
+		if ( self::is_public_ip( $hostname_ip ) ) {
 			return $hostname_ip;
 		}
 
@@ -393,13 +395,34 @@ class API {
 	}
 
 	/**
+	 * Whether the given string is a publicly routable IP address.
+	 *
+	 * Rejects loopback, private (RFC1918), and reserved ranges: none of them
+	 * can represent the server's egress IP as seen by Inmovilla's firewall,
+	 * so accepting one here would send a value that can never be whitelisted
+	 * (e.g. a container's internal 10.x/172.16.x address).
+	 *
+	 * @param mixed $ip Value to validate.
+	 * @return bool
+	 */
+	private static function is_public_ip( $ip ) {
+		if ( empty( $ip ) || ! is_string( $ip ) ) {
+			return false;
+		}
+		return false !== filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
+	}
+
+	/**
 	 * Get path to Inmovilla API cookie jar file.
+	 *
+	 * Stored in the system temp dir, not wp-content/uploads: the uploads tree
+	 * is served directly by the web server on standard installs, which would
+	 * make these session cookies downloadable by anyone who guesses the path.
 	 *
 	 * @return string Absolute path to cookie file.
 	 */
 	private static function get_inmovilla_cookie_jar_path() {
-		$uploads = wp_upload_dir();
-		return $uploads['basedir'] . '/ccrmre_logs/inmovilla-cookies.txt';
+		return trailingslashit( get_temp_dir() ) . 'ccrmre-inmovilla-cookies.txt';
 	}
 
 	/**
@@ -585,7 +608,8 @@ class API {
 					'data'    => $data,
 				);
 			},
-			'Inmovilla Procesos API'
+			'Inmovilla Procesos API',
+			true
 		);
 	}
 
@@ -1801,9 +1825,13 @@ class API {
 	 *
 	 * @param callable $request_callback Function that makes the actual API request.
 	 * @param string   $api_name Name of the API (for logging).
+	 * @param bool     $is_inmovilla Whether this is an Inmovilla API call (APIWEB or Procesos).
+	 *                               Gates the "Información para soporte Inmovilla" diagnostic
+	 *                               block: appending it to an Anaconda error would point the
+	 *                               user at the wrong support channel.
 	 * @return array Response with status, message, and data.
 	 */
-	private static function execute_with_retry( $request_callback, $api_name = 'API' ) {
+	private static function execute_with_retry( $request_callback, $api_name = 'API', $is_inmovilla = false ) {
 		$attempt = 0;
 
 		while ( $attempt <= self::MAX_RETRIES ) {
@@ -1824,7 +1852,7 @@ class API {
 					__( '%s: Maximum retry attempts reached. Last error: ', 'connect-crm-realstate' ),
 					$api_name
 				) . $result['message'];
-				return self::log_inmovilla_support_error( $result );
+				return $is_inmovilla ? self::log_inmovilla_support_error( $result ) : $result;
 			}
 
 			// Detect error type and get wait time.
@@ -1832,13 +1860,13 @@ class API {
 
 			// If IP is not registered, retrying will never help — return immediately.
 			if ( 'ip_not_registered' === $error_type ) {
-				return self::log_inmovilla_support_error( $result );
+				return $is_inmovilla ? self::log_inmovilla_support_error( $result ) : $result;
 			}
 
 			// If skip_retry is enabled (manual import), return immediately.
 			if ( self::$skip_retry ) {
 				$result['error_type'] = $error_type;
-				return self::log_inmovilla_support_error( $result );
+				return $is_inmovilla ? self::log_inmovilla_support_error( $result ) : $result;
 			}
 
 			$retry_config = isset( self::RETRY_CONFIG[ $error_type ] ) ? self::RETRY_CONFIG[ $error_type ] : self::RETRY_CONFIG['default'];
@@ -1875,6 +1903,26 @@ class API {
 		$id_petition = wp_rand( 100000, 999999 ) . '_' . time();
 		$req_body    = isset( $result['request']['body'] ) ? $result['request']['body'] : '';
 		$resp_body   = isset( $result['response']['body'] ) ? $result['response']['body'] : $result['message'];
+
+		// Redact the API password before it can reach a log, an on-screen message, or a
+		// support ticket: $req_body's "param=" value is "numagencia;apipassword;...",
+		// urlencoded, so it's decoded, the second field is blanked, then re-encoded.
+		$req_body = preg_replace_callback(
+			'/(?<=^param=)[^&]*/',
+			function ( $matches ) {
+				$fields = explode( ';', rawurldecode( $matches[0] ) );
+				if ( isset( $fields[1] ) ) {
+					$fields[1] = '***REDACTED***';
+				}
+				return rawurlencode( implode( ';', $fields ) );
+			},
+			$req_body
+		);
+
+		// The response body can contain markup from Inmovilla's own error pages; it's
+		// rendered via innerHTML in iip-manual-sync.js, so it must be escaped before
+		// being folded into the user-facing message, not just logged as plain text.
+		$resp_body = esc_html( $resp_body );
 
 		$log  = PHP_EOL . 'Información para soporte Inmovilla:' . PHP_EOL;
 		$log .= gmdate( 'Y-m-d H:i:s' ) . " - id_petition: {$id_petition} - parametros: {$req_body}" . PHP_EOL;

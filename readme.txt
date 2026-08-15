@@ -55,8 +55,11 @@ This plugin connects to third-party real estate CRM APIs to import property data
 **Anaconda (api.anaconda.guru)**  
 Used to fetch property listings and details. The plugin sends your configured API credentials and request parameters (e.g. filters, pagination) when you use the Anaconda CRM type. Data is sent only when importing or syncing. Check your Anaconda provider or contract for [terms](https://www.anacondasolutions.es/aviso-legal/) and [privacy](https://www.anacondasolutions.es/politica-de-privacidad/).
 
-**Inmovilla**  
+**Inmovilla**
 Used to fetch property data when you use the Inmovilla Procesos CRM type. The plugin sends your API credentials and request parameters only during import or sync. Inmovilla [terms](https://inmovilla.com/aviso-legal/) and [privacy policy](https://www.inmovilla.com/politica-de-privacidad/)
+
+**ipify (api.ipify.org)**
+Inmovilla APIWEB requires your server's public IP address to be whitelisted. If it can't be read from the server environment (e.g. behind certain proxies or containers), the plugin requests it from api.ipify.org, which returns only the IP address of the request — no other site or visitor data is sent. This call only happens when using the Inmovilla APIWEB CRM type and the server IP can't otherwise be determined. ipify [terms](https://www.ipify.org/) and [privacy policy](https://www.ipify.org/).
 
 == Installation ==
 
