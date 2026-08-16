@@ -229,7 +229,10 @@ class API {
 						'message'    => $response->get_error_message(),
 						'data'       => array(),
 						'error_type' => self::detect_error_type( $response, 0 ),
-						'request'    => array( 'url' => $url, 'body' => $args['body'] ?? '' ),
+						'request'    => array(
+							'url'  => $url,
+							'body' => $args['body'] ?? '',
+						),
 					);
 				}
 
@@ -246,8 +249,14 @@ class API {
 						),
 						'data'       => array(),
 						'error_type' => self::detect_error_type( $response, $code ),
-						'request'    => array( 'url' => $url, 'body' => $args['body'] ?? '' ),
-						'response'   => array( 'code' => $code, 'body' => $body ),
+						'request'    => array(
+							'url'  => $url,
+							'body' => $args['body'] ?? '',
+						),
+						'response'   => array(
+							'code' => $code,
+							'body' => $body,
+						),
 					);
 				}
 
@@ -259,7 +268,7 @@ class API {
 					if ( null !== $ip_error ) {
 						return $ip_error;
 					}
-					$message  = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' );
+					$message = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' );
 					// Escaped: this message is later rendered via innerHTML in iip-manual-sync.js,
 					// and $body is Inmovilla's raw response — untrusted, third-party content.
 					$message .= is_string( $body ) ? ' - ' . esc_html( $body ) : '';
@@ -587,7 +596,10 @@ class API {
 						'data'       => array(),
 						'error_type' => $error_type,
 						'request'    => $request_info,
-						'response'   => array( 'code' => $code, 'body' => $result_body ),
+						'response'   => array(
+							'code' => $code,
+							'body' => $result_body,
+						),
 					);
 				}
 
