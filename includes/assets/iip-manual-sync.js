@@ -17,68 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 
-	// Accordion functionality for automatic sync logs.
-	const logItems = document.querySelectorAll('.ccrmre-log-item');
-	
-	logItems.forEach(item => {
-		const header = item.querySelector('.ccrmre-log-header');
-		const content = item.querySelector('.ccrmre-log-content');
-		const toggle = item.querySelector('.ccrmre-log-toggle');
-		
-		header.addEventListener('click', function() {
-			const isOpen = content.style.display === 'block';
-			
-			if (isOpen) {
-				// Close accordion.
-				content.style.display = 'none';
-				toggle.classList.remove('dashicons-arrow-down');
-				toggle.classList.add('dashicons-arrow-right');
-				item.classList.remove('active');
-			} else {
-				// Open accordion and load content if not already loaded.
-				content.style.display = 'block';
-				toggle.classList.remove('dashicons-arrow-right');
-				toggle.classList.add('dashicons-arrow-down');
-				item.classList.add('active');
-				
-				// Load content via AJAX if not already loaded.
-				if (!content.classList.contains('loaded')) {
-					const filename = item.getAttribute('data-filename');
-					
-					fetch(ccrmre_ajax_action.url, {
-						method: 'POST',
-						credentials: 'same-origin',
-						headers: {
-							'Content-Type': 'application/x-www-form-urlencoded',
-						},
-						body: 'action=ccrmre_load_log_content&nonce=' + ccrmre_ajax_action.nonce + '&filename=' + encodeURIComponent(filename),
-					})
-					.then( function( resp ) { return resp.text(); } )
-					.then( function( text ) {
-						try {
-							return JSON.parse( text );
-						} catch ( e ) {
-							console.error( 'Log content response was not JSON:', text.substring( 0, 500 ) );
-							throw new Error( 'Server returned an invalid response. Check the PHP error log.' );
-						}
-					} )
-					.then(function(response) {
-						if (response && response.success) {
-							content.innerHTML = '<div class="ccrmre-log-data">' + response.data.content + '</div>';
-							content.classList.add('loaded');
-						} else {
-							const errorMsg = (response && response.data && response.data.message) ? response.data.message : 'Error loading log';
-							content.innerHTML = '<div class="error" style="padding: 10px; color: red;">' + errorMsg + '</div>';
-						}
-					})
-					.catch(err => {
-						console.error('Error loading log:', err);
-						content.innerHTML = '<div class="error" style="padding: 10px; color: red;">Error: ' + err.message + '</div>';
-					});
-				}
-			}
-		});
-	});
+	// Automatic sync log accordion is handled by connect-crm-realstate-pro's pro-cron-logs.js.
 });
 
 /**
