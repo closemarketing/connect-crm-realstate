@@ -43,6 +43,13 @@ class HelperAPITest extends WP_UnitTestCase {
 	private $mock_apiweb_body = null;
 
 	/**
+	 * Body of the latest APIWEB request received by the HTTP mock.
+	 *
+	 * @var string
+	 */
+	private $mock_apiweb_request_body = '';
+
+	/**
 	 * Set up test environment.
 	 */
 	public function setUp(): void {
@@ -51,6 +58,7 @@ class HelperAPITest extends WP_UnitTestCase {
 		$this->mock_api_properties = null;
 		$this->mock_api_error      = false;
 		$this->mock_apiweb_body    = null;
+		$this->mock_apiweb_request_body = '';
 		$this->cleanup_properties();
 
 		// Avoid sleep() in execute_with_retry when mock returns error (test_propagates_api_http_error, etc.).
@@ -99,6 +107,8 @@ class HelperAPITest extends WP_UnitTestCase {
 	public function mock_http_request( $pre, $args, $url ) {
 		// Inmovilla APIWEB (apiweb.inmovilla.com): POST with param= encoded body; tipo is 5th field (index 4).
 		if ( false !== strpos( $url, 'apiweb.inmovilla.com' ) ) {
+			$this->mock_apiweb_request_body = isset( $args['body'] ) ? $args['body'] : '';
+
 			if ( $this->mock_api_error ) {
 				return array(
 					'body'     => '',
@@ -321,6 +331,45 @@ class HelperAPITest extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'nodisponible', $first );
 		$this->assertArrayHasKey( 'fechaact', $first );
 		$this->assertArrayHasKey( 'keyprov', $first );
+	}
+
+	/**
+	 * Inmovilla APIWEB: saved IA and IB values override calculated defaults.
+	 */
+	public function test_inmovilla_api_uses_configured_ia_and_ib() {
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '6533',
+				'apipassword' => 'test',
+				'ia'          => '8.8.8.8',
+				'ib'          => '1.1.1.1',
+				'post_type'   => 'property',
+			)
+		);
+
+		$result = API::request_inmovilla( 'paginacion', 1, 10 );
+
+		$this->assertSame( 'ok', $result['status'] );
+		$this->assertStringContainsString( '&ia=8.8.8.8', $this->mock_apiweb_request_body );
+		$this->assertStringContainsString( '&ib=1.1.1.1', $this->mock_apiweb_request_body );
+	}
+
+	/**
+	 * Inmovilla APIWEB: proxy-provided client IP takes precedence over localhost.
+	 */
+	public function test_inmovilla_client_ip_uses_forwarded_header() {
+		$server = $_SERVER;
+
+		$_SERVER['REMOTE_ADDR']          = '127.0.0.1';
+		$_SERVER['HTTP_X_FORWARDED_FOR'] = '81.37.169.155, 127.0.0.1';
+
+		try {
+			$this->assertSame( '81.37.169.155', API::get_inmovilla_client_ip() );
+		} finally {
+			$_SERVER = $server;
+		}
 	}
 
 	/**
@@ -1305,4 +1354,3 @@ class HelperAPITest extends WP_UnitTestCase {
 		}
 	}
 }
-

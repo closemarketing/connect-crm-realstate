@@ -16,7 +16,9 @@
 		function toggleInmovillaFields() {
 			var selectedType = $('#type').val();
 			var inmovillaFields = [
-				'#numagencia'
+				'#numagencia',
+				'#ccrmre_inmovilla_ia',
+				'#ccrmre_inmovilla_ib'
 			];
 
 			inmovillaFields.forEach(function(fieldId) {
