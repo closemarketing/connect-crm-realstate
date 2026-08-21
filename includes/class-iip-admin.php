@@ -453,15 +453,6 @@ class Admin {
 			}
 		}
 
-		$ib = isset( $settings['ib'] ) ? $settings['ib'] : '';
-		if ( false === filter_var( $ib, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
-			$server_ip = API::get_inmovilla_server_ip();
-			if ( false !== filter_var( $server_ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
-				$settings['ib'] = $server_ip;
-				$updated        = true;
-			}
-		}
-
 		if ( $updated ) {
 			update_option( 'ccrmre_settings', $settings );
 		}
@@ -725,7 +716,7 @@ class Admin {
 			'apipassword',
 			'numagencia',
 			'ia',
-			'ib',
+			'ib_override',
 			'post_type',
 			'post_type_slug',
 			'sold_action',
@@ -753,6 +744,11 @@ class Admin {
 			if ( isset( $input[ $field_value ] ) ) {
 				$sanitary_values[ $field_value ] = sanitize_text_field( $input[ $field_value ] );
 			}
+		}
+
+		$sanitary_values['ib_override'] = isset( $input['ib_override'] ) && 'yes' === $input['ib_override'] ? 'yes' : 'no';
+		if ( 'yes' === $sanitary_values['ib_override'] ) {
+			$sanitary_values['ib'] = isset( $input['ib'] ) ? sanitize_text_field( $input['ib'] ) : '';
 		}
 
 		foreach ( array( 'ia', 'ib' ) as $ip_field ) {
@@ -861,15 +857,16 @@ class Admin {
 	 * @return void
 	 */
 	public function inmovilla_ib_callback() {
-		$ib = isset( $this->settings['ib'] ) ? $this->settings['ib'] : '';
-		if ( false === filter_var( $ib, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
-			$ib = API::get_inmovilla_server_ip();
-		}
+		$is_override = isset( $this->settings['ib_override'] ) && 'yes' === $this->settings['ib_override'];
+		$ib          = $is_override && isset( $this->settings['ib'] ) ? $this->settings['ib'] : API::get_inmovilla_server_ip();
 
 		printf(
-			'<input class="regular-text" type="text" name="ccrmre_settings[ib]" id="ccrmre_inmovilla_ib" value="%s"><br><small>%s</small>',
+			'<label><input type="checkbox" name="ccrmre_settings[ib_override]" id="ccrmre_inmovilla_ib_override" value="yes" %1$s> %2$s</label><br><input class="regular-text" type="text" name="ccrmre_settings[ib]" id="ccrmre_inmovilla_ib" value="%3$s" %4$s><br><small>%5$s</small>',
+			checked( $is_override, true, false ),
+			esc_html__( 'Override the calculated server IP', 'connect-crm-realstate' ),
 			esc_attr( $ib ),
-			esc_html__( 'Calculated from the public IP address of the server. You can override it if needed.', 'connect-crm-realstate' )
+			disabled( $is_override, false, false ),
+			esc_html__( 'Leave the override value empty to send IB empty, as required by some proxy configurations.', 'connect-crm-realstate' )
 		);
 	}
 

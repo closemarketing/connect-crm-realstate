@@ -345,6 +345,7 @@ class HelperAPITest extends WP_UnitTestCase {
 				'apipassword' => 'test',
 				'ia'          => '8.8.8.8',
 				'ib'          => '1.1.1.1',
+				'ib_override' => 'yes',
 				'post_type'   => 'property',
 			)
 		);
@@ -354,6 +355,71 @@ class HelperAPITest extends WP_UnitTestCase {
 		$this->assertSame( 'ok', $result['status'] );
 		$this->assertStringContainsString( '&ia=8.8.8.8', $this->mock_apiweb_request_body );
 		$this->assertStringContainsString( '&ib=1.1.1.1', $this->mock_apiweb_request_body );
+	}
+
+	/**
+	 * Inmovilla APIWEB: an explicit blank IB override is sent as blank.
+	 */
+	public function test_inmovilla_api_allows_blank_ib_override() {
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '6533',
+				'apipassword' => 'test',
+				'ia'          => '8.8.8.8',
+				'ib'          => '',
+				'ib_override' => 'yes',
+				'post_type'   => 'property',
+			)
+		);
+
+		$result = API::request_inmovilla( 'paginacion', 1, 10 );
+
+		$this->assertSame( 'ok', $result['status'] );
+		$this->assertStringContainsString( '&ib=&elDominio=', $this->mock_apiweb_request_body );
+	}
+
+	/**
+	 * Inmovilla APIWEB: unattended requests use the server IP for IA.
+	 */
+	public function test_inmovilla_api_uses_server_ip_for_missing_ia() {
+		$server        = $_SERVER;
+		$cached_ip     = get_option( 'ccrmre_server_public_ip', false );
+		$cached_expiry = get_option( 'ccrmre_server_public_ip_expiry', false );
+
+		$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+		update_option( 'ccrmre_server_public_ip', '8.8.4.4' );
+		update_option( 'ccrmre_server_public_ip_expiry', time() + HOUR_IN_SECONDS );
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '6533',
+				'apipassword' => 'test',
+				'ib_override' => 'yes',
+				'ib'          => '',
+				'post_type'   => 'property',
+			)
+		);
+
+		try {
+			$result = API::request_inmovilla( 'paginacion', 1, 10 );
+			$this->assertSame( 'ok', $result['status'] );
+			$this->assertStringContainsString( '&ia=8.8.4.4', $this->mock_apiweb_request_body );
+		} finally {
+			$_SERVER = $server;
+			if ( false === $cached_ip ) {
+				delete_option( 'ccrmre_server_public_ip' );
+			} else {
+				update_option( 'ccrmre_server_public_ip', $cached_ip );
+			}
+			if ( false === $cached_expiry ) {
+				delete_option( 'ccrmre_server_public_ip_expiry' );
+			} else {
+				update_option( 'ccrmre_server_public_ip_expiry', $cached_expiry );
+			}
+		}
 	}
 
 	/**

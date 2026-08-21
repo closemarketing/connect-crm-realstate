@@ -31,12 +31,21 @@
 			});
 		}
 
+		function toggleIbOverride() {
+			$('#ccrmre_inmovilla_ib').prop('disabled', ! $('#ccrmre_inmovilla_ib_override').is(':checked'));
+		}
+
 		// Initial state on page load.
 		toggleInmovillaFields();
+		toggleIbOverride();
 
 		// Toggle on CRM type change.
 		$('#type').on('change', function() {
 			toggleInmovillaFields();
+		});
+
+		$('#ccrmre_inmovilla_ib_override').on('change', function() {
+			toggleIbOverride();
 		});
 	});
 

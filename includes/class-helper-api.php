@@ -181,12 +181,22 @@ class API {
 		$texto = rawurlencode( $texto );
 
 		// Build POST body with IP tracking for API security.
-		$ia        = self::get_configured_inmovilla_ip( $settings, 'ia', self::get_inmovilla_client_ip() );
-		$server_ip = self::get_configured_inmovilla_ip( $settings, 'ib', self::get_inmovilla_server_ip() );
-		$body      = 'param=' . $texto;
-		$body     .= '&json=1'; // Request JSON response.
-		$body     .= '&ia=' . rawurlencode( $ia );
-		$body     .= '&ib=' . rawurlencode( $server_ip );
+		$ia = self::get_configured_inmovilla_ip( $settings, 'ia' );
+		if ( '' === $ia ) {
+			$ia = self::get_inmovilla_client_ip();
+		}
+		if ( '' === $ia ) {
+			$ia = self::get_inmovilla_server_ip();
+		}
+
+		$server_ip = self::get_configured_inmovilla_ib( $settings );
+		if ( null === $server_ip ) {
+			$server_ip = self::get_inmovilla_server_ip();
+		}
+		$body  = 'param=' . $texto;
+		$body .= '&json=1'; // Request JSON response.
+		$body .= '&ia=' . rawurlencode( $ia );
+		$body .= '&ib=' . rawurlencode( $server_ip );
 
 		// Add domain to the request, matching the official Inmovilla client order.
 		$parsed_url = wp_parse_url( get_site_url() );
@@ -398,21 +408,39 @@ class API {
 	}
 
 	/**
-	 * Get a valid administrator override or use the calculated IP address.
+	 * Get a valid administrator override for IA.
 	 *
 	 * @param array  $settings Plugin settings.
 	 * @param string $key Setting key.
-	 * @param string $fallback_ip Calculated fallback IP address.
 	 * @return string IP address.
 	 */
-	private static function get_configured_inmovilla_ip( $settings, $key, $fallback_ip ) {
+	private static function get_configured_inmovilla_ip( $settings, $key ) {
 		$ip = isset( $settings[ $key ] ) ? $settings[ $key ] : '';
 
 		if ( is_string( $ip ) && self::is_public_ip( $ip ) ) {
 			return $ip;
 		}
 
-		return $fallback_ip;
+		return '';
+	}
+
+	/**
+	 * Get the IB override, including an explicitly empty override.
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return string|null IP address or empty string for an explicit blank override; null for automatic mode.
+	 */
+	private static function get_configured_inmovilla_ib( $settings ) {
+		if ( ! isset( $settings['ib_override'] ) || 'yes' !== $settings['ib_override'] ) {
+			return null;
+		}
+
+		$ip = isset( $settings['ib'] ) ? $settings['ib'] : '';
+		if ( '' === $ip ) {
+			return '';
+		}
+
+		return self::is_public_ip( $ip ) ? $ip : null;
 	}
 
 	/**
