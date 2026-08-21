@@ -59,7 +59,7 @@ Used to fetch property listings and details. The plugin sends your configured AP
 Used to fetch property data when you use the Inmovilla Procesos CRM type. The plugin sends your API credentials and request parameters only during import or sync. Inmovilla [terms](https://inmovilla.com/aviso-legal/) and [privacy policy](https://www.inmovilla.com/politica-de-privacidad/)
 
 **ipify (api.ipify.org)**
-Inmovilla APIWEB requires your server's public IP address to be whitelisted. If it can't be read from the server environment (e.g. behind certain proxies or containers), the plugin requests it from api.ipify.org, which returns only the IP address of the request — no other site or visitor data is sent. This call only happens when using the Inmovilla APIWEB CRM type and the server IP can't otherwise be determined. ipify [terms](https://www.ipify.org/) and [privacy policy](https://www.ipify.org/).
+Inmovilla APIWEB requires IP parameters. If the server's public IP can't be read from the server environment (e.g. behind certain proxies or containers), the plugin requests it from api.ipify.org. When the administrator's browser IP (IA) is unavailable, it requests that IP directly from the browser while visiting the plugin settings. ipify returns only the IP address of the request — no other site or visitor data is sent. These calls only happen when using the Inmovilla APIWEB CRM type and the relevant IP can't otherwise be determined. ipify [terms](https://www.ipify.org/) and [privacy policy](https://www.ipify.org/).
 
 == Installation ==
 
@@ -98,6 +98,7 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 == Changelog ==
 
 = 1.2.5 =
+* Added configurable IA and IB IP parameters for Inmovilla APIWEB connections. IA defaults to the current user's IP address and IB to the server's public IP address.
 * Fixed: automatic sync error due to IP address change.
 * Fix cron import not getting IP address for Inmovilla APIWEB, causing registration errors and failed imports.
 

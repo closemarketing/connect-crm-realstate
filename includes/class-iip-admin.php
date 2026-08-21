@@ -45,6 +45,7 @@ class Admin {
 		add_action( 'admin_notices', array( $this, 'show_admin_notices' ) );
 		add_action( 'wp_ajax_ccrmre_auto_map_fields', array( $this, 'ajax_auto_map_fields' ) );
 		add_action( 'wp_ajax_ccrmre_import_enums', array( $this, 'ajax_import_enums' ) );
+		add_action( 'wp_ajax_ccrmre_store_inmovilla_client_ip', array( $this, 'ajax_store_inmovilla_client_ip' ) );
 	}
 
 	/**
@@ -58,6 +59,28 @@ class Admin {
 		}
 
 		$active_tab = ( isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'iip-import' );
+		$settings   = get_option( 'ccrmre_settings', array() );
+		$ia         = isset( $settings['ia'] ) ? $settings['ia'] : '';
+
+		// Studio and other local proxies do not always forward the browser IP to PHP.
+		if ( isset( $settings['type'] ) && 'inmovilla' === $settings['type'] && false === filter_var( $ia, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+			wp_enqueue_script(
+				'ccrmre-client-ip',
+				plugin_dir_url( __FILE__ ) . 'assets/iip-client-ip.js',
+				array(),
+				CCRMRE_VERSION,
+				true
+			);
+			wp_localize_script(
+				'ccrmre-client-ip',
+				'ccrmreClientIp',
+				array(
+					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+					'nonce'      => wp_create_nonce( 'ccrmre_store_inmovilla_client_ip_nonce' ),
+					'reloadPage' => 'iip-settings' === $active_tab,
+				)
+			);
+		}
 
 		if ( 'iip-merge' === $active_tab ) {
 			$merge_fields = get_option( 'ccrmre_merge_fields' );
@@ -302,6 +325,7 @@ class Admin {
 	 * @return void
 	 */
 	public function plugin_options_page() {
+		$this->ensure_inmovilla_ip_settings();
 		$this->settings        = get_option( 'ccrmre_settings' );
 		$this->settings_fields = get_option( 'ccrmre_merge_fields' );
 
@@ -402,6 +426,36 @@ class Admin {
 		do_action( 'ccrmre_admin_tab_content', $active_tab );
 
 		echo '</div>';
+	}
+
+	/**
+	 * Calculate missing Inmovilla APIWEB IP settings when visiting the plugin.
+	 *
+	 * IA is populated from the request when the proxy exposes a public client
+	 * IP. IA otherwise remains available for the browser-side lookup. IB is
+	 * always calculated from the server's public outbound IP.
+	 *
+	 * @return void
+	 */
+	private function ensure_inmovilla_ip_settings() {
+		$settings = get_option( 'ccrmre_settings', array() );
+		if ( ! is_array( $settings ) || ! isset( $settings['type'] ) || 'inmovilla' !== $settings['type'] ) {
+			return;
+		}
+
+		$updated = false;
+		$ia      = isset( $settings['ia'] ) ? $settings['ia'] : '';
+		if ( false === filter_var( $ia, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+			$client_ip = API::get_inmovilla_client_ip();
+			if ( false !== filter_var( $client_ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+				$settings['ia'] = $client_ip;
+				$updated        = true;
+			}
+		}
+
+		if ( $updated ) {
+			update_option( 'ccrmre_settings', $settings );
+		}
 	}
 
 	/**
@@ -521,6 +575,22 @@ class Admin {
 				'ccrmre_numagencia',
 				__( 'Agency Number', 'connect-crm-realstate' ),
 				array( $this, 'numagencia_callback' ),
+				'ccrmre_settings',
+				'ccrmre_admin_settings'
+			);
+
+			add_settings_field(
+				'ccrmre_inmovilla_ia',
+				__( 'User IP (IA)', 'connect-crm-realstate' ),
+				array( $this, 'inmovilla_ia_callback' ),
+				'ccrmre_settings',
+				'ccrmre_admin_settings'
+			);
+
+			add_settings_field(
+				'ccrmre_inmovilla_ib',
+				__( 'Server IP (IB)', 'connect-crm-realstate' ),
+				array( $this, 'inmovilla_ib_callback' ),
 				'ccrmre_settings',
 				'ccrmre_admin_settings'
 			);
@@ -645,6 +715,8 @@ class Admin {
 			'type',
 			'apipassword',
 			'numagencia',
+			'ia',
+			'ib_override',
 			'post_type',
 			'post_type_slug',
 			'sold_action',
@@ -671,6 +743,30 @@ class Admin {
 		foreach ( $field_values as $field_value ) {
 			if ( isset( $input[ $field_value ] ) ) {
 				$sanitary_values[ $field_value ] = sanitize_text_field( $input[ $field_value ] );
+			}
+		}
+
+		$sanitary_values['ib_override'] = isset( $input['ib_override'] ) && 'yes' === $input['ib_override'] ? 'yes' : 'no';
+		if ( 'yes' === $sanitary_values['ib_override'] ) {
+			$sanitary_values['ib'] = isset( $input['ib'] ) ? sanitize_text_field( $input['ib'] ) : '';
+		}
+
+		foreach ( array( 'ia', 'ib' ) as $ip_field ) {
+			if ( empty( $sanitary_values[ $ip_field ] ) ) {
+				continue;
+			}
+
+			if ( false === filter_var( $sanitary_values[ $ip_field ], FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+				$sanitary_values[ $ip_field ] = '';
+				add_settings_error(
+					'ccrmre_settings',
+					'invalid_' . $ip_field,
+					sprintf(
+						/* translators: %s: Inmovilla parameter name. */
+						__( '%s must be a public IP address.', 'connect-crm-realstate' ),
+						strtoupper( $ip_field )
+					)
+				);
 			}
 		}
 
@@ -734,6 +830,43 @@ class Admin {
 			'<input class="regular-text" type="text" name="ccrmre_settings[numagencia]" id="numagencia" value="%s"><br><small>%s</small>',
 			isset( $this->settings['numagencia'] ) ? esc_attr( $this->settings['numagencia'] ) : '',
 			esc_html__( 'API Username', 'connect-crm-realstate' )
+		);
+	}
+
+	/**
+	 * IA callback (Inmovilla APIWEB only).
+	 *
+	 * @return void
+	 */
+	public function inmovilla_ia_callback() {
+		$ia = isset( $this->settings['ia'] ) ? $this->settings['ia'] : '';
+		if ( false === filter_var( $ia, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+			$ia = API::get_inmovilla_client_ip();
+		}
+
+		printf(
+			'<input class="regular-text" type="text" name="ccrmre_settings[ia]" id="ccrmre_inmovilla_ia" value="%s"><br><small>%s</small>',
+			esc_attr( $ia ),
+			esc_html__( 'Calculated from the IP address of the current user. You can override it if needed.', 'connect-crm-realstate' )
+		);
+	}
+
+	/**
+	 * IB callback (Inmovilla APIWEB only).
+	 *
+	 * @return void
+	 */
+	public function inmovilla_ib_callback() {
+		$is_override = isset( $this->settings['ib_override'] ) && 'yes' === $this->settings['ib_override'];
+		$ib          = $is_override && isset( $this->settings['ib'] ) ? $this->settings['ib'] : API::get_inmovilla_server_ip();
+
+		printf(
+			'<label><input type="checkbox" name="ccrmre_settings[ib_override]" id="ccrmre_inmovilla_ib_override" value="yes" %1$s> %2$s</label><br><input class="regular-text" type="text" name="ccrmre_settings[ib]" id="ccrmre_inmovilla_ib" value="%3$s" %4$s><br><small>%5$s</small>',
+			checked( $is_override, true, false ),
+			esc_html__( 'Override the calculated server IP', 'connect-crm-realstate' ),
+			esc_attr( $ib ),
+			disabled( $is_override, false, false ),
+			esc_html__( 'Leave the override value empty to send IB empty, as required by some proxy configurations.', 'connect-crm-realstate' )
 		);
 	}
 
@@ -1360,6 +1493,41 @@ class Admin {
 		}
 
 		wp_send_json_success( array( 'steps' => $steps ) );
+	}
+
+	/**
+	 * Store the public IP detected in the administrator's browser for APIWEB.
+	 *
+	 * @return void
+	 */
+	public function ajax_store_inmovilla_client_ip() {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'ccrmre_store_inmovilla_client_ip_nonce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed', 'connect-crm-realstate' ) ) );
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions', 'connect-crm-realstate' ) ) );
+		}
+
+		$ip = isset( $_POST['ip'] ) ? sanitize_text_field( wp_unslash( $_POST['ip'] ) ) : '';
+		if ( false === filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+			wp_send_json_error( array( 'message' => __( 'A public IP address is required.', 'connect-crm-realstate' ) ) );
+		}
+
+		$settings = get_option( 'ccrmre_settings', array() );
+		if ( ! is_array( $settings ) || ! isset( $settings['type'] ) || 'inmovilla' !== $settings['type'] ) {
+			wp_send_json_error( array( 'message' => __( 'Inmovilla APIWEB is not configured.', 'connect-crm-realstate' ) ) );
+		}
+
+		$current_ip = isset( $settings['ia'] ) ? $settings['ia'] : '';
+		if ( false !== filter_var( $current_ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+			wp_send_json_success( array( 'updated' => false ) );
+		}
+
+		$settings['ia'] = $ip;
+		update_option( 'ccrmre_settings', $settings );
+
+		wp_send_json_success( array( 'updated' => true ) );
 	}
 
 	/**

@@ -16,7 +16,9 @@
 		function toggleInmovillaFields() {
 			var selectedType = $('#type').val();
 			var inmovillaFields = [
-				'#numagencia'
+				'#numagencia',
+				'#ccrmre_inmovilla_ia',
+				'#ccrmre_inmovilla_ib'
 			];
 
 			inmovillaFields.forEach(function(fieldId) {
@@ -29,12 +31,21 @@
 			});
 		}
 
+		function toggleIbOverride() {
+			$('#ccrmre_inmovilla_ib').prop('disabled', ! $('#ccrmre_inmovilla_ib_override').is(':checked'));
+		}
+
 		// Initial state on page load.
 		toggleInmovillaFields();
+		toggleIbOverride();
 
 		// Toggle on CRM type change.
 		$('#type').on('change', function() {
 			toggleInmovillaFields();
+		});
+
+		$('#ccrmre_inmovilla_ib_override').on('change', function() {
+			toggleIbOverride();
 		});
 	});
 

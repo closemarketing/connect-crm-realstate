@@ -181,14 +181,22 @@ class API {
 		$texto = rawurlencode( $texto );
 
 		// Build POST body with IP tracking for API security.
-		// Inmovilla whitelists the server's IP, not the visitor triggering the
-		// request, so ia/ib always carry the server's own public IP — the same
-		// value regardless of whether this runs from a browser click or cron.
-		$server_ip = self::get_server_public_ip();
-		$body      = 'param=' . $texto;
-		$body     .= '&json=1'; // Request JSON response.
-		$body     .= '&ia=' . $server_ip;
-		$body     .= '&ib=' . $server_ip;
+		$ia = self::get_configured_inmovilla_ip( $settings, 'ia' );
+		if ( '' === $ia ) {
+			$ia = self::get_inmovilla_client_ip();
+		}
+		if ( '' === $ia ) {
+			$ia = self::get_inmovilla_server_ip();
+		}
+
+		$server_ip = self::get_configured_inmovilla_ib( $settings );
+		if ( null === $server_ip ) {
+			$server_ip = self::get_inmovilla_server_ip();
+		}
+		$body  = 'param=' . $texto;
+		$body .= '&json=1'; // Request JSON response.
+		$body .= '&ia=' . rawurlencode( $ia );
+		$body .= '&ib=' . rawurlencode( $server_ip );
 
 		// Add domain to the request, matching the official Inmovilla client order.
 		$parsed_url = wp_parse_url( get_site_url() );
@@ -354,6 +362,85 @@ class API {
 			'error_type' => 'ip_not_registered',
 			'mailto'     => $mailto,
 		);
+	}
+
+	/**
+	 * Get the IP address of the user making the current request.
+	 *
+	 * Studio and many managed hosts proxy requests through localhost, so prefer
+	 * the client IP headers supplied by that proxy before using REMOTE_ADDR.
+	 *
+	 * @return string IP address or empty string when unavailable.
+	 */
+	public static function get_inmovilla_client_ip() {
+		$header_keys = array(
+			'HTTP_CF_CONNECTING_IP',
+			'HTTP_X_FORWARDED_FOR',
+			'HTTP_X_REAL_IP',
+		);
+
+		foreach ( $header_keys as $header_key ) {
+			if ( empty( $_SERVER[ $header_key ] ) ) {
+				continue;
+			}
+
+			$ips = explode( ',', sanitize_text_field( wp_unslash( $_SERVER[ $header_key ] ) ) );
+			foreach ( $ips as $ip ) {
+				$ip = trim( $ip );
+				if ( self::is_public_ip( $ip ) ) {
+					return $ip;
+				}
+			}
+		}
+
+		$client_ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+
+		return self::is_public_ip( $client_ip ) ? $client_ip : '';
+	}
+
+	/**
+	 * Get the default server IP sent as the Inmovilla IB parameter.
+	 *
+	 * @return string Public IP address or empty string on failure.
+	 */
+	public static function get_inmovilla_server_ip() {
+		return self::get_server_public_ip();
+	}
+
+	/**
+	 * Get a valid administrator override for IA.
+	 *
+	 * @param array  $settings Plugin settings.
+	 * @param string $key Setting key.
+	 * @return string IP address.
+	 */
+	private static function get_configured_inmovilla_ip( $settings, $key ) {
+		$ip = isset( $settings[ $key ] ) ? $settings[ $key ] : '';
+
+		if ( is_string( $ip ) && self::is_public_ip( $ip ) ) {
+			return $ip;
+		}
+
+		return '';
+	}
+
+	/**
+	 * Get the IB override, including an explicitly empty override.
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return string|null IP address or empty string for an explicit blank override; null for automatic mode.
+	 */
+	private static function get_configured_inmovilla_ib( $settings ) {
+		if ( ! isset( $settings['ib_override'] ) || 'yes' !== $settings['ib_override'] ) {
+			return null;
+		}
+
+		$ip = isset( $settings['ib'] ) ? $settings['ib'] : '';
+		if ( '' === $ip ) {
+			return '';
+		}
+
+		return self::is_public_ip( $ip ) ? $ip : null;
 	}
 
 	/**
