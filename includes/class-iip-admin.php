@@ -590,7 +590,7 @@ class Admin {
 
 			add_settings_field(
 				'ccrmre_inmovilla_ia',
-				__( 'IA', 'connect-crm-realstate' ),
+				__( 'User IP (IA)', 'connect-crm-realstate' ),
 				array( $this, 'inmovilla_ia_callback' ),
 				'ccrmre_settings',
 				'ccrmre_admin_settings'
@@ -598,7 +598,7 @@ class Admin {
 
 			add_settings_field(
 				'ccrmre_inmovilla_ib',
-				__( 'IB', 'connect-crm-realstate' ),
+				__( 'Server IP (IB)', 'connect-crm-realstate' ),
 				array( $this, 'inmovilla_ib_callback' ),
 				'ccrmre_settings',
 				'ccrmre_admin_settings'
