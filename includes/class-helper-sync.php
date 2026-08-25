@@ -415,7 +415,13 @@ class SYNC {
 	 * @return bool
 	 */
 	public static function is_property_available( $property, $crm ) {
-		$available = false;
+		$available     = false;
+		$property_info = API::get_property_info( $property, $crm );
+
+		// Normalize CRM-specific availability fields before evaluating the listing.
+		if ( null !== $property_info['status'] ) {
+			$property['status'] = $property_info['status'];
+		}
 
 		if ( isset( $property['status'] ) ) {
 			$available = (bool) $property['status'];
