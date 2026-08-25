@@ -16,15 +16,38 @@ use WP_UnitTestCase;
 class SyncAvailabilityTest extends WP_UnitTestCase {
 
 	/**
-	 * Inmovilla sold listings use nodisponible with inverse semantics.
+	 * APIWEB nodisponible values are normalized before the availability check.
+	 *
+	 * @dataProvider inmovilla_nodisponible_provider
+	 *
+	 * @param mixed $nodisponible APIWEB nodisponible value.
+	 * @param bool  $expected      Expected availability.
 	 */
-	public function test_inmovilla_unavailable_property_is_not_available() {
+	public function test_inmovilla_nodisponible_values( $nodisponible, $expected ) {
 		$property = array(
 			'cod_ofer'     => 123,
-			'nodisponible' => 1,
+			'nodisponible' => $nodisponible,
 		);
 
-		$this->assertFalse( SYNC::is_property_available( $property, 'inmovilla' ) );
+		$this->assertSame( $expected, SYNC::is_property_available( $property, 'inmovilla' ) );
+	}
+
+	/**
+	 * Provides normal, null, and unexpected APIWEB availability values.
+	 *
+	 * @return array
+	 */
+	public function inmovilla_nodisponible_provider() {
+		return array(
+			'available integer'     => array( 0, true ),
+			'sold integer'          => array( 1, false ),
+			'available boolean'     => array( false, true ),
+			'sold boolean'          => array( true, false ),
+			'available string'      => array( '0', true ),
+			'sold string'           => array( '1', false ),
+			'null defaults to open' => array( null, true ),
+			'unexpected value'      => array( 5, false ),
+		);
 	}
 
 	/**
