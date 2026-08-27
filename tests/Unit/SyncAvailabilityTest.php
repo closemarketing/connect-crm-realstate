@@ -75,4 +75,28 @@ class SyncAvailabilityTest extends WP_UnitTestCase {
 		$this->assertSame( 'ANON-AVAILABLE-001', $property['ref'] );
 		$this->assertTrue( SYNC::is_property_available( $property, 'inmovilla' ) );
 	}
+
+	/**
+	 * APIWEB unavailable properties include the nodisponible reason in sync output.
+	 */
+	public function test_inmovilla_apiweb_unavailable_property_includes_reason() {
+		$post_id = self::factory()->post->create();
+		add_post_meta( $post_id, 'ccrmre_property_id', 123 );
+
+		$result = SYNC::handle_unavailable_property(
+			array(
+				'cod_ofer'     => 123,
+				'ref'          => 'ANON-SOLD-001',
+				'nodisponible' => 1,
+			),
+			array(
+				'post_type'   => 'post',
+				'sold_action' => 'keep',
+			),
+			array(),
+			'inmovilla'
+		);
+
+		$this->assertStringContainsString( 'Reason: nodisponible = 1', $result['message'] );
+	}
 }
