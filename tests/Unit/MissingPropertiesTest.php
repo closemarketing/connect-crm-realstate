@@ -83,4 +83,33 @@ class MissingPropertiesTest extends WP_UnitTestCase {
 		$this->assertSame( 0, $result['count'] );
 		$this->assertSame( 'publish', get_post_status( $post_id ) );
 	}
+
+	/**
+	 * A listed property with an explicit unavailable status uses the configured action.
+	 */
+	public function test_listed_unavailable_property_uses_configured_action() {
+		update_option(
+			'ccrmre_settings',
+			array(
+				'post_type'   => 'post',
+				'sold_action' => 'draft',
+			)
+		);
+		$post_id = self::factory()->post->create();
+		add_post_meta( $post_id, 'ccrmre_property_id', 'LISTED-UNAVAILABLE' );
+
+		set_transient(
+			'ccrmre_query_property_ids_inmovilla',
+			array(
+				'LISTED-UNAVAILABLE' => array( 'status' => false ),
+			),
+			MINUTE_IN_SECONDS
+		);
+
+		$result = SYNC::remove_properties_not_in_api( 'inmovilla' );
+
+		$this->assertSame( 1, $result['count'] );
+		$this->assertSame( 'draft', $result['details'][0]['action'] );
+		$this->assertSame( 'draft', get_post_status( $post_id ) );
+	}
 }

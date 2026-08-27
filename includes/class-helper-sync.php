@@ -581,16 +581,24 @@ class SYNC {
 			);
 		}
 
-		$api_properties     = isset( $api_result['data'] ) ? $api_result['data'] : array();
-		$api_properties_ids = self::filter_active_properties( $api_properties );
+		$api_properties           = isset( $api_result['data'] ) ? $api_result['data'] : array();
+		$api_properties_ids       = array_keys( $api_properties );
+		$unavailable_property_ids = array();
+
+		foreach ( $api_properties as $property_id => $property ) {
+			if ( isset( $property['status'] ) && ! (bool) $property['status'] ) {
+				$unavailable_property_ids[] = $property_id;
+			}
+		}
 
 		// Get all property IDs from WordPress.
 		$wp_properties = self::get_wordpress_property_data( $crm_type );
 		$wp_ids        = array_keys( $wp_properties );
 
-		// Find properties in WordPress that are NOT in API.
-		$to_remove          = array_diff( $wp_ids, $api_properties_ids );
-		$reconciled_details = array();
+		// Reconcile properties that are missing from the API or explicitly unavailable.
+		$missing_property_ids = array_diff( $wp_ids, $api_properties_ids );
+		$to_remove            = array_unique( array_merge( $missing_property_ids, array_intersect( $wp_ids, $unavailable_property_ids ) ) );
+		$reconciled_details   = array();
 
 		foreach ( $to_remove as $property_ref ) {
 			// Find the WordPress post by property reference.
@@ -1043,7 +1051,7 @@ class SYNC {
 	public static function filter_active_properties( $properties ) {
 		$filtered = array();
 		foreach ( $properties as $id => $property ) {
-			if ( ! isset( $property['status'] ) || (bool) $property['status'] ) {
+			if ( isset( $property['status'] ) && (bool) $property['status'] ) {
 				$filtered[] = $id;
 			}
 		}
