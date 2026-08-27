@@ -1204,6 +1204,11 @@ class API {
 				$property_info[ $prefix . 'status' ] = $status_value;
 			}
 
+			// APIWEB uses estadoficha = 7 for reserved properties.
+			if ( 'inmovilla' === $crm_type && isset( $property['estadoficha'] ) && 7 === (int) $property['estadoficha'] ) {
+				$property_info[ $prefix . 'status' ] = false;
+			}
+
 			// Get last_updated if available.
 			if ( isset( $fields['last_updated'] ) && isset( $property[ $fields['last_updated'] ] ) ) {
 				$property_info[ $prefix . 'last_updated' ] = $property[ $fields['last_updated'] ];

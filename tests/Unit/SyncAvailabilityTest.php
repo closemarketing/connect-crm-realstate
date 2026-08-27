@@ -68,6 +68,25 @@ class SyncAvailabilityTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * APIWEB estadoficha identifies free and reserved properties.
+	 */
+	public function test_inmovilla_estadoficha_availability() {
+		$free_property = array(
+			'cod_ofer'     => 1386051,
+			'nodisponible' => 0,
+			'estadoficha'  => 1,
+		);
+		$reserved_property = array(
+			'cod_ofer'     => 1735284,
+			'nodisponible' => 0,
+			'estadoficha'  => 7,
+		);
+
+		$this->assertTrue( SYNC::is_property_available( $free_property, 'inmovilla' ) );
+		$this->assertFalse( SYNC::is_property_available( $reserved_property, 'inmovilla' ) );
+	}
+
+	/**
 	 * The anonymized APIWEB sold-property fixture is treated as unavailable.
 	 */
 	public function test_inmovilla_apiweb_sold_fixture_is_not_available() {
@@ -115,5 +134,30 @@ class SyncAvailabilityTest extends WP_UnitTestCase {
 		);
 
 		$this->assertStringContainsString( 'Reason: nodisponible = 1', $result['message'] );
+	}
+
+	/**
+	 * APIWEB reserved properties include the estadoficha reason in sync output.
+	 */
+	public function test_inmovilla_apiweb_reserved_property_includes_reason() {
+		$post_id = self::factory()->post->create();
+		add_post_meta( $post_id, 'ccrmre_property_id', 1735284 );
+
+		$result = SYNC::handle_unavailable_property(
+			array(
+				'cod_ofer'     => 1735284,
+				'ref'          => '054VC',
+				'nodisponible' => 0,
+				'estadoficha'  => 7,
+			),
+			array(
+				'post_type'   => 'post',
+				'sold_action' => 'keep',
+			),
+			array(),
+			'inmovilla'
+		);
+
+		$this->assertStringContainsString( 'Reason: estadoficha = 7 (Reserved)', $result['message'] );
 	}
 }

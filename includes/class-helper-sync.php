@@ -544,6 +544,10 @@ class SYNC {
 			return ' — ' . __( 'Reason: nodisponible = 1', 'connect-crm-realstate' );
 		}
 
+		if ( 'inmovilla' === $crm && isset( $property['estadoficha'] ) && 7 === (int) $property['estadoficha'] ) {
+			return ' — ' . __( 'Reason: estadoficha = 7 (Reserved)', 'connect-crm-realstate' );
+		}
+
 		if ( 'inmovilla' === $crm && isset( $property['estado'] ) && 'V' === $property['estado'] ) {
 			return ' — ' . __( 'Reason: estado = V (Sold)', 'connect-crm-realstate' );
 		}
