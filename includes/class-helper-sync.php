@@ -560,14 +560,15 @@ class SYNC {
 	}
 
 	/**
-	 * Removes properties that are not in API before sync starts.
+	 * Applies the configured unavailable action to properties missing from the API.
 	 *
 	 * @param string $crm_type CRM type.
-	 * @return array Array with count and detailed info of removed properties.
+	 * @return array Array with count and detailed info of reconciled properties.
 	 */
 	public static function remove_properties_not_in_api( $crm_type ) {
-		$settings  = get_option( 'ccrmre_settings' );
-		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
+		$settings    = get_option( 'ccrmre_settings' );
+		$post_type   = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
+		$sold_action = isset( $settings['sold_action'] ) ? $settings['sold_action'] : 'draft';
 
 		// Get all property IDs from API (use cached result if available).
 		$api_result = API::get_all_property_ids( $crm_type, true );
@@ -588,22 +589,44 @@ class SYNC {
 		$wp_ids        = array_keys( $wp_properties );
 
 		// Find properties in WordPress that are NOT in API.
-		$to_remove       = array_diff( $wp_ids, $api_properties_ids );
-		$removed_details = array();
+		$to_remove          = array_diff( $wp_ids, $api_properties_ids );
+		$reconciled_details = array();
 
 		foreach ( $to_remove as $property_ref ) {
 			// Find the WordPress post by property reference.
 			$post_id = self::find_property( $property_ref, $post_type );
 
 			if ( ! empty( $post_id ) ) {
-				$post_title        = get_the_title( $post_id );
-				$removed_details[] = array(
+				$post_title = get_the_title( $post_id );
+				$action     = '';
+				switch ( $sold_action ) {
+					case 'trash':
+						wp_trash_post( $post_id );
+						$action = 'trash';
+						break;
+
+					case 'keep':
+						$action = 'keep';
+						break;
+
+					case 'draft':
+					default:
+						wp_update_post(
+							array(
+								'ID'          => $post_id,
+								'post_status' => 'draft',
+							)
+						);
+						$action = 'draft';
+						break;
+				}
+
+				$reconciled_details[] = array(
 					'post_id'     => $post_id,
 					'title'       => $post_title,
 					'property_id' => $property_ref,
+					'action'      => $action,
 				);
-
-				wp_trash_post( $post_id );
 			}
 		}
 
@@ -613,8 +636,8 @@ class SYNC {
 
 		return array(
 			'status'  => 'ok',
-			'count'   => count( $removed_details ),
-			'details' => $removed_details,
+			'count'   => count( $reconciled_details ),
+			'details' => $reconciled_details,
 		);
 	}
 
@@ -1020,7 +1043,7 @@ class SYNC {
 	public static function filter_active_properties( $properties ) {
 		$filtered = array();
 		foreach ( $properties as $id => $property ) {
-			if ( isset( $property['status'] ) && ! empty( $property['status'] ) && '0' !== $property['status'] && false !== $property['status'] ) {
+			if ( ! isset( $property['status'] ) || (bool) $property['status'] ) {
 				$filtered[] = $id;
 			}
 		}
