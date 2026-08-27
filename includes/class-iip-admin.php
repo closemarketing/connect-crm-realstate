@@ -1060,6 +1060,9 @@ class Admin {
 							<?php esc_html_e( 'Filtered by province:', 'connect-crm-realstate' ); ?> <span id="stat-filtered-province-count">0</span>
 						</div>
 						<div class="ccrmre-stat-sublabel">
+							<?php esc_html_e( 'Sold/Unavailable:', 'connect-crm-realstate' ); ?> <span id="stat-sold-count">--</span>
+						</div>
+						<div class="ccrmre-stat-sublabel">
 							<?php esc_html_e( 'Total:', 'connect-crm-realstate' ); ?> <span id="stat-api-count">--</span>
 						</div>
 					</div>

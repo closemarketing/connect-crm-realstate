@@ -466,9 +466,12 @@ class Import {
 		$api_ids        = array_keys( $api_properties );
 
 		$available_properties = array();
+		$sold_count           = 0;
 		foreach ( $api_properties as $prop_id => $prop_data ) {
-			if ( SYNC::is_property_available( $prop_data, $crm_type ) ) {
+			if ( SYNC::is_property_available( $prop_data, $crm_type, false ) ) {
 				$available_properties[ $prop_id ] = $prop_data;
+			} else {
+				++$sold_count;
 			}
 		}
 
@@ -498,6 +501,7 @@ class Import {
 			array(
 				'api_count'                  => $api_count,
 				'available_count'            => count( $available_properties ),
+				'sold_count'                 => $sold_count,
 				'wp_count'                   => $wp_count,
 				'filtered_by_province_count' => 0,
 			),
@@ -507,7 +511,7 @@ class Import {
 		/**
 		 * Filter stats response (e.g. PRO can set api_count to filtered count when postal filter is active).
 		 *
-		 * @param array $response Keys: api_count, available_count, wp_count, new_count, outdated_count, import_count, delete_count.
+		 * @param array $response Keys: api_count, available_count, sold_count, wp_count, new_count, outdated_count, import_count, delete_count.
 		 */
 		$response = apply_filters( 'ccrmre_import_stats_response', $response );
 

@@ -33,6 +33,23 @@ class SyncAvailabilityTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Availability statistics ignore import-only filters.
+	 */
+	public function test_availability_can_skip_import_filters() {
+		$property = array(
+			'cod_ofer'     => 123,
+			'nodisponible' => 0,
+		);
+
+		add_filter( 'ccrmre_should_import_property', '__return_false' );
+
+		$this->assertFalse( SYNC::is_property_available( $property, 'inmovilla' ) );
+		$this->assertTrue( SYNC::is_property_available( $property, 'inmovilla', false ) );
+
+		remove_filter( 'ccrmre_should_import_property', '__return_false' );
+	}
+
+	/**
 	 * Provides normal, null, and unexpected APIWEB availability values.
 	 *
 	 * @return array

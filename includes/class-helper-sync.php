@@ -411,10 +411,11 @@ class SYNC {
 	 * Checks if property is available in listing.
 	 *
 	 * @param array  $property Property data from listing.
-	 * @param string $crm CRM type.
+	 * @param string $crm           CRM type.
+	 * @param bool   $apply_filters Whether to apply import filters.
 	 * @return bool
 	 */
-	public static function is_property_available( $property, $crm ) {
+	public static function is_property_available( $property, $crm, $apply_filters = true ) {
 		$available     = false;
 		$property_info = API::get_property_info( $property, $crm );
 
@@ -438,8 +439,12 @@ class SYNC {
 			$available = true;
 		}
 
+		if ( ! $available || ! $apply_filters ) {
+			return $available;
+		}
+
 		// Let PRO (and other plugins) exclude by province or postal code.
-		return $available && apply_filters( 'ccrmre_should_import_property', true, $property );
+		return apply_filters( 'ccrmre_should_import_property', true, $property );
 	}
 
 	/**
