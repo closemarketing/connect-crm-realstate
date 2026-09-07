@@ -227,11 +227,11 @@ Frontend:
 ## Build a release
 
 Actions for making a release:
-- Update readme Stable Tag, and Version.
-- Update Plugin Header and constant.
-- Create release in GitHub.
+- Update the Stable Tag in `readme.txt` and the plugin version in its header and `CCRMRE_VERSION` constant.
+- Finalize the `= Unreleased =` changelog entries under the released version and create a new empty `= Unreleased =` section.
+- Create the matching GitHub release and tag.
 
 ## Test Enforcement
 
 - Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
-- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test` with a specific filename or filter.
+- Run the minimum number of PHPUnit tests needed to ensure code quality and speed. Use `composer test -- --filter=<test-name>` for focused coverage.
