@@ -1,0 +1,16 @@
+{
+	"paginacion": [
+		{
+			"posicion": 1,
+			"elementos": 1,
+			"total": 1
+		},
+		{
+			"cod_ofer": 900001,
+			"ref": "ANON-SOLD-001",
+			"nodisponible": 1,
+			"fechaact": "2026-01-15 10:30:00",
+			"keyprov": 99
+		}
+	]
+}

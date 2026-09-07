@@ -30,6 +30,7 @@ var loadImportStats;
 				if ( response.success ) {
 					document.getElementById('stat-available-count').textContent = response.data.available_count.toLocaleString();
 					document.getElementById('stat-api-count').textContent = response.data.api_count.toLocaleString();
+					document.getElementById('stat-sold-count').textContent = response.data.sold_count.toLocaleString();
 					var filteredByProvince = typeof response.data.filtered_by_province_count !== 'undefined' ? response.data.filtered_by_province_count : 0;
 					var wrap = document.getElementById('stat-filtered-province-wrap');
 					if ( wrap ) {

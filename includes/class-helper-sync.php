@@ -411,11 +411,18 @@ class SYNC {
 	 * Checks if property is available in listing.
 	 *
 	 * @param array  $property Property data from listing.
-	 * @param string $crm CRM type.
+	 * @param string $crm           CRM type.
+	 * @param bool   $apply_filters Whether to apply import filters.
 	 * @return bool
 	 */
-	public static function is_property_available( $property, $crm ) {
-		$available = false;
+	public static function is_property_available( $property, $crm, $apply_filters = true ) {
+		$available     = false;
+		$property_info = API::get_property_info( $property, $crm );
+
+		// Normalize CRM-specific availability fields before evaluating the listing.
+		if ( null !== $property_info['status'] ) {
+			$property['status'] = $property_info['status'];
+		}
 
 		if ( isset( $property['status'] ) ) {
 			$available = (bool) $property['status'];
@@ -432,8 +439,12 @@ class SYNC {
 			$available = true;
 		}
 
+		if ( ! $available || ! $apply_filters ) {
+			return $available;
+		}
+
 		// Let PRO (and other plugins) exclude by province or postal code.
-		return $available && apply_filters( 'ccrmre_should_import_property', true, $property );
+		return apply_filters( 'ccrmre_should_import_property', true, $property );
 	}
 
 	/**
@@ -529,6 +540,14 @@ class SYNC {
 			return ' — ' . __( 'Reason: nodisponible = 1', 'connect-crm-realstate' );
 		}
 
+		if ( 'inmovilla' === $crm && isset( $property['nodisponible'] ) && (bool) $property['nodisponible'] ) {
+			return ' — ' . __( 'Reason: nodisponible = 1', 'connect-crm-realstate' );
+		}
+
+		if ( 'inmovilla' === $crm && isset( $property['estadoficha'] ) && 7 === (int) $property['estadoficha'] ) {
+			return ' — ' . __( 'Reason: estadoficha = 7 (Reserved)', 'connect-crm-realstate' );
+		}
+
 		if ( 'inmovilla' === $crm && isset( $property['estado'] ) && 'V' === $property['estado'] ) {
 			return ' — ' . __( 'Reason: estado = V (Sold)', 'connect-crm-realstate' );
 		}
@@ -541,14 +560,15 @@ class SYNC {
 	}
 
 	/**
-	 * Removes properties that are not in API before sync starts.
+	 * Applies the configured unavailable action to properties missing from the API.
 	 *
 	 * @param string $crm_type CRM type.
-	 * @return array Array with count and detailed info of removed properties.
+	 * @return array Array with count and detailed info of reconciled properties.
 	 */
 	public static function remove_properties_not_in_api( $crm_type ) {
-		$settings  = get_option( 'ccrmre_settings' );
-		$post_type = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
+		$settings    = get_option( 'ccrmre_settings' );
+		$post_type   = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
+		$sold_action = isset( $settings['sold_action'] ) ? $settings['sold_action'] : 'draft';
 
 		// Get all property IDs from API (use cached result if available).
 		$api_result = API::get_all_property_ids( $crm_type, true );
@@ -561,30 +581,60 @@ class SYNC {
 			);
 		}
 
-		$api_properties     = isset( $api_result['data'] ) ? $api_result['data'] : array();
-		$api_properties_ids = self::filter_active_properties( $api_properties );
+		$api_properties           = isset( $api_result['data'] ) ? $api_result['data'] : array();
+		$api_properties_ids       = array_keys( $api_properties );
+		$unavailable_property_ids = array();
+
+		foreach ( $api_properties as $property_id => $property ) {
+			if ( isset( $property['status'] ) && ! (bool) $property['status'] ) {
+				$unavailable_property_ids[] = $property_id;
+			}
+		}
 
 		// Get all property IDs from WordPress.
 		$wp_properties = self::get_wordpress_property_data( $crm_type );
 		$wp_ids        = array_keys( $wp_properties );
 
-		// Find properties in WordPress that are NOT in API.
-		$to_remove       = array_diff( $wp_ids, $api_properties_ids );
-		$removed_details = array();
+		// Reconcile properties that are missing from the API or explicitly unavailable.
+		$missing_property_ids = array_diff( $wp_ids, $api_properties_ids );
+		$to_remove            = array_unique( array_merge( $missing_property_ids, array_intersect( $wp_ids, $unavailable_property_ids ) ) );
+		$reconciled_details   = array();
 
 		foreach ( $to_remove as $property_ref ) {
 			// Find the WordPress post by property reference.
 			$post_id = self::find_property( $property_ref, $post_type );
 
 			if ( ! empty( $post_id ) ) {
-				$post_title        = get_the_title( $post_id );
-				$removed_details[] = array(
+				$post_title = get_the_title( $post_id );
+				$action     = '';
+				switch ( $sold_action ) {
+					case 'trash':
+						wp_trash_post( $post_id );
+						$action = 'trash';
+						break;
+
+					case 'keep':
+						$action = 'keep';
+						break;
+
+					case 'draft':
+					default:
+						wp_update_post(
+							array(
+								'ID'          => $post_id,
+								'post_status' => 'draft',
+							)
+						);
+						$action = 'draft';
+						break;
+				}
+
+				$reconciled_details[] = array(
 					'post_id'     => $post_id,
 					'title'       => $post_title,
 					'property_id' => $property_ref,
+					'action'      => $action,
 				);
-
-				wp_trash_post( $post_id );
 			}
 		}
 
@@ -594,8 +644,8 @@ class SYNC {
 
 		return array(
 			'status'  => 'ok',
-			'count'   => count( $removed_details ),
-			'details' => $removed_details,
+			'count'   => count( $reconciled_details ),
+			'details' => $reconciled_details,
 		);
 	}
 
@@ -1001,7 +1051,7 @@ class SYNC {
 	public static function filter_active_properties( $properties ) {
 		$filtered = array();
 		foreach ( $properties as $id => $property ) {
-			if ( isset( $property['status'] ) && ! empty( $property['status'] ) && '0' !== $property['status'] && false !== $property['status'] ) {
+			if ( isset( $property['status'] ) && (bool) $property['status'] ) {
 				$filtered[] = $id;
 			}
 		}

@@ -45,6 +45,17 @@ Para conocer los diferentes valores que pueden tener campos como `estadoficha`, 
 
 ---
 
+## Disponibilidad de propiedades
+
+La disponibilidad de APIWEB se determina con los siguientes campos:
+
+- `nodisponible`: `0` indica que la propiedad está disponible y un valor distinto de cero que no lo está.
+- `estadoficha`: `1` identifica una propiedad libre y `7` una propiedad reservada.
+
+El conector trata las propiedades reservadas (`estadoficha = 7`) como no disponibles y aplica la acción configurada para inmuebles vendidos o no disponibles.
+
+---
+
 ## Ejemplo de implementación
 
 La API de Inmovilla se basa en 2 funciones: `Procesos` para definir el tipo de datos a consultar y `PedirDatos` para consultar los datos y definir filtros y orden.

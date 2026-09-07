@@ -274,6 +274,14 @@ class API {
 					// Detect Inmovilla IP registration error (plain-text response, not JSON).
 					$ip_error = self::detect_ip_whitelist_error( $body, $numagencia, $hostname, $server_ip );
 					if ( null !== $ip_error ) {
+						$ip_error['request']  = array(
+							'url'  => $url,
+							'body' => $args['body'],
+						);
+						$ip_error['response'] = array(
+							'code' => $code,
+							'body' => $body,
+						);
 						return $ip_error;
 					}
 					$message = __( 'Invalid JSON response from Inmovilla API', 'connect-crm-realstate' );
@@ -285,6 +293,14 @@ class API {
 						'message'    => $message,
 						'data'       => array(),
 						'error_type' => 'default',
+						'request'    => array(
+							'url'  => $url,
+							'body' => $args['body'],
+						),
+						'response'   => array(
+							'code' => $code,
+							'body' => $body,
+						),
 					);
 				}
 
@@ -1204,6 +1220,11 @@ class API {
 				$property_info[ $prefix . 'status' ] = $status_value;
 			}
 
+			// APIWEB uses estadoficha = 7 for reserved properties.
+			if ( 'inmovilla' === $crm_type && isset( $property['estadoficha'] ) && 7 === (int) $property['estadoficha'] ) {
+				$property_info[ $prefix . 'status' ] = false;
+			}
+
 			// Get last_updated if available.
 			if ( isset( $fields['last_updated'] ) && isset( $property[ $fields['last_updated'] ] ) ) {
 				$property_info[ $prefix . 'last_updated' ] = $property[ $fields['last_updated'] ];
@@ -1992,6 +2013,8 @@ class API {
 	 *
 	 * Mirrors what their apiinmovilla.php writes when DEPURAR_API_INMOVILLA is
 	 * enabled: parameters sent and raw response, one line each, per request.
+	 * The endpoint and HTTP status are included too, so support can reproduce
+	 * the exact failed request.
 	 * Appended directly to 'message' so every caller (cron log, manual import UI)
 	 * shows it automatically without needing to know about a separate field.
 	 *
@@ -2000,7 +2023,9 @@ class API {
 	 */
 	private static function log_inmovilla_support_error( $result ) {
 		$id_petition = wp_rand( 100000, 999999 ) . '_' . time();
+		$req_url     = isset( $result['request']['url'] ) ? $result['request']['url'] : '';
 		$req_body    = isset( $result['request']['body'] ) ? $result['request']['body'] : '';
+		$resp_code   = isset( $result['response']['code'] ) ? (int) $result['response']['code'] : 0;
 		$resp_body   = isset( $result['response']['body'] ) ? $result['response']['body'] : $result['message'];
 
 		// Redact the API password before it can reach a log, an on-screen message, or a
@@ -2024,7 +2049,9 @@ class API {
 		$resp_body = esc_html( $resp_body );
 
 		$log  = PHP_EOL . 'Información para soporte Inmovilla:' . PHP_EOL;
+		$log .= gmdate( 'Y-m-d H:i:s' ) . " - id_petition: {$id_petition} - URL: {$req_url}" . PHP_EOL;
 		$log .= gmdate( 'Y-m-d H:i:s' ) . " - id_petition: {$id_petition} - parametros: {$req_body}" . PHP_EOL;
+		$log .= gmdate( 'Y-m-d H:i:s' ) . " - id_petition: {$id_petition} - HTTP: {$resp_code}" . PHP_EOL;
 		$log .= gmdate( 'Y-m-d H:i:s' ) . " - id_petition: {$id_petition} - respuesta: {$resp_body}";
 
 		$result['message'] .= $log;
