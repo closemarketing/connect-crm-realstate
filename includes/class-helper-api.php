@@ -189,14 +189,14 @@ class API {
 			$ia = self::get_inmovilla_server_ip();
 		}
 
-		$server_ip = self::get_configured_inmovilla_ib( $settings );
-		if ( null === $server_ip ) {
-			$server_ip = self::get_inmovilla_server_ip();
-		}
-		$body  = 'param=' . $texto;
-		$body .= '&json=1'; // Request JSON response.
-		$body .= '&ia=' . rawurlencode( $ia );
-		$body .= '&ib=' . rawurlencode( $server_ip );
+		// IB identifies an intermediate proxy. Do not send the server's outbound IP
+		// unless the administrator explicitly configures that proxy.
+		$proxy_ip  = self::get_configured_inmovilla_ib( $settings );
+		$server_ip = self::get_inmovilla_server_ip();
+		$body      = 'param=' . $texto;
+		$body     .= '&json=1'; // Request JSON response.
+		$body     .= '&ia=' . rawurlencode( $ia );
+		$body     .= '&ib=' . rawurlencode( $proxy_ip );
 
 		// Add domain to the request, matching the official Inmovilla client order.
 		$parsed_url = wp_parse_url( get_site_url() );
@@ -318,13 +318,13 @@ class API {
 	 * Detect Inmovilla IP whitelist error and build an actionable response
 	 *
 	 * Inmovilla APIWEB returns a plain-text die() body (not JSON) when the
-	 * server's outbound IP has not been whitelisted. It has been observed
-	 * using more than one wording for this, so several patterns are checked.
+	 * APIWEB parameters are invalid. It has been observed using more than one
+	 * wording for this, so several patterns are checked.
 	 *
 	 * @param mixed  $body Raw response body.
 	 * @param string $numagencia Agency number configured in plugin settings.
 	 * @param string $hostname Site hostname.
-	 * @param string $server_ip Server's public IP, from get_server_public_ip().
+	 * @param string $server_ip Detected public IP of the server making the request.
 	 * @return array|null Error response array (status/message/error_type/mailto), or null if body doesn't match.
 	 */
 	private static function detect_ip_whitelist_error( $body, $numagencia, $hostname, $server_ip ) {
@@ -345,11 +345,8 @@ class API {
 			return null;
 		}
 
-		// Prefer the IP Inmovilla reports having received: it reflects what
-		// their firewall actually saw, which can differ from the server's
-		// local IP when there's a proxy/CDN/load balancer in front. Otherwise
-		// fall back to the already-validated public IP from
-		// get_server_public_ip(), not a raw, unvalidated SERVER_ADDR re-read.
+		// Prefer the IP Inmovilla reports having received. Otherwise retain the
+		// detected server IP for the support diagnostic.
 		$ip = '';
 		if ( preg_match( '/IP_RECIVED:\s*([0-9.]+)/i', $body, $matches ) ) {
 			$ip = $matches[1];
@@ -358,20 +355,20 @@ class API {
 		}
 
 		$mailto_body = sprintf(
-			"Hello,\n\nPlease whitelist the following IP address so our WordPress site can connect to the Inmovilla API:\n\nIP: %s\nAgency number: %s\nWebsite: %s\n\nThank you.",
+			"Hello,\n\nOur WordPress site cannot connect to the Inmovilla APIWEB endpoint. Please review the API IP parameters. IA contains the client IP and IB is empty unless an intermediate proxy is used.\n\nReported IP: %s\nAgency number: %s\nWebsite: %s\n\nThank you.",
 			$ip,
 			$numagencia,
 			$hostname
 		);
 		$mailto      = 'mailto:soporte@inmovilla.com'
-			. '?subject=' . rawurlencode( sprintf( 'IP whitelist request - Agency %s', $numagencia ) )
+			. '?subject=' . rawurlencode( sprintf( 'APIWEB IP configuration - Agency %s', $numagencia ) )
 			. '&body=' . rawurlencode( $mailto_body );
 
 		return array(
 			'status'     => 'error',
 			'message'    => sprintf(
-				/* translators: %s: Server IP address */
-				__( 'Inmovilla API requires IP registration. Please ask Inmovilla support to whitelist your server IP (%s).', 'connect-crm-realstate' ),
+				/* translators: %s: IP address reported by Inmovilla, when available. */
+				__( 'Inmovilla API rejected the IP parameters. Verify that IA is the client IP and leave IB empty unless you use an intermediate proxy. Reported IP: %s.', 'connect-crm-realstate' ),
 				$ip
 			),
 			'data'       => array(),
@@ -441,14 +438,14 @@ class API {
 	}
 
 	/**
-	 * Get the IB override, including an explicitly empty override.
+	 * Get the explicitly configured IB proxy IP.
 	 *
 	 * @param array $settings Plugin settings.
-	 * @return string|null IP address or empty string for an explicit blank override; null for automatic mode.
+	 * @return string IP address or an empty string when no proxy is configured.
 	 */
 	private static function get_configured_inmovilla_ib( $settings ) {
 		if ( ! isset( $settings['ib_override'] ) || 'yes' !== $settings['ib_override'] ) {
-			return null;
+			return '';
 		}
 
 		$ip = isset( $settings['ib'] ) ? $settings['ib'] : '';
@@ -456,7 +453,7 @@ class API {
 			return '';
 		}
 
-		return self::is_public_ip( $ip ) ? $ip : null;
+		return self::is_public_ip( $ip ) ? $ip : '';
 	}
 
 	/**

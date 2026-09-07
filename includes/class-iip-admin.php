@@ -432,8 +432,8 @@ class Admin {
 	 * Calculate missing Inmovilla APIWEB IP settings when visiting the plugin.
 	 *
 	 * IA is populated from the request when the proxy exposes a public client
-	 * IP. IA otherwise remains available for the browser-side lookup. IB is
-	 * always calculated from the server's public outbound IP.
+	 * IP. IA otherwise remains available for the browser-side lookup. IB remains
+	 * empty unless an intermediate proxy is explicitly configured.
 	 *
 	 * @return void
 	 */
@@ -589,7 +589,7 @@ class Admin {
 
 			add_settings_field(
 				'ccrmre_inmovilla_ib',
-				__( 'Server IP (IB)', 'connect-crm-realstate' ),
+				__( 'Proxy IP (IB)', 'connect-crm-realstate' ),
 				array( $this, 'inmovilla_ib_callback' ),
 				'ccrmre_settings',
 				'ccrmre_admin_settings'
@@ -858,15 +858,15 @@ class Admin {
 	 */
 	public function inmovilla_ib_callback() {
 		$is_override = isset( $this->settings['ib_override'] ) && 'yes' === $this->settings['ib_override'];
-		$ib          = $is_override && isset( $this->settings['ib'] ) ? $this->settings['ib'] : API::get_inmovilla_server_ip();
+		$ib          = $is_override && isset( $this->settings['ib'] ) ? $this->settings['ib'] : '';
 
 		printf(
 			'<label><input type="checkbox" name="ccrmre_settings[ib_override]" id="ccrmre_inmovilla_ib_override" value="yes" %1$s> %2$s</label><br><input class="regular-text" type="text" name="ccrmre_settings[ib]" id="ccrmre_inmovilla_ib" value="%3$s" %4$s><br><small>%5$s</small>',
 			checked( $is_override, true, false ),
-			esc_html__( 'Override the calculated server IP', 'connect-crm-realstate' ),
+			esc_html__( 'Use a proxy IP', 'connect-crm-realstate' ),
 			esc_attr( $ib ),
 			disabled( $is_override, false, false ),
-			esc_html__( 'Leave the override value empty to send IB empty, as required by some proxy configurations.', 'connect-crm-realstate' )
+			esc_html__( 'Leave this empty unless Inmovilla tells you to use the IP of an intermediate proxy.', 'connect-crm-realstate' )
 		);
 	}
 

@@ -101,9 +101,10 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 * Improved Inmovilla APIWEB error diagnostics with the request URL, redacted request parameters, HTTP status, and API response for Inmovilla support.
 * Fixed APIWEB reserved properties (`estadoficha = 7`) being treated as available. They now follow the configured action for sold/unavailable properties.
 * Changed the daily PRO reconciliation to apply the configured sold/unavailable action to properties that are no longer returned by the CRM.
+* Fixed Inmovilla APIWEB requests to leave IB empty by default; it is now sent only when a proxy IP is explicitly configured.
 
 = 1.2.5 =
-* Added configurable IA and IB IP parameters for Inmovilla APIWEB connections. IA defaults to the current user's IP address and IB to the server's public IP address.
+* Added configurable IA and IB IP parameters for Inmovilla APIWEB connections. IA defaults to the current user's IP address.
 * Fixed: automatic sync error due to IP address change.
 * Fix cron import not getting IP address for Inmovilla APIWEB, causing registration errors and failed imports.
 
