@@ -541,6 +541,12 @@ class HelperAPITest extends WP_UnitTestCase {
 	 * as an IP whitelist error and produces a mailto link.
 	 */
 	public function test_inmovilla_api_detects_ip_whitelist_error_necesitamos() {
+		$server        = $_SERVER;
+		$cached_ip     = get_option( 'ccrmre_server_public_ip', false );
+		$cached_expiry = get_option( 'ccrmre_server_public_ip_expiry', false );
+		$_SERVER['SERVER_ADDR'] = '8.8.4.4';
+		update_option( 'ccrmre_server_public_ip', '8.8.4.4' );
+		update_option( 'ccrmre_server_public_ip_expiry', time() + HOUR_IN_SECONDS );
 		$this->mock_apiweb_body = 'die("NECESITAMOS RECIBIR LA IP");';
 		update_option(
 			'ccrmre_settings',
@@ -552,19 +558,34 @@ class HelperAPITest extends WP_UnitTestCase {
 			)
 		);
 
-		$result = API::request_inmovilla( 'paginacion', 1, 10 );
+		try {
+			$result = API::request_inmovilla( 'paginacion', 1, 10 );
 
-		$this->assertSame( 'error', $result['status'] );
-		$this->assertSame( 'ip_not_registered', $result['error_type'] );
-		$this->assertArrayHasKey( 'mailto', $result );
-		$this->assertStringContainsString( 'mailto:soporte@inmovilla.com', $result['mailto'] );
-		$this->assertStringContainsString( 'Información para soporte Inmovilla:', $result['message'] );
-		$this->assertStringContainsString( 'URL: https://apiweb.inmovilla.com/apiweb/apiweb.php', $result['message'] );
-		$this->assertStringContainsString( 'parametros: param=', $result['message'] );
-		$this->assertStringContainsString( 'HTTP: 200', $result['message'] );
-		$this->assertStringContainsString( 'respuesta: die(&quot;NECESITAMOS RECIBIR LA IP&quot;);', $result['message'] );
-		$this->assertStringNotContainsString( '6533%3Btest%3B', $result['message'] );
-		$this->assertStringContainsString( '6533%3B%2A%2A%2AREDACTED%2A%2A%2A%3B', $result['message'] );
+			$this->assertSame( 'error', $result['status'] );
+			$this->assertSame( 'ip_not_registered', $result['error_type'] );
+			$this->assertArrayHasKey( 'mailto', $result );
+			$this->assertStringContainsString( 'mailto:soporte@inmovilla.com', $result['mailto'] );
+			$this->assertStringContainsString( rawurlencode( '8.8.4.4' ), $result['mailto'] );
+			$this->assertStringContainsString( 'Información para soporte Inmovilla:', $result['message'] );
+			$this->assertStringContainsString( 'URL: https://apiweb.inmovilla.com/apiweb/apiweb.php', $result['message'] );
+			$this->assertStringContainsString( 'parametros: param=', $result['message'] );
+			$this->assertStringContainsString( 'HTTP: 200', $result['message'] );
+			$this->assertStringContainsString( 'respuesta: die(&quot;NECESITAMOS RECIBIR LA IP&quot;);', $result['message'] );
+			$this->assertStringNotContainsString( '6533%3Btest%3B', $result['message'] );
+			$this->assertStringContainsString( '6533%3B%2A%2A%2AREDACTED%2A%2A%2A%3B', $result['message'] );
+		} finally {
+			$_SERVER = $server;
+			if ( false === $cached_ip ) {
+				delete_option( 'ccrmre_server_public_ip' );
+			} else {
+				update_option( 'ccrmre_server_public_ip', $cached_ip );
+			}
+			if ( false === $cached_expiry ) {
+				delete_option( 'ccrmre_server_public_ip_expiry' );
+			} else {
+				update_option( 'ccrmre_server_public_ip_expiry', $cached_expiry );
+			}
+		}
 	}
 
 	/**

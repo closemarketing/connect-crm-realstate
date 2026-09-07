@@ -191,11 +191,12 @@ class API {
 
 		// IB identifies an intermediate proxy. Do not send the server's outbound IP
 		// unless the administrator explicitly configures that proxy.
-		$proxy_ip = self::get_configured_inmovilla_ib( $settings );
-		$body     = 'param=' . $texto;
-		$body    .= '&json=1'; // Request JSON response.
-		$body    .= '&ia=' . rawurlencode( $ia );
-		$body    .= '&ib=' . rawurlencode( $proxy_ip );
+		$proxy_ip  = self::get_configured_inmovilla_ib( $settings );
+		$server_ip = self::get_inmovilla_server_ip();
+		$body      = 'param=' . $texto;
+		$body     .= '&json=1'; // Request JSON response.
+		$body     .= '&ia=' . rawurlencode( $ia );
+		$body     .= '&ib=' . rawurlencode( $proxy_ip );
 
 		// Add domain to the request, matching the official Inmovilla client order.
 		$parsed_url = wp_parse_url( get_site_url() );
@@ -225,7 +226,7 @@ class API {
 		$url = 'https://apiweb.inmovilla.com/apiweb/apiweb.php';
 
 		return self::execute_with_retry(
-			function () use ( $url, $args, $proxy_ip, $numagencia, $hostname ) {
+			function () use ( $url, $args, $server_ip, $numagencia, $hostname ) {
 				$response = wp_remote_post( $url, $args );
 
 				self::save_inmovilla_cookies( $response );
@@ -271,7 +272,7 @@ class API {
 
 				if ( json_last_error() !== JSON_ERROR_NONE ) {
 					// Detect Inmovilla IP registration error (plain-text response, not JSON).
-					$ip_error = self::detect_ip_whitelist_error( $body, $numagencia, $hostname, $proxy_ip );
+					$ip_error = self::detect_ip_whitelist_error( $body, $numagencia, $hostname, $server_ip );
 					if ( null !== $ip_error ) {
 						$ip_error['request']  = array(
 							'url'  => $url,
@@ -317,16 +318,16 @@ class API {
 	 * Detect Inmovilla IP whitelist error and build an actionable response
 	 *
 	 * Inmovilla APIWEB returns a plain-text die() body (not JSON) when the
-	 * server's outbound IP has not been whitelisted. It has been observed
-	 * using more than one wording for this, so several patterns are checked.
+	 * APIWEB parameters are invalid. It has been observed using more than one
+	 * wording for this, so several patterns are checked.
 	 *
 	 * @param mixed  $body Raw response body.
 	 * @param string $numagencia Agency number configured in plugin settings.
 	 * @param string $hostname Site hostname.
-	 * @param string $proxy_ip Configured intermediate proxy IP, when present.
+	 * @param string $server_ip Detected public IP of the server making the request.
 	 * @return array|null Error response array (status/message/error_type/mailto), or null if body doesn't match.
 	 */
-	private static function detect_ip_whitelist_error( $body, $numagencia, $hostname, $proxy_ip ) {
+	private static function detect_ip_whitelist_error( $body, $numagencia, $hostname, $server_ip ) {
 		if ( ! is_string( $body ) ) {
 			return null;
 		}
@@ -345,12 +346,12 @@ class API {
 		}
 
 		// Prefer the IP Inmovilla reports having received. Otherwise retain the
-		// configured proxy IP, if any, for the support diagnostic.
+		// detected server IP for the support diagnostic.
 		$ip = '';
 		if ( preg_match( '/IP_RECIVED:\s*([0-9.]+)/i', $body, $matches ) ) {
 			$ip = $matches[1];
 		} else {
-			$ip = $proxy_ip;
+			$ip = $server_ip;
 		}
 
 		$mailto_body = sprintf(
