@@ -536,6 +536,13 @@ class HelperAPITest extends WP_UnitTestCase {
 		$this->assertSame( 'ip_not_registered', $result['error_type'] );
 		$this->assertArrayHasKey( 'mailto', $result );
 		$this->assertStringContainsString( 'mailto:soporte@inmovilla.com', $result['mailto'] );
+		$this->assertStringContainsString( 'Información para soporte Inmovilla:', $result['message'] );
+		$this->assertStringContainsString( 'URL: https://apiweb.inmovilla.com/apiweb/apiweb.php', $result['message'] );
+		$this->assertStringContainsString( 'parametros: param=', $result['message'] );
+		$this->assertStringContainsString( 'HTTP: 200', $result['message'] );
+		$this->assertStringContainsString( 'respuesta: die(&quot;NECESITAMOS RECIBIR LA IP&quot;);', $result['message'] );
+		$this->assertStringNotContainsString( '6533%3Btest%3B', $result['message'] );
+		$this->assertStringContainsString( '6533%3B%2A%2A%2AREDACTED%2A%2A%2A%3B', $result['message'] );
 	}
 
 	/**

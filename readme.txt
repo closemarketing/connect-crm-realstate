@@ -98,6 +98,7 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 == Changelog ==
 
 = Unreleased =
+* Improved Inmovilla APIWEB error diagnostics with the request URL, redacted request parameters, HTTP status, and API response for Inmovilla support.
 * Fixed APIWEB reserved properties (`estadoficha = 7`) being treated as available. They now follow the configured action for sold/unavailable properties.
 * Changed the daily PRO reconciliation to apply the configured sold/unavailable action to properties that are no longer returned by the CRM.
 
