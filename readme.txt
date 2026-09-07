@@ -104,7 +104,7 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 * Fixed Inmovilla APIWEB requests to leave IB empty by default; it is now sent only when a proxy IP is explicitly configured.
 
 = 1.2.5 =
-* Added configurable IA and IB IP parameters for Inmovilla APIWEB connections. IA defaults to the current user's IP address.
+* Added configurable IA and IB IP parameters for Inmovilla APIWEB connections. IA defaults to the current user's IP address and IB to the server's public IP address.
 * Fixed: automatic sync error due to IP address change.
 * Fix cron import not getting IP address for Inmovilla APIWEB, causing registration errors and failed imports.
 
