@@ -223,3 +223,15 @@ Frontend:
 - Use feature detection (check if PRO addon is active via `apply_filters`) not feature restriction.
 - Before submission: verify no locked code paths exist in the free plugin.
 - PRO features: background cron sync, postal code / province filtering, WP-CLI support.
+
+## Build a release
+
+Actions for making a release:
+- Update readme Stable Tag, and Version.
+- Update Plugin Header and constant.
+- Create release in GitHub.
+
+## Test Enforcement
+
+- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
+- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test` with a specific filename or filter.
