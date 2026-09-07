@@ -381,6 +381,28 @@ class HelperAPITest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Inmovilla APIWEB: IB is empty by default because it identifies an
+	 * intermediate proxy, not the server making the API request.
+	 */
+	public function test_inmovilla_api_sends_empty_ib_without_proxy_override() {
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'        => 'inmovilla',
+				'numagencia'  => '6533',
+				'apipassword' => 'test',
+				'ia'          => '8.8.8.8',
+				'post_type'   => 'property',
+			)
+		);
+
+		$result = API::request_inmovilla( 'paginacion', 1, 10 );
+
+		$this->assertSame( 'ok', $result['status'] );
+		$this->assertStringContainsString( '&ib=&elDominio=', $this->mock_apiweb_request_body );
+	}
+
+	/**
 	 * Inmovilla APIWEB: unattended requests use the server IP for IA.
 	 */
 	public function test_inmovilla_api_uses_server_ip_for_missing_ia() {
