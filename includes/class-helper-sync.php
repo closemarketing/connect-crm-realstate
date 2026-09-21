@@ -151,6 +151,17 @@ class SYNC {
 				}
 			}
 
+			/**
+			 * Allow add-ons to persist CRM-specific property data after the base
+			 * property and media metadata have been saved.
+			 *
+			 * @param int    $property_post_id WordPress property post ID.
+			 * @param array  $item             Complete CRM property data.
+			 * @param array  $settings         Connector settings.
+			 * @param string $crm              CRM identifier.
+			 */
+			do_action( 'ccrmre_property_synced', $property_post_id, $item, $settings, $crm );
+
 			// Clear statistics cache after syncing.
 			delete_transient( 'ccrmre_wp_properties_' . $crm );
 		}
