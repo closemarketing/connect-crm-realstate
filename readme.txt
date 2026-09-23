@@ -4,7 +4,7 @@ Tags: real estate, properties, inmovilla, anaconda, crm
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.6
+Stable tag: 1.2.7
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -98,8 +98,10 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 == Changelog ==
 
-= Unreleased =
+= 1.2.7 =
 * Added the `ccrmre_property_synced` action for add-ons to persist CRM-specific property data after a property has been synchronized.
+* Renamed the "Import Properties" admin tab to "Properties & Demands", since the PRO add-on now renders the Inmovilla Demands sub-tab inside this same page.
+* Documented the PRO add-on's Inmovilla videos and 360° virtual tours feature.
 
 = 1.2.6 =
 * Improved Inmovilla APIWEB error diagnostics with the request URL, redacted request parameters, HTTP status, and API response for Inmovilla support.
