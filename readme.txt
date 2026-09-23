@@ -98,6 +98,7 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 == Changelog ==
 
 = Unreleased =
+* Added the `ccrmre_property_synced` action for add-ons to persist CRM-specific property data after a property has been synchronized.
 
 = 1.2.6 =
 * Improved Inmovilla APIWEB error diagnostics with the request URL, redacted request parameters, HTTP status, and API response for Inmovilla support.
