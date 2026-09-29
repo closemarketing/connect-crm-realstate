@@ -46,7 +46,7 @@ Connect CRM RealState imports properties from popular real estate CRM systems (I
 * Add ability to filter by postal code and province
 * WPCLI for long-running tasks
 * Inmovilla videos and 360° virtual tours on property pages (auto-display or `[ccrmre_property_multimedia]` shortcode)
-* SEO-optimized property content *(coming soon)*
+* SEO-optimized property structured data for better search visibility
 * AI-powered property descriptions with LLM *(coming soon)*
 
 == External Services ==
