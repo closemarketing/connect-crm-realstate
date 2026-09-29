@@ -133,23 +133,37 @@ class PostType {
 	 * @return void
 	 */
 	public function metabox_show_property( $post ) {
-		$merge_fields = get_option( 'ccrmre_merge_fields', array() );
+		$merge_fields       = get_option( 'ccrmre_merge_fields', array() );
+		$show_native_fields = empty( $merge_fields );
 
-		if ( empty( $merge_fields ) ) {
-			echo '<p>' . esc_html__( 'No merge fields configured. Please configure merge fields in the plugin settings.', 'connect-crm-realstate' ) . '</p>';
-			return;
+		if ( $show_native_fields ) {
+			$post_meta = get_post_meta( $post->ID );
+
+			foreach ( array_keys( $post_meta ) as $meta_key ) {
+				if ( 0 !== strpos( $meta_key, 'property_' ) || 'property_synced' === $meta_key ) {
+					continue;
+				}
+
+				$crm_field                  = substr( $meta_key, strlen( 'property_' ) );
+				$merge_fields[ $crm_field ] = $meta_key;
+			}
+
+			ksort( $merge_fields );
 		}
 
 		$settings = get_option( 'ccrmre_settings', array() );
 		$crm_type = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
 
-		$api_fields   = API::get_properties_fields( $crm_type );
 		$field_labels = array();
 
-		if ( isset( $api_fields['data'] ) && is_array( $api_fields['data'] ) ) {
-			foreach ( $api_fields['data'] as $field ) {
-				if ( isset( $field['name'] ) && isset( $field['label'] ) ) {
-					$field_labels[ $field['name'] ] = $field['label'];
+		if ( ! $show_native_fields ) {
+			$api_fields = API::get_properties_fields( $crm_type );
+
+			if ( isset( $api_fields['data'] ) && is_array( $api_fields['data'] ) ) {
+				foreach ( $api_fields['data'] as $field ) {
+					if ( isset( $field['name'] ) && isset( $field['label'] ) ) {
+						$field_labels[ $field['name'] ] = $field['label'];
+					}
 				}
 			}
 		}

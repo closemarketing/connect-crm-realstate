@@ -98,6 +98,9 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 == Changelog ==
 
+= Unreleased =
+* Fixed the Property Meta box to show imported native CRM fields when no merge fields are configured.
+
 = 1.2.7 =
 * Added the `ccrmre_property_synced` action for add-ons to persist CRM-specific property data after a property has been synchronized.
 * Renamed the "Import Properties" admin tab to "Properties & Demands", since the PRO add-on now renders the Inmovilla Demands sub-tab inside this same page.
