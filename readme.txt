@@ -4,7 +4,7 @@ Tags: real estate, properties, inmovilla, anaconda, crm
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.7
+Stable tag: 1.2.8
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,8 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 == Changelog ==
 
 = Unreleased =
+
+= 1.2.8 =
 * Fixed the Property Meta box to show imported native CRM fields when no merge fields are configured.
 
 = 1.2.7 =
