@@ -98,6 +98,9 @@ class SYNC {
 			}
 		}
 
+		// Store explicit display and filter values for the Inmovilla sale price.
+		self::add_price_meta_values( $property_info['meta_input'], $item, $settings_fields );
+
 		$is_new_property = empty( $property_post_id );
 		if ( $is_new_property ) {
 			$property_info['post_title']   = $property_title;
@@ -262,6 +265,32 @@ class SYNC {
 		}
 
 		return $item_meta;
+	}
+
+	/**
+	 * Adds formatted and raw price meta values when the price is imported.
+	 *
+	 * The originally mapped field is intentionally left unchanged for backward
+	 * compatibility. The derived fields give templates a display value and
+	 * numeric filters a value without thousands separators or currency symbols.
+	 *
+	 * @param array $meta_input      Meta values to save with the property.
+	 * @param array $item            Raw CRM property data.
+	 * @param array $settings_fields CRM-to-meta field mappings.
+	 * @return void
+	 */
+	private static function add_price_meta_values( array &$meta_input, array $item, array $settings_fields ) {
+		if ( ! isset( $item['precioinmo'] ) || ! is_numeric( $item['precioinmo'] ) ) {
+			return;
+		}
+
+		$meta_key = empty( $settings_fields ) ? 'property_precioinmo' : ( isset( $settings_fields['precioinmo'] ) ? $settings_fields['precioinmo'] : '' );
+		if ( empty( $meta_key ) ) {
+			return;
+		}
+
+		$meta_input[ $meta_key . '_formatted' ] = number_format( (float) $item['precioinmo'], 0, ',', '.' ) . ' €';
+		$meta_input[ $meta_key . '_raw' ]       = (string) $item['precioinmo'];
 	}
 
 	/**
