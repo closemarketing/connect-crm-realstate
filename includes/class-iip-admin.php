@@ -604,7 +604,7 @@ class Admin {
 			'ccrmre_admin_settings'
 		);
 
-		if ( isset( $this->settings['post_type'] ) && 'property' === $this->settings['post_type'] ) {
+		if ( ! isset( $this->settings['post_type'] ) || CCRMRE_POST_TYPE === $this->settings['post_type'] ) {
 			add_settings_field(
 				'ccrmre_post_type_slug',
 				__( 'Post Type SLUG', 'connect-crm-realstate' ),
@@ -876,7 +876,7 @@ class Admin {
 	 * @return void
 	 */
 	public function post_type_callback() {
-		$post_type_option = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'show';
+		$post_type_option = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : CCRMRE_POST_TYPE;
 
 		$args       = array(
 			'public' => true,
@@ -885,9 +885,12 @@ class Admin {
 		unset( $post_types['attachment'] );
 		?>
 		<select name="ccrmre_settings[post_type]" id="post_type">
-			<option value="property" <?php selected( $post_type_option, 'property' ); ?>><?php esc_html_e( 'Created by this plugin', 'connect-crm-realstate' ); ?></option>
+			<option value="<?php echo esc_attr( CCRMRE_POST_TYPE ); ?>" <?php selected( $post_type_option, CCRMRE_POST_TYPE ); ?>><?php esc_html_e( 'Created by this plugin', 'connect-crm-realstate' ); ?></option>
 			<?php
 			foreach ( $post_types as $post_type ) {
+				if ( CCRMRE_POST_TYPE === $post_type ) {
+					continue;
+				}
 				?>
 				<option value="<?php echo esc_attr( $post_type ); ?>" <?php selected( $post_type_option, $post_type ); ?>><?php echo esc_html( $post_type ); ?></option>
 				<?php
@@ -1295,7 +1298,7 @@ class Admin {
 	 */
 	public function merge_fields_callback() {
 		$crm_type      = isset( $this->settings['type'] ) ? $this->settings['type'] : 'anaconda';
-		$post_type     = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		$post_type     = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : CCRMRE_POST_TYPE;
 		$custom_fields = $this->get_all_custom_fields( $post_type );
 
 		$properties_fields = API::get_properties_fields( $crm_type );
