@@ -99,7 +99,7 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 == Changelog ==
 
 = Unreleased =
-* Added formatted and raw price meta fields for Inmovilla properties, making price filters compatible with numeric query tools.
+* Added `ccrmre_precioinmo_formatted` and `ccrmre_precioinmo_raw` meta fields for Inmovilla properties, making price filters compatible with numeric query tools.
 
 = 1.2.8 =
 * Fixed the Property Meta box to show imported native CRM fields when no merge fields are configured.

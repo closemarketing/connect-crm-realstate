@@ -39,8 +39,8 @@ class PriceMetaTest extends WP_UnitTestCase {
 		$post_id = (int) $result['post_id'];
 
 		try {
-			$this->assertSame( '195.000 €', get_post_meta( $post_id, 'crm_precioinmo_formatted', true ) );
-			$this->assertSame( '195000', get_post_meta( $post_id, 'crm_precioinmo_raw', true ) );
+			$this->assertSame( '195.000 €', get_post_meta( $post_id, 'ccrmre_precioinmo_formatted', true ) );
+			$this->assertSame( '195000', get_post_meta( $post_id, 'ccrmre_precioinmo_raw', true ) );
 		} finally {
 			wp_delete_post( $post_id, true );
 		}
@@ -64,8 +64,8 @@ class PriceMetaTest extends WP_UnitTestCase {
 		$post_id = (int) $result['post_id'];
 
 		try {
-			$this->assertSame( '195.000 €', get_post_meta( $post_id, 'property_precioinmo_formatted', true ) );
-			$this->assertSame( '195000', get_post_meta( $post_id, 'property_precioinmo_raw', true ) );
+			$this->assertSame( '195.000 €', get_post_meta( $post_id, 'ccrmre_precioinmo_formatted', true ) );
+			$this->assertSame( '195000', get_post_meta( $post_id, 'ccrmre_precioinmo_raw', true ) );
 		} finally {
 			wp_delete_post( $post_id, true );
 		}
@@ -89,15 +89,15 @@ class PriceMetaTest extends WP_UnitTestCase {
 			),
 			array(
 				'precioinmo'       => 'crm_precioinmo',
-				'raw_source'       => 'crm_precioinmo_raw',
-				'formatted_source' => 'crm_precioinmo_formatted',
+				'raw_source'       => 'ccrmre_precioinmo_raw',
+				'formatted_source' => 'ccrmre_precioinmo_formatted',
 			)
 		);
 		$post_id = (int) $result['post_id'];
 
 		try {
-			$this->assertSame( 'keep raw mapping', get_post_meta( $post_id, 'crm_precioinmo_raw', true ) );
-			$this->assertSame( 'keep formatted mapping', get_post_meta( $post_id, 'crm_precioinmo_formatted', true ) );
+			$this->assertSame( 'keep raw mapping', get_post_meta( $post_id, 'ccrmre_precioinmo_raw', true ) );
+			$this->assertSame( 'keep formatted mapping', get_post_meta( $post_id, 'ccrmre_precioinmo_formatted', true ) );
 		} finally {
 			wp_delete_post( $post_id, true );
 		}
@@ -127,8 +127,8 @@ class PriceMetaTest extends WP_UnitTestCase {
 			unset( $property['precioinmo'] );
 			SYNC::sync_property( $property, $settings, $mappings );
 
-			$this->assertSame( '', get_post_meta( $post_id, 'crm_precioinmo_formatted', true ) );
-			$this->assertSame( '', get_post_meta( $post_id, 'crm_precioinmo_raw', true ) );
+			$this->assertSame( '', get_post_meta( $post_id, 'ccrmre_precioinmo_formatted', true ) );
+			$this->assertSame( '', get_post_meta( $post_id, 'ccrmre_precioinmo_raw', true ) );
 		} finally {
 			wp_delete_post( $post_id, true );
 		}

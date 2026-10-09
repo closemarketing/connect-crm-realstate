@@ -15,6 +15,28 @@ use WP_UnitTestCase;
  */
 class PostTypeMetaBoxTest extends WP_UnitTestCase {
 	/**
+	 * Registers the default plugin post type through the real init action.
+	 */
+	public function test_registers_default_post_type_on_init() {
+		delete_option( 'ccrmre_settings' );
+		if ( post_type_exists( CCRMRE_POST_TYPE ) ) {
+			unregister_post_type( CCRMRE_POST_TYPE );
+		}
+
+		$post_type = new PostType();
+
+		try {
+			do_action( 'init' );
+			$this->assertTrue( post_type_exists( CCRMRE_POST_TYPE ) );
+		} finally {
+			remove_action( 'init', array( $post_type, 'cpt_property' ), 10 );
+			if ( post_type_exists( CCRMRE_POST_TYPE ) ) {
+				unregister_post_type( CCRMRE_POST_TYPE );
+			}
+		}
+	}
+
+	/**
 	 * Shows native CRM fields when merge fields are not configured.
 	 */
 	public function test_shows_native_fields_without_merge_fields() {

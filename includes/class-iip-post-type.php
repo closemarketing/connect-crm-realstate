@@ -42,11 +42,11 @@ class PostType {
 		$settings_post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : CCRMRE_POST_TYPE;
 
 		if ( CCRMRE_POST_TYPE === $settings_post_type ) {
-			add_action( 'init', array( $this, 'cpt_property' ) );
+			add_action( 'init', array( $this, 'cpt_property' ), 10, 0 );
 		} elseif ( 'property' === $settings_post_type ) {
 			// Legacy value (plugin CPT was named "property" before 1.2.x): register it only
 			// when no other plugin (e.g. JetEngine) has already registered that post type.
-			add_action( 'init', array( $this, 'cpt_property_legacy' ), 99 );
+			add_action( 'init', array( $this, 'cpt_property_legacy' ), 99, 0 );
 		}
 
 		add_action( 'add_meta_boxes', array( $this, 'metabox_property' ) );

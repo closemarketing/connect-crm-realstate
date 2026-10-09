@@ -315,6 +315,8 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 	 * @return void
 	 */
 	public function test_filter_backfills_missing_inmovilla_price_meta_once() {
+		global $wpdb;
+
 		update_option(
 			'ccrmre_settings',
 			array(
@@ -325,39 +327,46 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 		update_option(
 			'ccrmre_merge_fields',
 			array(
-				'precioinmo' => 'crm_precioinmo',
+				'precioinmo' => 'price',
 			)
 		);
 
+		$wp_properties  = array();
+		$api_properties = array();
+		for ( $index = 1; $index <= 3; $index++ ) {
+			$property_id    = 'INM-BACKFILL-' . $index;
+			$wp_properties[] = array(
+				'id'           => $property_id,
+				'last_updated' => '2024-01-01 10:00:00',
+				'status'       => '1',
+			);
+			$api_properties[] = array(
+				'cod_ofer'     => $property_id,
+				'referencia'   => $property_id,
+				'fechaact'     => '2024-01-01 10:00:00',
+				'nodisponible' => '0',
+			);
+		}
+
 		$this->create_wp_properties(
-			array(
-				array(
-					'id'           => 'INM-BACKFILL',
-					'last_updated' => '2024-01-01 10:00:00',
-					'status'       => '1',
-				),
-			),
+			$wp_properties,
 			'inmovilla'
 		);
 
-		$api_properties = array(
-			array(
-				'cod_ofer'     => 'INM-BACKFILL',
-				'referencia'   => 'INM-BACKFILL',
-				'fechaact'     => '2024-01-01 10:00:00',
-				'nodisponible' => '0',
-			),
-		);
-
 		$filtered = $this->call_filter_method( $api_properties, 'inmovilla' );
-		$this->assertCount( 1, $filtered, 'Should re-sync when derived price metadata is missing.' );
+		$this->assertCount( 3, $filtered, 'Should re-sync when derived price metadata is missing.' );
 
-		$post_id = SYNC::find_property( 'INM-BACKFILL', 'property' );
-		update_post_meta( $post_id, 'crm_precioinmo_formatted', '195.000 €' );
-		update_post_meta( $post_id, 'crm_precioinmo_raw', '195000' );
+		foreach ( $wp_properties as $property ) {
+			$post_id = SYNC::find_property( $property['id'], 'property' );
+			update_post_meta( $post_id, 'ccrmre_precioinmo_formatted', '195.000 €' );
+			update_post_meta( $post_id, 'ccrmre_precioinmo_raw', '195000' );
+		}
 
-		$filtered = $this->call_filter_method( $api_properties, 'inmovilla' );
+		$query_count_before = $wpdb->num_queries;
+		$filtered           = $this->call_filter_method( $api_properties, 'inmovilla' );
+		$query_count        = $wpdb->num_queries - $query_count_before;
 		$this->assertCount( 0, $filtered, 'Should skip the property after the price metadata is backfilled.' );
+		$this->assertLessThanOrEqual( 2, $query_count, 'Backfill status should be loaded in bulk, not queried per property.' );
 	}
 
 	/**
