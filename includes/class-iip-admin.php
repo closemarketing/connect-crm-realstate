@@ -604,7 +604,7 @@ class Admin {
 			'ccrmre_admin_settings'
 		);
 
-		if ( ! isset( $this->settings['post_type'] ) || CCRMRE_POST_TYPE === $this->settings['post_type'] ) {
+		if ( ! isset( $this->settings['post_type'] ) || in_array( $this->settings['post_type'], array( CCRMRE_POST_TYPE, 'property' ), true ) ) {
 			add_settings_field(
 				'ccrmre_post_type_slug',
 				__( 'Post Type SLUG', 'connect-crm-realstate' ),

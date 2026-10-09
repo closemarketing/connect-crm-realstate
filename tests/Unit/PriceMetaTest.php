@@ -104,6 +104,37 @@ class PriceMetaTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Derived price values are cleared when the CRM removes the source price.
+	 *
+	 * @dataProvider inmovilla_price_provider
+	 *
+	 * @param string $crm      CRM identifier.
+	 * @param array  $property Property returned by the CRM.
+	 * @return void
+	 */
+	public function test_sync_clears_derived_meta_when_price_is_removed( $crm, $property ) {
+		$settings = array(
+			'type'      => $crm,
+			'post_type' => 'post',
+		);
+		$mappings = array(
+			'precioinmo' => 'crm_precioinmo',
+		);
+		$result  = SYNC::sync_property( $property, $settings, $mappings );
+		$post_id = (int) $result['post_id'];
+
+		try {
+			unset( $property['precioinmo'] );
+			SYNC::sync_property( $property, $settings, $mappings );
+
+			$this->assertSame( '', get_post_meta( $post_id, 'crm_precioinmo_formatted', true ) );
+			$this->assertSame( '', get_post_meta( $post_id, 'crm_precioinmo_raw', true ) );
+		} finally {
+			wp_delete_post( $post_id, true );
+		}
+	}
+
+	/**
 	 * Returns a minimum APIWEB property fixture.
 	 *
 	 * @param int $property_id Property identifier.

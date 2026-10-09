@@ -233,7 +233,7 @@ class SYNC {
 			$enums = API::get_enums( $crm, $key );
 			switch ( $key ) {
 				case 'precioinmo':
-					return number_format( $item_meta, 0, ',', '.' ) . ' €';
+					return is_numeric( $item_meta ) ? number_format( (float) $item_meta, 0, ',', '.' ) . ' €' : '';
 				case 'key_loca':
 					$key_loca    = (int) $item_meta;
 					$ciudad_data = isset( $enums['key_loca'][ $key_loca ] ) ? $enums['key_loca'][ $key_loca ] : null;
@@ -281,10 +281,6 @@ class SYNC {
 	 * @return void
 	 */
 	private static function add_price_meta_values( array &$meta_input, array $item, array $settings_fields ) {
-		if ( ! isset( $item['precioinmo'] ) || ! is_numeric( $item['precioinmo'] ) ) {
-			return;
-		}
-
 		$meta_key = self::get_price_meta_key( $settings_fields );
 		if ( empty( $meta_key ) ) {
 			return;
@@ -292,12 +288,13 @@ class SYNC {
 
 		$formatted_key = $meta_key . '_formatted';
 		$raw_key       = $meta_key . '_raw';
+		$has_price     = isset( $item['precioinmo'] ) && is_numeric( $item['precioinmo'] );
 
 		if ( ! array_key_exists( $formatted_key, $meta_input ) ) {
-			$meta_input[ $formatted_key ] = number_format( (float) $item['precioinmo'], 0, ',', '.' ) . ' €';
+			$meta_input[ $formatted_key ] = $has_price ? number_format( (float) $item['precioinmo'], 0, ',', '.' ) . ' €' : '';
 		}
 		if ( ! array_key_exists( $raw_key, $meta_input ) ) {
-			$meta_input[ $raw_key ] = (string) $item['precioinmo'];
+			$meta_input[ $raw_key ] = $has_price ? (string) $item['precioinmo'] : '';
 		}
 	}
 
