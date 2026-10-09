@@ -30,7 +30,8 @@ class SYNC {
 		$message             = '';
 		$settings            = empty( $settings ) ? get_option( 'ccrmre_settings' ) : $settings;
 		$crm                 = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
-		$settings_fields     = empty( $settings_fields ) ? get_option( 'ccrmre_merge_fields' ) : $settings_fields;
+		$settings_fields     = empty( $settings_fields ) ? get_option( 'ccrmre_merge_fields', array() ) : $settings_fields;
+		$settings_fields     = is_array( $settings_fields ) ? $settings_fields : array();
 		$post_type           = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 		$property_info_early = API::get_property_info( $item, $crm );
 		$property_id         = $property_info_early['id'];
@@ -284,13 +285,30 @@ class SYNC {
 			return;
 		}
 
-		$meta_key = empty( $settings_fields ) ? 'property_precioinmo' : ( isset( $settings_fields['precioinmo'] ) ? $settings_fields['precioinmo'] : '' );
+		$meta_key = self::get_price_meta_key( $settings_fields );
 		if ( empty( $meta_key ) ) {
 			return;
 		}
 
-		$meta_input[ $meta_key . '_formatted' ] = number_format( (float) $item['precioinmo'], 0, ',', '.' ) . ' €';
-		$meta_input[ $meta_key . '_raw' ]       = (string) $item['precioinmo'];
+		$formatted_key = $meta_key . '_formatted';
+		$raw_key       = $meta_key . '_raw';
+
+		if ( ! array_key_exists( $formatted_key, $meta_input ) ) {
+			$meta_input[ $formatted_key ] = number_format( (float) $item['precioinmo'], 0, ',', '.' ) . ' €';
+		}
+		if ( ! array_key_exists( $raw_key, $meta_input ) ) {
+			$meta_input[ $raw_key ] = (string) $item['precioinmo'];
+		}
+	}
+
+	/**
+	 * Returns the base meta key used for derived sale price values.
+	 *
+	 * @param array $settings_fields CRM-to-meta field mappings.
+	 * @return string
+	 */
+	private static function get_price_meta_key( array $settings_fields ) {
+		return empty( $settings_fields ) ? 'property_precioinmo' : ( isset( $settings_fields['precioinmo'] ) ? $settings_fields['precioinmo'] : '' );
 	}
 
 	/**
@@ -703,7 +721,8 @@ class SYNC {
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT 
+				"SELECT
+					p.ID as post_id,
 					pm1.meta_value as property_ref, 
 					pm2.meta_value as last_updated
 				FROM {$wpdb->postmeta} pm1
@@ -722,6 +741,7 @@ class SYNC {
 		foreach ( $results as $row ) {
 			if ( ! empty( $row['property_ref'] ) ) {
 				$property_data[ $row['property_ref'] ] = array(
+					'post_id'      => isset( $row['post_id'] ) ? (int) $row['post_id'] : 0,
 					'last_updated' => isset( $row['last_updated'] ) ? $row['last_updated'] : null,
 				);
 			}
@@ -955,8 +975,11 @@ class SYNC {
 	 * @return array Filtered list of properties
 	 */
 	public static function filter_properties_to_update( $properties, $crm_type ) {
-		$wp_properties = self::get_wordpress_property_data( $crm_type );
-		$wp_refs       = array_keys( $wp_properties );
+		$wp_properties   = self::get_wordpress_property_data( $crm_type );
+		$wp_refs         = array_keys( $wp_properties );
+		$settings_fields = get_option( 'ccrmre_merge_fields', array() );
+		$settings_fields = is_array( $settings_fields ) ? $settings_fields : array();
+		$price_meta_key  = in_array( $crm_type, array( 'inmovilla', 'inmovilla_procesos' ), true ) ? self::get_price_meta_key( $settings_fields ) : '';
 
 		// Filter properties.
 		$filtered = array();
@@ -981,6 +1004,16 @@ class SYNC {
 			if ( isset( $wp_properties[ $property_info['id'] ] ) ) {
 				$wp_data      = $wp_properties[ $property_info['id'] ];
 				$needs_update = false;
+
+				// Backfill derived Inmovilla price values on the next updated-only import.
+				$post_id = isset( $wp_data['post_id'] ) ? (int) $wp_data['post_id'] : 0;
+				if ( $post_id && $price_meta_key ) {
+					$has_formatted_price = metadata_exists( 'post', $post_id, $price_meta_key . '_formatted' );
+					$has_raw_price       = metadata_exists( 'post', $post_id, $price_meta_key . '_raw' );
+					if ( ! $has_formatted_price || ! $has_raw_price ) {
+						$needs_update = true;
+					}
+				}
 
 				// Get dates and status.
 				$api_date = $property_info['last_updated'];

@@ -310,6 +310,57 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Existing Inmovilla properties are re-synced once to backfill price metadata.
+	 *
+	 * @return void
+	 */
+	public function test_filter_backfills_missing_inmovilla_price_meta_once() {
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'      => 'inmovilla',
+				'post_type' => 'property',
+			)
+		);
+		update_option(
+			'ccrmre_merge_fields',
+			array(
+				'precioinmo' => 'crm_precioinmo',
+			)
+		);
+
+		$this->create_wp_properties(
+			array(
+				array(
+					'id'           => 'INM-BACKFILL',
+					'last_updated' => '2024-01-01 10:00:00',
+					'status'       => '1',
+				),
+			),
+			'inmovilla'
+		);
+
+		$api_properties = array(
+			array(
+				'cod_ofer'     => 'INM-BACKFILL',
+				'referencia'   => 'INM-BACKFILL',
+				'fechaact'     => '2024-01-01 10:00:00',
+				'nodisponible' => '0',
+			),
+		);
+
+		$filtered = $this->call_filter_method( $api_properties, 'inmovilla' );
+		$this->assertCount( 1, $filtered, 'Should re-sync when derived price metadata is missing.' );
+
+		$post_id = SYNC::find_property( 'INM-BACKFILL', 'property' );
+		update_post_meta( $post_id, 'crm_precioinmo_formatted', '195.000 €' );
+		update_post_meta( $post_id, 'crm_precioinmo_raw', '195000' );
+
+		$filtered = $this->call_filter_method( $api_properties, 'inmovilla' );
+		$this->assertCount( 0, $filtered, 'Should skip the property after the price metadata is backfilled.' );
+	}
+
+	/**
 	 * Test filtering with empty properties array
 	 */
 	public function test_filter_with_empty_properties() {
