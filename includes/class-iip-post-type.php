@@ -39,10 +39,14 @@ class PostType {
 	 */
 	public function __construct() {
 		$this->settings     = get_option( 'ccrmre_settings' );
-		$settings_post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : 'property';
+		$settings_post_type = isset( $this->settings['post_type'] ) ? $this->settings['post_type'] : CCRMRE_POST_TYPE;
 
-		if ( 'property' === $settings_post_type ) {
-			add_action( 'init', array( $this, 'cpt_property' ) );
+		if ( CCRMRE_POST_TYPE === $settings_post_type ) {
+			add_action( 'init', array( $this, 'cpt_property' ), 10, 0 );
+		} elseif ( 'property' === $settings_post_type ) {
+			// Legacy value (plugin CPT was named "property" before 1.2.x): register it only
+			// when no other plugin (e.g. JetEngine) has already registered that post type.
+			add_action( 'init', array( $this, 'cpt_property_legacy' ), 99, 0 );
 		}
 
 		add_action( 'add_meta_boxes', array( $this, 'metabox_property' ) );
@@ -51,11 +55,23 @@ class PostType {
 	}
 
 	/**
-	 * Register Post Type POST Property
+	 * Registers the legacy "property" post type when nobody else did.
 	 *
 	 * @return void
+	 */
+	public function cpt_property_legacy() {
+		if ( ! post_type_exists( 'property' ) ) {
+			$this->cpt_property( 'property' );
+		}
+	}
+
+	/**
+	 * Register Post Type POST Property
+	 *
+	 * @param string $post_type Post type name.
+	 * @return void
 	 **/
-	public function cpt_property() {
+	public function cpt_property( $post_type = CCRMRE_POST_TYPE ) {
 		$settings_post_type_slug = isset( $this->settings['post_type_slug'] ) ? $this->settings['post_type_slug'] : __( 'properties', 'connect-crm-realstate' );
 
 		$labels = array(
@@ -88,7 +104,7 @@ class PostType {
 			'menu_icon'          => 'dashicons-admin-users',
 			'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ),
 		);
-		register_post_type( CCRMRE_POST_TYPE, $args );
+		register_post_type( $post_type, $args );
 	}
 
 	/**

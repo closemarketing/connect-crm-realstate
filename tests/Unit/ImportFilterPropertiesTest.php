@@ -310,6 +310,66 @@ class ImportFilterPropertiesTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Existing Inmovilla properties are re-synced once to backfill price metadata.
+	 *
+	 * @return void
+	 */
+	public function test_filter_backfills_missing_inmovilla_price_meta_once() {
+		global $wpdb;
+
+		update_option(
+			'ccrmre_settings',
+			array(
+				'type'      => 'inmovilla',
+				'post_type' => 'property',
+			)
+		);
+		update_option(
+			'ccrmre_merge_fields',
+			array(
+				'precioinmo' => 'price',
+			)
+		);
+
+		$wp_properties  = array();
+		$api_properties = array();
+		for ( $index = 1; $index <= 3; $index++ ) {
+			$property_id    = 'INM-BACKFILL-' . $index;
+			$wp_properties[] = array(
+				'id'           => $property_id,
+				'last_updated' => '2024-01-01 10:00:00',
+				'status'       => '1',
+			);
+			$api_properties[] = array(
+				'cod_ofer'     => $property_id,
+				'referencia'   => $property_id,
+				'fechaact'     => '2024-01-01 10:00:00',
+				'nodisponible' => '0',
+			);
+		}
+
+		$this->create_wp_properties(
+			$wp_properties,
+			'inmovilla'
+		);
+
+		$filtered = $this->call_filter_method( $api_properties, 'inmovilla' );
+		$this->assertCount( 3, $filtered, 'Should re-sync when derived price metadata is missing.' );
+
+		foreach ( $wp_properties as $property ) {
+			$post_id = SYNC::find_property( $property['id'], 'property' );
+			update_post_meta( $post_id, 'ccrmre_precioinmo_formatted', '195.000 €' );
+			update_post_meta( $post_id, 'ccrmre_precioinmo_raw', '195000' );
+		}
+
+		$query_count_before = $wpdb->num_queries;
+		$filtered           = $this->call_filter_method( $api_properties, 'inmovilla' );
+		$query_count        = $wpdb->num_queries - $query_count_before;
+		$this->assertCount( 0, $filtered, 'Should skip the property after the price metadata is backfilled.' );
+		$this->assertLessThanOrEqual( 2, $query_count, 'Backfill status should be loaded in bulk, not queried per property.' );
+	}
+
+	/**
 	 * Test filtering with empty properties array
 	 */
 	public function test_filter_with_empty_properties() {

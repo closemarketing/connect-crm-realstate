@@ -18,6 +18,12 @@ defined( 'ABSPATH' ) || exit;
  * @since 1.0.0
  */
 class SYNC {
+	/** Fixed metadata key for a display-ready Inmovilla sale price. */
+	const PRICE_META_FORMATTED = 'ccrmre_precioinmo_formatted';
+
+	/** Fixed metadata key for a numeric Inmovilla sale price. */
+	const PRICE_META_RAW = 'ccrmre_precioinmo_raw';
+
 	/**
 	 * Syncs property from item API.
 	 *
@@ -30,7 +36,8 @@ class SYNC {
 		$message             = '';
 		$settings            = empty( $settings ) ? get_option( 'ccrmre_settings' ) : $settings;
 		$crm                 = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
-		$settings_fields     = empty( $settings_fields ) ? get_option( 'ccrmre_merge_fields' ) : $settings_fields;
+		$settings_fields     = empty( $settings_fields ) ? get_option( 'ccrmre_merge_fields', array() ) : $settings_fields;
+		$settings_fields     = is_array( $settings_fields ) ? $settings_fields : array();
 		$post_type           = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
 		$property_info_early = API::get_property_info( $item, $crm );
 		$property_id         = $property_info_early['id'];
@@ -97,6 +104,9 @@ class SYNC {
 				$property_info['meta_input'][ $field ] = $item_meta;
 			}
 		}
+
+		// Store explicit display and filter values for the Inmovilla sale price.
+		self::add_price_meta_values( $property_info['meta_input'], $item );
 
 		$is_new_property = empty( $property_post_id );
 		if ( $is_new_property ) {
@@ -229,7 +239,7 @@ class SYNC {
 			$enums = API::get_enums( $crm, $key );
 			switch ( $key ) {
 				case 'precioinmo':
-					return number_format( $item_meta, 0, ',', '.' ) . ' €';
+					return is_numeric( $item_meta ) ? number_format( (float) $item_meta, 0, ',', '.' ) . ' €' : '';
 				case 'key_loca':
 					$key_loca    = (int) $item_meta;
 					$ciudad_data = isset( $enums['key_loca'][ $key_loca ] ) ? $enums['key_loca'][ $key_loca ] : null;
@@ -262,6 +272,28 @@ class SYNC {
 		}
 
 		return $item_meta;
+	}
+
+	/**
+	 * Adds formatted and raw price meta values when the price is imported.
+	 *
+	 * The originally mapped field is intentionally left unchanged for backward
+	 * compatibility. The derived fields give templates a display value and
+	 * numeric filters a value without thousands separators or currency symbols.
+	 *
+	 * @param array $meta_input Meta values to save with the property.
+	 * @param array $item       Raw CRM property data.
+	 * @return void
+	 */
+	private static function add_price_meta_values( array &$meta_input, array $item ) {
+		$has_price = isset( $item['precioinmo'] ) && is_numeric( $item['precioinmo'] );
+
+		if ( ! array_key_exists( self::PRICE_META_FORMATTED, $meta_input ) ) {
+			$meta_input[ self::PRICE_META_FORMATTED ] = $has_price ? number_format( (float) $item['precioinmo'], 0, ',', '.' ) . ' €' : '';
+		}
+		if ( ! array_key_exists( self::PRICE_META_RAW, $meta_input ) ) {
+			$meta_input[ self::PRICE_META_RAW ] = $has_price ? (string) $item['precioinmo'] : '';
+		}
 	}
 
 	/**
@@ -674,15 +706,31 @@ class SYNC {
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT 
-					pm1.meta_value as property_ref, 
-					pm2.meta_value as last_updated
+				"SELECT
+					p.ID as post_id,
+					pm1.meta_value as property_ref,
+					pm2.meta_value as last_updated,
+					COALESCE(pm_price.has_formatted_price, 0) as has_formatted_price,
+					COALESCE(pm_price.has_raw_price, 0) as has_raw_price
 				FROM {$wpdb->postmeta} pm1
 				INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
 				LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = 'ccrmre_last_updated'
+				LEFT JOIN (
+					SELECT
+						post_id,
+						MAX(CASE WHEN meta_key = %s THEN 1 ELSE 0 END) as has_formatted_price,
+						MAX(CASE WHEN meta_key = %s THEN 1 ELSE 0 END) as has_raw_price
+					FROM {$wpdb->postmeta}
+					WHERE meta_key IN (%s, %s)
+					GROUP BY post_id
+				) pm_price ON p.ID = pm_price.post_id
 				WHERE p.post_type = %s
 				AND p.post_status != 'trash'
 				AND pm1.meta_key = 'ccrmre_property_id'",
+				self::PRICE_META_FORMATTED,
+				self::PRICE_META_RAW,
+				self::PRICE_META_FORMATTED,
+				self::PRICE_META_RAW,
 				$post_type
 			),
 			ARRAY_A
@@ -693,7 +741,10 @@ class SYNC {
 		foreach ( $results as $row ) {
 			if ( ! empty( $row['property_ref'] ) ) {
 				$property_data[ $row['property_ref'] ] = array(
-					'last_updated' => isset( $row['last_updated'] ) ? $row['last_updated'] : null,
+					'post_id'             => isset( $row['post_id'] ) ? (int) $row['post_id'] : 0,
+					'last_updated'        => isset( $row['last_updated'] ) ? $row['last_updated'] : null,
+					'has_formatted_price' => ! empty( $row['has_formatted_price'] ),
+					'has_raw_price'       => ! empty( $row['has_raw_price'] ),
 				);
 			}
 		}
@@ -928,6 +979,7 @@ class SYNC {
 	public static function filter_properties_to_update( $properties, $crm_type ) {
 		$wp_properties = self::get_wordpress_property_data( $crm_type );
 		$wp_refs       = array_keys( $wp_properties );
+		$is_inmovilla  = in_array( $crm_type, array( 'inmovilla', 'inmovilla_procesos' ), true );
 
 		// Filter properties.
 		$filtered = array();
@@ -952,6 +1004,11 @@ class SYNC {
 			if ( isset( $wp_properties[ $property_info['id'] ] ) ) {
 				$wp_data      = $wp_properties[ $property_info['id'] ];
 				$needs_update = false;
+
+				// Backfill derived Inmovilla price values on the next updated-only import.
+				if ( $is_inmovilla && ( empty( $wp_data['has_formatted_price'] ) || empty( $wp_data['has_raw_price'] ) ) ) {
+					$needs_update = true;
+				}
 
 				// Get dates and status.
 				$api_date = $property_info['last_updated'];
