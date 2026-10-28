@@ -4,7 +4,7 @@ Tags: real estate, properties, inmovilla, anaconda, crm
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.8
+Stable tag: 1.2.9
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -98,8 +98,9 @@ Yes, you can filter by postal code. Use wildcards like `18*` to include all prop
 
 == Changelog ==
 
-= Unreleased =
+= 1.2.9 =
 * Added `ccrmre_precioinmo_formatted` and `ccrmre_precioinmo_raw` meta fields for Inmovilla properties, making price filters compatible with numeric query tools.
+* Added the `ccrmre_admin_tabs_after_settings` action so add-ons can place admin tabs right after the Settings tab.
 
 = 1.2.8 =
 * Fixed the Property Meta box to show imported native CRM fields when no merge fields are configured.
