@@ -345,6 +345,13 @@ class Admin {
 		echo ( 'iip-settings' === $active_tab ? 'nav-tab-active' : '' );
 		echo '">' . esc_html__( 'Settings', 'connect-crm-realstate' ) . '</a>';
 
+		/**
+		 * Allow PRO or add-ons to inject admin tabs right after the Settings tab.
+		 *
+		 * @param string $active_tab Currently active tab slug.
+		 */
+		do_action( 'ccrmre_admin_tabs_after_settings', $active_tab );
+
 		// Merge variables tab.
 		echo '<a href="' . esc_url( '?page=ccrmre_options&tab=iip-merge' ) . '" class="nav-tab ';
 		echo ( 'iip-merge' === $active_tab ? 'nav-tab-active' : '' );
