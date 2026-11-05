@@ -27,12 +27,63 @@ class SYNC {
 	/**
 	 * Syncs property from item API.
 	 *
+	 * Wraps the sync in a per-property lock so two concurrent processes (cron,
+	 * manual import, WP-CLI) can never create the same property twice, and
+	 * sends any extra posts linked to the same CRM ID to the trash.
+	 *
 	 * @param array $item Item from API.
 	 * @param array $settings Settings.
 	 * @param array $settings_fields Settings fields.
 	 * @return array
 	 */
 	public static function sync_property( $item, $settings = array(), $settings_fields = array() ) {
+		$settings    = empty( $settings ) ? get_option( 'ccrmre_settings' ) : $settings;
+		$crm         = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
+		$post_type   = isset( $settings['post_type'] ) ? $settings['post_type'] : CCRMRE_POST_TYPE;
+		$property_id = API::get_property_info( $item, $crm )['id'];
+		$lock_name   = 'property_' . md5( $crm . '|' . $property_id );
+
+		if ( ! self::acquire_lock( $lock_name, 5 * MINUTE_IN_SECONDS ) ) {
+			$reference = self::get_reference_from_item( $item, $crm );
+
+			return array(
+				'property_id' => $property_id,
+				'message'     => __( 'Skipped: this property is being synced by another process', 'connect-crm-realstate' ),
+				'is_new'      => false,
+				'reference'   => null !== $reference && '' !== $reference ? $reference : (string) $property_id,
+				'status'      => '',
+				'title'       => '',
+				'city'        => '',
+			);
+		}
+
+		try {
+			$result = self::do_sync_property( $item, $settings, $settings_fields );
+
+			// Remove duplicates of this CRM ID, keeping the post that was just synced.
+			if ( ! empty( $result['post_id'] ) ) {
+				foreach ( self::find_properties( $property_id, $post_type ) as $duplicate_id ) {
+					if ( (int) $result['post_id'] !== $duplicate_id ) {
+						wp_trash_post( $duplicate_id );
+					}
+				}
+			}
+		} finally {
+			self::release_lock( $lock_name );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Creates or updates the WordPress post for a CRM property.
+	 *
+	 * @param array $item Item from API.
+	 * @param array $settings Settings.
+	 * @param array $settings_fields Settings fields.
+	 * @return array
+	 */
+	private static function do_sync_property( $item, $settings = array(), $settings_fields = array() ) {
 		$message             = '';
 		$settings            = empty( $settings ) ? get_option( 'ccrmre_settings' ) : $settings;
 		$crm                 = isset( $settings['type'] ) ? $settings['type'] : 'anaconda';
@@ -408,17 +459,43 @@ class SYNC {
 	/**
 	 * Finds property by property_id.
 	 *
+	 * Searches every non-trashed status (draft, pending, private...) so an
+	 * unpublished post is reused instead of creating a duplicate. When several
+	 * posts share the same CRM ID, the oldest one is returned.
+	 *
 	 * @param string $property_id Property ID.
 	 * @param string $post_type Post type.
 	 *
 	 * @return int
 	 */
 	public static function find_property( $property_id, $post_type ) {
-		$property = get_posts(
+		$properties = self::find_properties( $property_id, $post_type );
+
+		return ! empty( $properties ) ? (int) $properties[0] : 0;
+	}
+
+	/**
+	 * Finds every non-trashed post linked to a CRM property ID, oldest first.
+	 *
+	 * @param string $property_id Property ID.
+	 * @param string $post_type   Post type.
+	 * @return int[]
+	 */
+	public static function find_properties( $property_id, $post_type ) {
+		if ( '' === (string) $property_id ) {
+			return array();
+		}
+
+		$properties = get_posts(
 			array(
-				'post_type'  => $post_type,
-				'fields'     => 'ids',
-				'meta_query' => array(
+				'post_type'        => $post_type,
+				'post_status'      => 'any',
+				'fields'           => 'ids',
+				'numberposts'      => -1,
+				'orderby'          => 'ID',
+				'order'            => 'ASC',
+				'suppress_filters' => true,
+				'meta_query'       => array(
 					array(
 						'key'     => 'ccrmre_property_id',
 						'value'   => $property_id,
@@ -427,10 +504,74 @@ class SYNC {
 				),
 			)
 		);
-		if ( ! empty( $property[0] ) ) {
-			return (int) $property[0];
-		} else {
-			return 0;
+
+		return array_map( 'intval', $properties );
+	}
+
+	/**
+	 * Acquires a named lock stored as an autoload-disabled option.
+	 *
+	 * The add_option() call fails when the option already exists, which makes it an
+	 * atomic check-and-set at the database level. Locks older than $ttl are
+	 * considered stale (crashed process) and are taken over.
+	 *
+	 * @param string $name Lock name.
+	 * @param int    $ttl  Seconds after which an existing lock is considered stale.
+	 * @return bool True if the lock was acquired.
+	 */
+	public static function acquire_lock( $name, $ttl = 300 ) {
+		$option = 'ccrmre_lock_' . $name;
+
+		if ( add_option( $option, time(), '', 'no' ) ) {
+			return true;
+		}
+
+		$locked_at = (int) get_option( $option, 0 );
+		if ( $locked_at > 0 && ( time() - $locked_at ) < $ttl ) {
+			return false;
+		}
+
+		// Stale lock: remove it and try once more so only one process wins.
+		delete_option( $option );
+
+		return add_option( $option, time(), '', 'no' );
+	}
+
+	/**
+	 * Releases a named lock.
+	 *
+	 * @param string $name Lock name.
+	 * @return void
+	 */
+	public static function release_lock( $name ) {
+		delete_option( 'ccrmre_lock_' . $name );
+	}
+
+	/**
+	 * Applies the configured unavailable action to a single post.
+	 *
+	 * @param int    $post_id     Post ID.
+	 * @param string $sold_action Configured action (draft|trash|keep).
+	 * @return string Action applied.
+	 */
+	private static function apply_unavailable_action( $post_id, $sold_action ) {
+		switch ( $sold_action ) {
+			case 'trash':
+				wp_trash_post( $post_id );
+				return 'trash';
+
+			case 'keep':
+				return 'keep';
+
+			case 'draft':
+			default:
+				wp_update_post(
+					array(
+						'ID'          => $post_id,
+						'post_status' => 'draft',
+					)
+				);
+				return 'draft';
 		}
 	}
 
@@ -506,7 +647,8 @@ class SYNC {
 		$sold_action      = isset( $settings['sold_action'] ) ? $settings['sold_action'] : 'draft';
 		$property_info_h  = API::get_property_info( $property, $crm );
 		$property_id      = $property_info_h['id'];
-		$property_post_id = self::find_property( $property_id, $post_type );
+		$property_posts   = self::find_properties( $property_id, $post_type );
+		$property_post_id = ! empty( $property_posts ) ? $property_posts[0] : 0;
 		$title_city       = self::get_title_and_city_from_item( $property, $crm );
 
 		if ( empty( $property_post_id ) ) {
@@ -530,26 +672,29 @@ class SYNC {
 
 		$reason = self::get_unavailable_reason( $property, $crm );
 
-		switch ( $sold_action ) {
+		// Apply the action to every post linked to this CRM ID, so duplicates are not left published.
+		$action = 'keep';
+		foreach ( $property_posts as $post_id ) {
+			$action = self::apply_unavailable_action( $post_id, $sold_action );
+		}
+
+		switch ( $action ) {
 			case 'draft':
-				wp_update_post(
-					array(
-						'ID'          => $property_post_id,
-						'post_status' => 'draft',
-					)
-				);
 				$message = __( 'Unpublished (Set to Draft)', 'connect-crm-realstate' ) . $reason;
 				break;
 
 			case 'trash':
-				wp_trash_post( $property_post_id );
 				$message = __( 'Moved to Trash', 'connect-crm-realstate' ) . $reason;
 				break;
 
-			case 'keep':
 			default:
 				$message = __( 'Kept Published (Not Available)', 'connect-crm-realstate' ) . $reason;
 				break;
+		}
+
+		if ( count( $property_posts ) > 1 ) {
+			/* translators: %d: number of WordPress posts linked to the same CRM property. */
+			$message .= ' ' . sprintf( __( '(%d duplicated posts)', 'connect-crm-realstate' ), count( $property_posts ) );
 		}
 
 		$ref_disp = isset( $property_info_h['reference'] ) && '' !== $property_info_h['reference'] ? $property_info_h['reference'] : (string) $property_id;
@@ -576,7 +721,7 @@ class SYNC {
 	private static function get_unavailable_reason( $property, $crm ) {
 		if ( isset( $property['status'] ) && ! (bool) $property['status'] ) {
 			/* translators: %s: status field value from the API. */
-			return ' — ' . sprintf( __( 'Reason: status = %s', 'connect-crm-realstate' ), esc_html( $property['status'] ) );
+			return ' — ' . sprintf( __( 'Reason: status = %s', 'connect-crm-realstate' ), esc_html( var_export( (bool) $property['status'], true ) ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Renders the boolean as "false" instead of an empty string.
 		}
 
 		if ( 'inmovilla_procesos' === $crm && isset( $property['nodisponible'] ) && 1 === (int) $property['nodisponible'] ) {
@@ -644,33 +789,10 @@ class SYNC {
 		$reconciled_details   = array();
 
 		foreach ( $to_remove as $property_ref ) {
-			// Find the WordPress post by property reference.
-			$post_id = self::find_property( $property_ref, $post_type );
-
-			if ( ! empty( $post_id ) ) {
+			// Reconcile every post linked to this CRM ID, including duplicates.
+			foreach ( self::find_properties( $property_ref, $post_type ) as $post_id ) {
 				$post_title = get_the_title( $post_id );
-				$action     = '';
-				switch ( $sold_action ) {
-					case 'trash':
-						wp_trash_post( $post_id );
-						$action = 'trash';
-						break;
-
-					case 'keep':
-						$action = 'keep';
-						break;
-
-					case 'draft':
-					default:
-						wp_update_post(
-							array(
-								'ID'          => $post_id,
-								'post_status' => 'draft',
-							)
-						);
-						$action = 'draft';
-						break;
-				}
+				$action     = self::apply_unavailable_action( $post_id, $sold_action );
 
 				$reconciled_details[] = array(
 					'post_id'     => $post_id,
