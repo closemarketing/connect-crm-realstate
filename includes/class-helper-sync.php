@@ -43,6 +43,12 @@ class SYNC {
 		$property_id = API::get_property_info( $item, $crm )['id'];
 		$lock_name   = 'property_' . md5( $crm . '|' . $property_id );
 
+		// Callers may decide availability from a partial item (e.g. an ID-only item
+		// for unsynced properties). Re-check with the complete data before publishing.
+		if ( ! self::is_property_available( $item, $crm, false ) ) {
+			return self::handle_unavailable_property( $item, $settings, $settings_fields, $crm );
+		}
+
 		if ( ! self::acquire_lock( $lock_name, 5 * MINUTE_IN_SECONDS ) ) {
 			$reference = self::get_reference_from_item( $item, $crm );
 
@@ -1061,8 +1067,16 @@ class SYNC {
 		$api_properties = isset( $api_result['data'] ) ? $api_result['data'] : array();
 		$wp_properties  = self::get_wordpress_property_data( $crm_type );
 
-		// Properties in API but missing from WordPress.
-		$unsynced = array_diff_key( $api_properties, $wp_properties );
+		// Properties in API but missing from WordPress. Unavailable ones are expected to be
+		// missing (never imported, or already removed), so they must not be queued: the
+		// minimal item built from their ID carries no availability field and would be
+		// imported as if it were available.
+		$unsynced = array_filter(
+			array_diff_key( $api_properties, $wp_properties ),
+			function ( $property ) {
+				return ! ( is_array( $property ) && isset( $property['status'] ) && false === (bool) $property['status'] );
+			}
+		);
 
 		return array(
 			'status' => 'ok',
